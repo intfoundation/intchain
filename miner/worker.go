@@ -1,0 +1,708 @@
+// Copyright 2015 The go-ethereum Authors
+// This file is part of the go-ethereum library.
+//
+// The go-ethereum library is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// The go-ethereum library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public License
+// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
+
+package miner
+
+import (
+	"fmt"
+	"math/big"
+	"sync"
+	"sync/atomic"
+	"time"
+
+	"github.com/intfoundation/intchain/common"
+	"github.com/intfoundation/intchain/consensus"
+	tdmTypes "github.com/intfoundation/intchain/consensus/ipbft/types"
+	"github.com/intfoundation/intchain/core"
+	"github.com/intfoundation/intchain/core/state"
+	"github.com/intfoundation/intchain/core/types"
+	"github.com/intfoundation/intchain/core/vm"
+	"github.com/intfoundation/intchain/event"
+	"github.com/intfoundation/intchain/log"
+	"github.com/intfoundation/intchain/params"
+	"github.com/intfoundation/fatih-set-v0"
+)
+
+const (
+	resultQueueSize  = 10
+	miningLogAtDepth = 5
+
+	// txChanSize is the size of channel listening to TxPreEvent.
+	// The number is referenced from the size of tx pool.
+	txChanSize = 4096
+	// chainHeadChanSize is the size of channel listening to ChainHeadEvent.
+	chainHeadChanSize = 10
+	// chainSideChanSize is the size of channel listening to ChainSideEvent.
+	chainSideChanSize = 10
+)
+
+// Agent can register themself with the worker
+type Agent interface {
+	Work() chan<- *Work
+	SetReturnCh(chan<- *Result)
+	Stop()
+	Start()
+}
+
+// Work is the workers current environment and holds
+// all of the current state information
+type Work struct {
+	signer types.Signer
+
+	state     *state.StateDB // apply state changes here
+	ancestors *set.Set       // ancestor set (used for checking uncle parent validity)
+	family    *set.Set       // family set (used for checking uncle invalidity)
+	uncles    *set.Set       // uncle set
+	tcount    int            // tx count in cycle
+
+	Block *types.Block // the new block
+
+	header   *types.Header
+	txs      []*types.Transaction
+	receipts []*types.Receipt
+
+	ops *types.PendingOps // pending events here
+
+	createdAt time.Time
+	logger    log.Logger
+}
+
+type Result struct {
+	Work         *Work
+	Block        *types.Block
+	Intermediate *tdmTypes.IntermediateBlockResult
+}
+
+// worker is the main object which takes care of applying messages to the new state
+type worker struct {
+	config *params.ChainConfig
+	engine consensus.Engine
+	eth    Backend
+	chain  *core.BlockChain
+
+	gasFloor uint64
+	gasCeil  uint64
+
+	mu sync.Mutex
+
+	// update loop
+	mux          *event.TypeMux
+	txCh         chan core.TxPreEvent
+	txSub        event.Subscription
+	chainHeadCh  chan core.ChainHeadEvent
+	chainHeadSub event.Subscription
+	chainSideCh  chan core.ChainSideEvent
+	chainSideSub event.Subscription
+	wg           sync.WaitGroup
+
+	agents   map[Agent]struct{}
+	resultCh chan *Result
+	exitCh   chan struct{}
+
+	proc core.Validator
+
+	coinbase common.Address
+	extra    []byte
+
+	currentMu sync.Mutex
+	current   *Work
+
+	uncleMu        sync.Mutex
+	possibleUncles map[common.Hash]*types.Block
+
+	unconfirmed *unconfirmedBlocks // set of locally mined blocks pending canonicalness confirmations
+
+	// atomic status counters
+	mining int32
+	atWork int32
+
+	logger log.Logger
+	cch    core.CrossChainHelper
+}
+
+func newWorker(config *params.ChainConfig, engine consensus.Engine, eth Backend, mux *event.TypeMux, gasFloor, gasCeil uint64, cch core.CrossChainHelper) *worker {
+	worker := &worker{
+		config:         config,
+		engine:         engine,
+		eth:            eth,
+		mux:            mux,
+		gasFloor:       gasFloor,
+		gasCeil:        gasCeil,
+		txCh:           make(chan core.TxPreEvent, txChanSize),
+		chainHeadCh:    make(chan core.ChainHeadEvent, chainHeadChanSize),
+		chainSideCh:    make(chan core.ChainSideEvent, chainSideChanSize),
+		resultCh:       make(chan *Result, resultQueueSize),
+		exitCh:         make(chan struct{}),
+		chain:          eth.BlockChain(),
+		proc:           eth.BlockChain().Validator(),
+		possibleUncles: make(map[common.Hash]*types.Block),
+		agents:         make(map[Agent]struct{}),
+		unconfirmed:    newUnconfirmedBlocks(eth.BlockChain(), miningLogAtDepth, config.ChainLogger),
+		logger:         config.ChainLogger,
+		cch:            cch,
+	}
+	// Subscribe TxPreEvent for tx pool
+	worker.txSub = eth.TxPool().SubscribeTxPreEvent(worker.txCh)
+	// Subscribe events for blockchain
+	worker.chainHeadSub = eth.BlockChain().SubscribeChainHeadEvent(worker.chainHeadCh)
+	worker.chainSideSub = eth.BlockChain().SubscribeChainSideEvent(worker.chainSideCh)
+
+	go worker.mainLoop()
+
+	go worker.resultLoop()
+	//worker.commitNewWork()
+
+	return worker
+}
+
+func (self *worker) setCoinbase(addr common.Address) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.coinbase = addr
+}
+
+func (self *worker) setExtra(extra []byte) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.extra = extra
+}
+
+func (self *worker) pending() (*types.Block, *state.StateDB) {
+	self.currentMu.Lock()
+	defer self.currentMu.Unlock()
+
+	if atomic.LoadInt32(&self.mining) == 0 {
+		return types.NewBlock(
+			self.current.header,
+			self.current.txs,
+			nil,
+			self.current.receipts,
+		), self.current.state.Copy()
+	}
+	return self.current.Block, self.current.state.Copy()
+}
+
+func (self *worker) pendingBlock() *types.Block {
+	self.currentMu.Lock()
+	defer self.currentMu.Unlock()
+
+	if atomic.LoadInt32(&self.mining) == 0 {
+		return types.NewBlock(
+			self.current.header,
+			self.current.txs,
+			nil,
+			self.current.receipts,
+		)
+	}
+	return self.current.Block
+}
+
+func (self *worker) start() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	atomic.StoreInt32(&self.mining, 1)
+
+	//if istanbul, ok := self.engine.(consensus.Istanbul); ok {
+	//	istanbul.Start(self.chain, self.chain.CurrentBlock, self.chain.HasBadBlock)
+	//}
+
+	if ipbft, ok := self.engine.(consensus.IPBFT); ok {
+		err := ipbft.Start(self.chain, self.chain.CurrentBlock, self.chain.HasBadBlock)
+		if err != nil {
+			self.logger.Error("Starting IPBFT failed", "err", err)
+		}
+	}
+
+	// spin up agents
+	for agent := range self.agents {
+		agent.Start()
+	}
+}
+
+func (self *worker) stop() {
+	self.wg.Wait()
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	if atomic.LoadInt32(&self.mining) == 1 {
+		for agent := range self.agents {
+			agent.Stop()
+		}
+	}
+
+	if stoppableEngine, ok := self.engine.(consensus.EngineStartStop); ok {
+		engineStopErr := stoppableEngine.Stop()
+		if engineStopErr != nil {
+			self.logger.Error("Stop Engine failed.", "err", engineStopErr)
+		} else {
+			self.logger.Info("Stop Engine Success.")
+		}
+	}
+
+	atomic.StoreInt32(&self.mining, 0)
+	atomic.StoreInt32(&self.atWork, 0)
+}
+
+// isRunning returns an indicator whether worker is running or not.
+func (self *worker) isRunning() bool {
+	return atomic.LoadInt32(&self.mining) == 1
+}
+
+// close terminates all background threads maintained by the worker.
+// Note the worker does not support being closed multiple times.
+func (self *worker) close() {
+	close(self.exitCh)
+}
+
+func (self *worker) register(agent Agent) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.agents[agent] = struct{}{}
+	agent.SetReturnCh(self.resultCh)
+}
+
+func (self *worker) unregister(agent Agent) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	delete(self.agents, agent)
+	agent.Stop()
+}
+
+func (self *worker) mainLoop() {
+	defer self.txSub.Unsubscribe()
+	defer self.chainHeadSub.Unsubscribe()
+	defer self.chainSideSub.Unsubscribe()
+
+	for {
+		// A real event arrived, process interesting content
+		select {
+		// Handle ChainHeadEvent
+		case ev := <-self.chainHeadCh:
+			if h, ok := self.engine.(consensus.Handler); ok {
+				h.NewChainHead(ev.Block)
+			}
+			self.commitNewWork()
+
+		// Handle ChainSideEvent
+		case ev := <-self.chainSideCh:
+			self.uncleMu.Lock()
+			self.possibleUncles[ev.Block.Hash()] = ev.Block
+			self.uncleMu.Unlock()
+
+		// Handle TxPreEvent
+		case ev := <-self.txCh:
+			// Apply transaction to the pending state if we're not mining
+			if !self.isRunning() && self.current != nil {
+				self.currentMu.Lock()
+				acc, _ := types.Sender(self.current.signer, ev.Tx)
+				txs := map[common.Address]types.Transactions{acc: {ev.Tx}}
+				txset := types.NewTransactionsByPriceAndNonce(self.current.signer, txs)
+
+				self.commitTransactionsEx(txset, self.coinbase, big.NewInt(0), self.cch)
+				self.currentMu.Unlock()
+			}
+
+		// System stopped
+		case <-self.exitCh:
+			return
+		case <-self.txSub.Err():
+			return
+		case <-self.chainHeadSub.Err():
+			return
+		case <-self.chainSideSub.Err():
+			return
+		}
+	}
+}
+
+func (self *worker) resultLoop() {
+	for {
+		mustCommitNewWork := true
+		select {
+		case result := <-self.resultCh:
+			atomic.AddInt32(&self.atWork, -1)
+
+			if result == nil {
+				continue
+			}
+
+			var block *types.Block
+			var receipts types.Receipts
+			var state *state.StateDB
+			var ops *types.PendingOps
+
+			if result.Work != nil {
+				block = result.Block
+				hash := block.Hash()
+				work := result.Work
+
+				for i, receipt := range work.receipts {
+					// add block location fields
+					receipt.BlockHash = hash
+					receipt.BlockNumber = block.Number()
+					receipt.TransactionIndex = uint(i)
+
+					// Update the block hash in all logs since it is now available and not when the
+					// receipt/log of individual transactions were created.
+					for _, l := range receipt.Logs {
+						l.BlockHash = hash
+					}
+				}
+				for _, log := range work.state.Logs() {
+					log.BlockHash = hash
+				}
+				receipts = work.receipts
+				state = work.state
+				ops = work.ops
+			} else if result.Intermediate != nil {
+				block = result.Intermediate.Block
+
+				for i, receipt := range result.Intermediate.Receipts {
+					// add block location fields
+					receipt.BlockHash = block.Hash()
+					receipt.BlockNumber = block.Number()
+					receipt.TransactionIndex = uint(i)
+				}
+
+				receipts = result.Intermediate.Receipts
+				state = result.Intermediate.State
+				ops = result.Intermediate.Ops
+			} else {
+				continue
+			}
+
+			self.chain.MuLock()
+
+			stat, err := self.chain.WriteBlockWithState(block, receipts, state)
+			if err != nil {
+				self.logger.Error("Failed writing block to chain", "err", err)
+				self.chain.MuUnLock()
+				continue
+			}
+			// execute the pending ops.
+			for _, op := range ops.Ops() {
+				if err := core.ApplyOp(op, self.chain, self.cch); err != nil {
+					log.Error("Failed executing op", op, "err", err)
+				}
+			}
+			// check if canon block and write transactions
+			if stat == core.CanonStatTy {
+				// implicit by posting ChainHeadEvent
+				mustCommitNewWork = false
+			}
+			// Broadcast the block and announce chain insertion event
+			self.mux.Post(core.NewMinedBlockEvent{Block: block})
+			var (
+				events []interface{}
+				logs   = state.Logs()
+			)
+			events = append(events, core.ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
+			if stat == core.CanonStatTy {
+				events = append(events, core.ChainHeadEvent{Block: block})
+			}
+
+			self.chain.MuUnLock()
+
+			self.chain.PostChainEvents(events, logs)
+
+			// Insert the block into the set of pending ones to wait for confirmations
+			self.unconfirmed.Insert(block.NumberU64(), block.Hash())
+
+			if mustCommitNewWork {
+				self.commitNewWork()
+			}
+		case <-self.exitCh:
+			return
+		}
+	}
+}
+
+// push sends a new work task to currently live miner agents.
+func (self *worker) push(work *Work) {
+	if atomic.LoadInt32(&self.mining) != 1 {
+		return
+	}
+	for agent := range self.agents {
+		atomic.AddInt32(&self.atWork, 1)
+		if ch := agent.Work(); ch != nil {
+			ch <- work
+		}
+	}
+}
+
+// makeCurrent creates a new environment for the current cycle.
+func (self *worker) makeCurrent(parent *types.Block, header *types.Header) error {
+	state, err := self.chain.StateAt(parent.Root())
+	if err != nil {
+		return err
+	}
+	work := &Work{
+		signer:    types.NewEIP155Signer(self.config.ChainId),
+		state:     state,
+		ancestors: set.New(),
+		family:    set.New(),
+		uncles:    set.New(),
+		header:    header,
+		ops:       new(types.PendingOps),
+		createdAt: time.Now(),
+		logger:    self.logger,
+	}
+
+	// when 08 is processed ancestors contain 07 (quick block)
+	for _, ancestor := range self.chain.GetBlocksFromHash(parent.Hash(), 7) {
+		for _, uncle := range ancestor.Uncles() {
+			work.family.Add(uncle.Hash())
+		}
+		work.family.Add(ancestor.Hash())
+		work.ancestors.Add(ancestor.Hash())
+	}
+
+	// Keep track of transactions which return errors so they can be removed
+	work.tcount = 0
+	self.current = work
+	return nil
+}
+
+func (self *worker) commitNewWork() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.uncleMu.Lock()
+	defer self.uncleMu.Unlock()
+	self.currentMu.Lock()
+	defer self.currentMu.Unlock()
+
+	tstart := time.Now()
+	parent := self.chain.CurrentBlock()
+
+	tstamp := tstart.Unix()
+	if parent.Time() >= uint64(tstamp) {
+		tstamp = int64(parent.Time() + 1)
+	}
+
+	// this will ensure we're not going off too far in the future
+	if now := time.Now().Unix(); tstamp > now+1 {
+		wait := time.Duration(tstamp-now) * time.Second
+		self.logger.Info("Mining too far in the future", "suppose but not wait", common.PrettyDuration(wait))
+		//In intchain, there is no need to sleep to wait, commit work immediately
+		//time.Sleep(wait)
+	}
+
+	num := parent.Number()
+	header := &types.Header{
+		ParentHash: parent.Hash(),
+		Number:     num.Add(num, common.Big1),
+		GasLimit:   core.CalcGasLimit(parent, self.gasFloor, self.gasCeil),
+		Extra:      self.extra,
+		Time:       big.NewInt(tstamp),
+	}
+	// Only set the coinbase if our consensus engine is running (avoid spurious block rewards)
+	if self.isRunning() {
+		if self.coinbase == (common.Address{}) {
+			log.Error("Refusing to mine without coinbase")
+			return
+		}
+		header.Coinbase = self.coinbase
+	}
+	if err := self.engine.Prepare(self.chain, header); err != nil {
+		self.logger.Error("Failed to prepare header for mining", "err", err)
+		return
+	}
+	// Could potentially happen if starting to mine in an odd state.
+	err := self.makeCurrent(parent, header)
+	if err != nil {
+		self.logger.Error("Failed to create mining context", "err", err)
+		return
+	}
+	// Create the current work task and check any fork transitions needed
+	work := self.current
+	//if self.config.DAOForkSupport && self.config.DAOForkBlock != nil && self.config.DAOForkBlock.Cmp(header.Number) == 0 {
+	//	misc.ApplyDAOHardFork(work.state)
+	//}
+
+	// Fill the block with all available pending transactions.
+	pending, err := self.eth.TxPool().Pending()
+	if err != nil {
+		self.logger.Error("Failed to fetch pending transactions", "err", err)
+		return
+	}
+
+	totalUsedMoney := big.NewInt(0)
+	txs := types.NewTransactionsByPriceAndNonce(self.current.signer, pending)
+	//work.commitTransactions(self.mux, txs, self.chain, self.coinbase)
+	rmTxs := self.commitTransactionsEx(txs, self.coinbase, totalUsedMoney, self.cch)
+
+	// Remove the Invalid Transactions during tx execution (eg: tx4)
+	if len(rmTxs) > 0 {
+		self.eth.TxPool().RemoveTxs(rmTxs)
+	}
+
+	// compute uncles for the new block.
+	var (
+		uncles    []*types.Header
+		badUncles []common.Hash
+	)
+	for hash, uncle := range self.possibleUncles {
+		if len(uncles) == 2 {
+			break
+		}
+		if err := self.commitUncle(work, uncle.Header()); err != nil {
+			self.logger.Trace("Bad uncle found and will be removed", "hash", hash)
+			self.logger.Trace(fmt.Sprint(uncle))
+
+			badUncles = append(badUncles, hash)
+		} else {
+			self.logger.Debug("Committing new uncle to block", "hash", hash)
+			uncles = append(uncles, uncle.Header())
+		}
+	}
+	for _, hash := range badUncles {
+		delete(self.possibleUncles, hash)
+	}
+	// Create the new block to seal with the consensus engine
+	if work.Block, err = self.engine.Finalize(self.chain, header, work.state, work.txs, totalUsedMoney, uncles, work.receipts, work.ops); err != nil {
+		self.logger.Error("Failed to finalize block for sealing", "err", err)
+		return
+	}
+	// We only care about logging if we're actually mining.
+	if self.isRunning() {
+		self.logger.Info("Commit new full mining work", "number", work.Block.Number(), "txs", work.tcount, "uncles", len(uncles), "elapsed", common.PrettyDuration(time.Since(tstart)))
+		self.unconfirmed.Shift(work.Block.NumberU64() - 1)
+	}
+	self.push(work)
+}
+
+func (self *worker) commitUncle(work *Work, uncle *types.Header) error {
+	hash := uncle.Hash()
+	if work.uncles.Has(hash) {
+		return fmt.Errorf("uncle not unique")
+	}
+	if !work.ancestors.Has(uncle.ParentHash) {
+		return fmt.Errorf("uncle's parent unknown (%x)", uncle.ParentHash[0:4])
+	}
+	if work.family.Has(hash) {
+		return fmt.Errorf("uncle already in family (%x)", hash)
+	}
+	work.uncles.Add(uncle.Hash())
+	return nil
+}
+
+func (self *worker) commitTransactionsEx(txs *types.TransactionsByPriceAndNonce, coinbase common.Address, totalUsedMoney *big.Int, cch core.CrossChainHelper) (rmTxs types.Transactions) {
+
+	gp := new(core.GasPool).AddGas(self.current.header.GasLimit)
+
+	var coalescedLogs []*types.Log
+
+	for {
+		// If we don't have enough gas for any further transactions then we're done
+		if gp.Gas() < params.TxGas {
+			self.logger.Trace("Not enough gas for further transactions", "have", gp, "want", params.TxGas)
+			break
+		}
+		// Retrieve the next transaction and abort if all done
+		tx := txs.Peek()
+		if tx == nil {
+			break
+		}
+		// Error may be ignored here. The error has already been checked
+		// during transaction acceptance is the transaction pool.
+		//
+		// We use the eip155 signer regardless of the current hf.
+		from, _ := types.Sender(self.current.signer, tx)
+		// Check whether the tx is replay protected. If we're not in the EIP155 hf
+		// phase, start ignoring the sender until we do.
+		if tx.Protected() && !self.config.IsEIP155(self.current.header.Number) {
+			self.logger.Trace("Ignoring reply protected transaction", "hash", tx.Hash(), "eip155", self.config.EIP155Block)
+
+			txs.Pop()
+			continue
+		}
+
+		// Start executing the transaction
+		self.current.state.Prepare(tx.Hash(), common.Hash{}, self.current.tcount)
+
+		logs, err := self.commitTransactionEx(tx, coinbase, gp, totalUsedMoney, cch)
+		switch err {
+		case core.ErrGasLimitReached:
+			// Pop the current out-of-gas transaction without shifting in the next from the account
+			self.logger.Trace("Gas limit exceeded for current block", "sender", from)
+			txs.Pop()
+
+		case core.ErrNonceTooLow:
+			// New head notification data race between the transaction pool and miner, shift
+			self.logger.Trace("Skipping transaction with low nonce", "sender", from, "nonce", tx.Nonce())
+			txs.Shift()
+
+		case core.ErrNonceTooHigh:
+			// Reorg notification data race between the transaction pool and miner, skip account =
+			self.logger.Trace("Skipping account with hight nonce", "sender", from, "nonce", tx.Nonce())
+			txs.Pop()
+
+		case core.ErrInvalidTx4:
+			// Remove the tx4
+			rmTxs = append(rmTxs, tx)
+			self.logger.Trace("Invalid Tx4, this tx will be removed", "hash", tx.Hash())
+			txs.Shift()
+
+		case nil:
+			// Everything ok, collect the logs and shift in the next transaction from the same account
+			coalescedLogs = append(coalescedLogs, logs...)
+			self.current.tcount++
+			txs.Shift()
+
+		default:
+			// Strange error, discard the transaction and get the next in line (note, the
+			// nonce-too-high clause will prevent us from executing in vain).
+			self.logger.Debug("Transaction failed, account skipped", "hash", tx.Hash(), "err", err)
+			txs.Shift()
+		}
+	}
+
+	if len(coalescedLogs) > 0 || self.current.tcount > 0 {
+		// make a copy, the state caches the logs and these logs get "upgraded" from pending to mined
+		// logs by filling in the block hash when the block was mined by the local miner. This can
+		// cause a race condition if a log was "upgraded" before the PendingLogsEvent is processed.
+		cpy := make([]*types.Log, len(coalescedLogs))
+		for i, l := range coalescedLogs {
+			cpy[i] = new(types.Log)
+			*cpy[i] = *l
+		}
+		go func(logs []*types.Log, tcount int) {
+			if len(logs) > 0 {
+				self.mux.Post(core.PendingLogsEvent{Logs: logs})
+			}
+			if tcount > 0 {
+				self.mux.Post(core.PendingStateEvent{})
+			}
+		}(cpy, self.current.tcount)
+	}
+	return
+}
+
+func (self *worker) commitTransactionEx(tx *types.Transaction, coinbase common.Address, gp *core.GasPool, totalUsedMoney *big.Int, cch core.CrossChainHelper) ([]*types.Log, error) {
+	snap := self.current.state.Snapshot()
+
+	receipt, _, err := core.ApplyTransactionEx(self.config, self.chain, nil, gp, self.current.state, self.current.ops, self.current.header, tx, &self.current.header.GasUsed, totalUsedMoney, vm.Config{}, cch, true)
+	if err != nil {
+		self.current.state.RevertToSnapshot(snap)
+		return nil, err
+	}
+
+	self.current.txs = append(self.current.txs, tx)
+	self.current.receipts = append(self.current.receipts, receipt)
+
+	return receipt.Logs, nil
+}
