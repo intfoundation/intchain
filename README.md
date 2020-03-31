@@ -1,6 +1,6 @@
 # INTChain
 
-![intchain](./docs/intchain.jpg)
+![intchain]((https://raw.githubusercontent.com/intfoundation/intchain/master/docs/intchain.jpg)
 
 INT is the world's first bottom up new-generation blockchain of things (BoT) communication standard and base application platform. The ecosystem is specifically designed for easy integration with any IoT protocol.
 
