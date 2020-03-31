@@ -214,7 +214,7 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 	if header.Number.Uint64() > sb.GetEpoch().EndBlock {
 		for {
 			duration := 2 * time.Second
-			sb.logger.Infof("Tendermint (backend) VerifyHeader, Epoch Switch, wait for %v then try again", duration)
+			sb.logger.Infof("IPBFT VerifyHeader, Epoch Switch, wait for %v then try again", duration)
 			time.Sleep(duration)
 
 			if header.Number.Uint64() <= sb.GetEpoch().EndBlock {
@@ -242,14 +242,14 @@ func (sb *backend) verifyHeader(chain consensus.ChainReader, header *types.Heade
 			}
 
 			if tried == 10 {
-				sb.logger.Warnf("Tendermint (backend) VerifyHeader, Main Chain Number mismatch, after retried %d times", tried)
+				sb.logger.Warnf("IPBFT VerifyHeader, Main Chain Number mismatch, after retried %d times", tried)
 				return errMainChainNotCatchup
 			}
 
 			// Sleep for a while and check again
 			duration := 30 * time.Second
 			tried++
-			sb.logger.Infof("Tendermint (backend) VerifyHeader, Main Chain Number mismatch, wait for %v then try again (count %d)", duration, tried)
+			sb.logger.Infof("IPBFT VerifyHeader, Main Chain Number mismatch, wait for %v then try again (count %d)", duration, tried)
 			time.Sleep(duration)
 		}
 	}
@@ -454,7 +454,7 @@ func (sb *backend) Prepare(chain consensus.ChainReader, header *types.Header) er
 func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, state *state.StateDB, txs []*types.Transaction,
 	totalGasFee *big.Int, uncles []*types.Header, receipts []*types.Receipt, ops *types.PendingOps) (*types.Block, error) {
 
-	sb.logger.Debugf("Tendermint (backend) Finalize, receipts are: %v", receipts)
+	sb.logger.Debugf("IPBFT Finalize, receipts are: %v", receipts)
 
 	// Check if any Child Chain need to be launch and Update their account balance accordingly
 	if sb.chainConfig.IntChainId == params.MainnetChainConfig.IntChainId || sb.chainConfig.IntChainId == params.TestnetChainConfig.IntChainId {
@@ -467,7 +467,7 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 				DeleteChildChainIds: removedId,
 			}); !ok {
 				// This should not happened
-				sb.logger.Error("Tendermint (backend) Finalize, Fail to append LaunchChildChainsOp, only one LaunchChildChainsOp is allowed in each block")
+				sb.logger.Error("IPBFT Finalize, Fail to append LaunchChildChainsOp, only one LaunchChildChainsOp is allowed in each block")
 			}
 		}
 	}
@@ -538,7 +538,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, stop <-
 	defer clear()
 
 	// post block into Istanbul engine
-	sb.logger.Infof("Tendermint (backend) Seal, before fire event with block height: %d", block.NumberU64())
+	sb.logger.Infof("IPBFT Seal, before fire event with block height: %d", block.NumberU64())
 	go tdmTypes.FireEventRequest(sb.core.EventSwitch(), tdmTypes.EventDataRequest{Proposal: block})
 	//go sb.EventMux().Post(tdmTypes.RequestEvent{
 	//	Proposal: block,
@@ -549,33 +549,33 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, stop <-
 		case result, ok := <-sb.commitCh:
 
 			if ok {
-				sb.logger.Debugf("Tendermint (backend) Seal, got result with block.Hash: %x, result.Hash: %x", block.Hash(), result.Hash())
+				sb.logger.Debugf("IPBFT Seal, got result with block.Hash: %x, result.Hash: %x", block.Hash(), result.Hash())
 				// if the block hash and the hash from channel are the same,
 				// return the result. Otherwise, keep waiting the next hash.
 				if block.Hash() == result.Hash() {
 					return result, nil
 				}
-				sb.logger.Debug("Tendermint (backend) Seal, hash are different")
+				sb.logger.Debug("IPBFT Seal, hash are different")
 			} else {
-				sb.logger.Debug("Tendermint (backend) Seal, has been restart, just return")
+				sb.logger.Debug("IPBFT Seal, has been restart, just return")
 				return nil, nil
 			}
 
 		case iresult, ok := <-sb.vcommitCh:
 
 			if ok {
-				sb.logger.Debugf("Tendermint (backend) Seal, v got result with block.Hash: %x, result.Hash: %x", block.Hash(), iresult.Block.Hash())
+				sb.logger.Debugf("IPBFT Seal, v got result with block.Hash: %x, result.Hash: %x", block.Hash(), iresult.Block.Hash())
 				if block.Hash() != iresult.Block.Hash() {
 					return iresult, nil
 				}
-				sb.logger.Debug("Tendermint (backend) Seal, v hash are the same")
+				sb.logger.Debug("IPBFT Seal, v hash are the same")
 			} else {
-				sb.logger.Debug("Tendermint (backend) Seal, v has been restart, just return")
+				sb.logger.Debug("IPBFT Seal, v has been restart, just return")
 				return nil, nil
 			}
 
 		case <-stop:
-			sb.logger.Debug("Tendermint (backend) Seal, stop")
+			sb.logger.Debug("IPBFT Seal, stop")
 			return nil, nil
 		}
 	}
@@ -605,8 +605,8 @@ func (sb *backend) Commit(proposal *tdmTypes.TdmBlock, seals [][]byte, isPropose
 	// update block's header
 	block = block.WithSeal(h)
 
-	sb.logger.Debugf("Tendermint (backend) Commit, hash: %x, number: %v", block.Hash(), block.Number().Int64())
-	sb.logger.Debugf("Tendermint (backend) Commit, block: %s", block.String())
+	sb.logger.Debugf("IPBFT Commit, hash: %x, number: %v", block.Hash(), block.Number().Int64())
+	sb.logger.Debugf("IPBFT Commit, block: %s", block.String())
 
 	// - if the proposed and committed blocks are the same, send the proposed hash
 	//   to commit channel, which is being watched inside the engine.Seal() function.
@@ -616,16 +616,16 @@ func (sb *backend) Commit(proposal *tdmTypes.TdmBlock, seals [][]byte, isPropose
 	// -- otherwise, a error will be returned and a round change event will be fired.
 	if isProposer() && (sb.proposedBlockHash == block.Hash()) { // for proposer
 		// feed block hash to Seal() and wait the Seal() result
-		sb.logger.Debugf("Tendermint (backend) Commit, proposer | feed to Seal: %x", block.Hash())
+		sb.logger.Debugf("IPBFT Commit, proposer | feed to Seal: %x", block.Hash())
 		sb.commitCh <- block
 		return nil
 	} else { // for other validators
 		if proposal.IntermediateResult != nil {
-			sb.logger.Debugf("Tendermint (backend) Commit, validator | feed to Seal: %x", block.Hash())
+			sb.logger.Debugf("IPBFT Commit, validator | feed to Seal: %x", block.Hash())
 			proposal.IntermediateResult.Block = block
 			sb.vcommitCh <- proposal.IntermediateResult
 		} else {
-			sb.logger.Debugf("Tendermint (backend) Commit, validator | fetcher enqueue: %x", block.Hash())
+			sb.logger.Debugf("IPBFT Commit, validator | fetcher enqueue: %x", block.Hash())
 			if sb.broadcaster != nil {
 				sb.broadcaster.Enqueue(fetcherID, block)
 			}

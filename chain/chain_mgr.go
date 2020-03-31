@@ -84,7 +84,7 @@ func (cm *ChainManager) LoadMainChain() error {
 func (cm *ChainManager) LoadChains(childIds []string) error {
 
 	childChainIds := core.GetChildChainIds(cm.cch.chainInfoDB)
-	log.Infof("Before Load Child Chains, childChainIds is %v, len is %d", childChainIds, len(childChainIds))
+	log.Infof("Before load child chains, child chain IDs are %v, len is %d", childChainIds, len(childChainIds))
 
 	readyToLoadChains := make(map[string]bool) // Key: Child Chain ID, Value: Enable Mining (deprecated)
 
@@ -115,18 +115,18 @@ func (cm *ChainManager) LoadChains(childIds []string) error {
 		}
 	}
 
-	log.Infof("Number of Child Chain to be load - %v", len(readyToLoadChains))
-	log.Infof("Start to Load Child Chain - %v", readyToLoadChains)
+	log.Infof("Number of child chain to be loaded :%v", len(readyToLoadChains))
+	log.Infof("Start to load child chain: %v", readyToLoadChains)
 
 	for chainId := range readyToLoadChains {
 		chain := LoadChildChain(cm.ctx, chainId)
 		if chain == nil {
-			log.Errorf("Load Child Chain - %s Failed.", chainId)
+			log.Errorf("Load child chain: %s Failed.", chainId)
 			continue
 		}
 
 		cm.childChains[chainId] = chain
-		log.Infof("Load Child Chain - %s Success!", chainId)
+		log.Infof("Load child chain: %s Success!", chainId)
 	}
 	return nil
 }

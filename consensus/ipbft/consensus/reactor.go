@@ -96,7 +96,7 @@ func (conR *ConsensusReactor) OnStop() {
 // Implements Reactor
 func (conR *ConsensusReactor) AddPeer(peer consensus.Peer) {
 
-	conR.logger.Debug("add peer ============================================================")
+	conR.logger.Debug("add peer")
 
 	if _, ok := conR.peerStates.Load(peer.GetKey()); ok {
 		conR.logger.Infof("peer %v has been added, return", peer.GetKey())

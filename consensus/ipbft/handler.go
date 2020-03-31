@@ -62,13 +62,13 @@ func (sb *backend) HandleMsg(chID uint64, src consensus.Peer, msgBytes []byte) (
 // SetBroadcaster implements consensus.Handler.SetBroadcaster
 func (sb *backend) SetBroadcaster(broadcaster consensus.Broadcaster) {
 
-	sb.logger.Infof("Tendermint (backend) SetBroadcaster: %p", broadcaster)
+	sb.logger.Infof("IPBFT SetBroadcaster: %p", broadcaster)
 	sb.broadcaster = broadcaster
 }
 
 func (sb *backend) GetBroadcaster() consensus.Broadcaster {
 
-	sb.logger.Infof("Tendermint (backend) GetBroadcaster: %p", sb.broadcaster)
+	sb.logger.Infof("IPBFT GetBroadcaster: %p", sb.broadcaster)
 	return sb.broadcaster
 }
 

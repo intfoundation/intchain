@@ -163,7 +163,7 @@ func loadCoreChainInfo(db dbm.DB, chainId string) *CoreChainInfo {
 		wire.ReadBinaryPtr(&cci, r, 0, n, err)
 		if *err != nil {
 			// DATA HAS BEEN CORRUPTED OR THE SPEC HAS CHANGED
-			log.Debugf("LoadChainInfo: Data has been corrupted or its spec has changed: %v\n", *err)
+			log.Debugf("LoadChainInfo: Data has been corrupted or its spec has changed: %v", *err)
 			os.Exit(1)
 		}
 	}
@@ -243,7 +243,7 @@ func saveId(db dbm.DB, chainId string) {
 
 	if len(buf) == 0 {
 		db.SetSync(allChainKey, []byte(chainId))
-		log.Debugf("ChainInfo SaveId(), chainId is: %s\n", chainId)
+		log.Debugf("ChainInfo SaveId(), chainId is: %s", chainId)
 	} else {
 
 		strIdArr := strings.Split(string(buf), specialSep)
@@ -261,7 +261,7 @@ func saveId(db dbm.DB, chainId string) {
 			strIds := strings.Join(strIdArr, specialSep)
 			db.SetSync(allChainKey, []byte(strIds))
 
-			log.Debugf("ChainInfo SaveId(), strIds is: %s\n", strIds)
+			log.Debugf("ChainInfo SaveId(), strIds is: %s", strIds)
 		}
 	}
 }
@@ -272,7 +272,7 @@ func GetChildChainIds(db dbm.DB) []string {
 
 	buf := db.Get(allChainKey)
 
-	log.Debugf("GetChildChainIds 0, buf is %v, len is %d\n", buf, len(buf))
+	log.Debugf("Get child chain IDs, buf is %v, len is %d", buf, len(buf))
 
 	if len(buf) == 0 {
 		return []string{}
