@@ -33,7 +33,7 @@ import (
 	"github.com/intfoundation/intchain/event"
 	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/params"
-	"github.com/intfoundation/fatih-set-v0"
+	"github.com/intfoundation/set.v0"
 )
 
 const (

@@ -19,8 +19,8 @@ package intprotocol
 import (
 	"errors"
 	"fmt"
-	"github.com/intfoundation/intchain/consensus"
 	"github.com/intfoundation/go-wire"
+	"github.com/intfoundation/intchain/consensus"
 	"math/big"
 	"sync"
 	"time"
@@ -29,7 +29,7 @@ import (
 	"github.com/intfoundation/intchain/core/types"
 	"github.com/intfoundation/intchain/p2p"
 	"github.com/intfoundation/intchain/rlp"
-	"github.com/intfoundation/fatih-set-v0"
+	"github.com/intfoundation/set.v0"
 )
 
 var (

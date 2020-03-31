@@ -30,7 +30,7 @@ import (
 	"github.com/intfoundation/intchain/accounts"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/log"
-	"github.com/intfoundation/fatih-set-v0"
+	"github.com/intfoundation/set.v0"
 )
 
 // Minimum amount of time between cache reloads. This limit applies if the platform does

@@ -25,7 +25,7 @@ import (
 	"time"
 
 	"github.com/intfoundation/intchain/log"
-	set "github.com/intfoundation/fatih-set-v0"
+	set "github.com/intfoundation/set.v0"
 )
 
 // fileCache is a cache of files seen during scan of keystore.

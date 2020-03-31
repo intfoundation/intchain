@@ -3,8 +3,7 @@ module github.com/intfoundation/intchain
 go 1.14
 
 require (
-	github.com/intfoundation/bls v1.0.4
-	github.com/intfoundation/prometheus-flock v1.0.2
+	github.com/SickleZhang/bls v1.0.3 // indirect
 	github.com/allegro/bigcache v1.2.1
 	github.com/aristanetworks/goarista v0.0.0-20200306225906-e0480e715858
 	github.com/btcsuite/btcd v0.20.1-beta
@@ -23,6 +22,19 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/huin/goupnp v1.0.0
 	github.com/influxdata/influxdb v1.2.3
+	github.com/intfoundation/bls v1.0.4
+	github.com/intfoundation/go-common v1.0.1
+	github.com/intfoundation/go-config v1.0.1
+	github.com/intfoundation/go-crypto v1.0.3
+	github.com/intfoundation/go-data v1.0.1 // indirect
+	github.com/intfoundation/go-db v1.0.1
+	github.com/intfoundation/go-events v1.0.1
+	github.com/intfoundation/go-logger v1.0.1 // indirect
+	github.com/intfoundation/go-merkle v1.0.2
+	github.com/intfoundation/go-wire v1.0.1
+	github.com/intfoundation/log15 v1.0.1 // indirect
+	github.com/intfoundation/prometheus-flock v1.0.3
+	github.com/intfoundation/set.v0 v1.0.0
 	github.com/jackpal/go-nat-pmp v1.0.2
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/julienschmidt/httprouter v1.2.0
@@ -45,25 +57,14 @@ require (
 	github.com/syndtr/goleveldb v1.0.1-0.20190923125748-758128399b1d
 	github.com/tendermint/ed25519 v0.0.0-20171027050219-d8387025d2b9 // indirect
 	github.com/tendermint/go-amino v0.15.1 // indirect
-	github.com/intfoundation/go-common v1.0.0
-	github.com/intfoundation/go-config v1.0.0
-	github.com/intfoundation/go-crypto v1.0.2
-	github.com/intfoundation/go-data v1.0.0
-	github.com/intfoundation/go-db v1.0.0
-	github.com/intfoundation/go-events v1.0.0
-	github.com/intfoundation/go-logger v1.0.0
-	github.com/intfoundation/go-merkle v1.0.1
-	github.com/intfoundation/go-wire v1.0.0
-	github.com/intfoundation/log15 v1.0.0
 	github.com/tendermint/tmlibs v0.9.0 // indirect
 	github.com/zondax/ledger-go v0.11.0 // indirect
 	github.com/zondax/ledger-goclient v0.9.9 // indirect
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 	golang.org/x/net v0.0.0-20200222125558-5a598a2470a0
 	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae
-	golang.org/x/tools v0.0.0-20200221224223-e1da425f72fd
+	golang.org/x/tools v0.0.0-20200221224223-e1da425f72fd // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15
-	github.com/intfoundation/set.v0 v1.0.0
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce
 	gopkg.in/olebedev/go-duktape.v3 v3.0.0-20190213234257-ec84240a7772
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
