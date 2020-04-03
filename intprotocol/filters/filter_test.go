@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"github.com/intfoundation/intchain/common"
-	"github.com/intfoundation/intchain/consensus/ethash"
 	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/core/types"
 	"github.com/intfoundation/intchain/crypto"
@@ -50,23 +49,23 @@ func BenchmarkFilters(b *testing.B) {
 	defer os.RemoveAll(dir)
 
 	var (
-		db, _      = intdb.NewLDBDatabase(dir, 0, 0)
+		//db, _      = intdb.Database(dir, 0, 0)
 		mux        = new(event.TypeMux)
 		txFeed     = new(event.Feed)
 		rmLogsFeed = new(event.Feed)
 		logsFeed   = new(event.Feed)
 		chainFeed  = new(event.Feed)
-		backend    = &testBackend{mux, db, 0, txFeed, rmLogsFeed, logsFeed, chainFeed}
+		backend    = &testBackend{mux, nil, 0, txFeed, rmLogsFeed, logsFeed, chainFeed}
 		key1, _    = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		addr1      = crypto.PubkeyToAddress(key1.PublicKey)
 		addr2      = common.BytesToAddress([]byte("jeff"))
 		addr3      = common.BytesToAddress([]byte("ethereum"))
 		addr4      = common.BytesToAddress([]byte("random addresses please"))
 	)
-	defer db.Close()
+	//defer db.Close()
 
-	genesis := core.GenesisBlockForTesting(db, addr1, big.NewInt(1000000))
-	chain, receipts := core.GenerateChain(params.TestChainConfig, genesis, ethash.NewFaker(), db, 100010, func(i int, gen *core.BlockGen) {
+	genesis := core.GenesisBlockForTesting(nil, addr1, big.NewInt(1000000))
+	chain, receipts := core.GenerateChain(params.TestChainConfig, genesis, nil, nil, 100010, func(i int, gen *core.BlockGen) {
 		switch i {
 		case 2403:
 			receipt := makeReceipt(addr1)
@@ -84,7 +83,7 @@ func BenchmarkFilters(b *testing.B) {
 		}
 	})
 	for i, block := range chain {
-		core.WriteBlock(db, block)
+		//core.WriteBlock(nil, block)
 		if err := core.WriteCanonicalHash(db, block.Hash(), block.NumberU64()); err != nil {
 			b.Fatalf("failed to insert block number: %v", err)
 		}
@@ -133,7 +132,7 @@ func TestFilters(t *testing.T) {
 	defer db.Close()
 
 	genesis := core.GenesisBlockForTesting(db, addr, big.NewInt(1000000))
-	chain, receipts := core.GenerateChain(params.TestChainConfig, genesis, ethash.NewFaker(), db, 1000, func(i int, gen *core.BlockGen) {
+	chain, receipts := core.GenerateChain(params.TestChainConfig, genesis, nil, db, 1000, func(i int, gen *core.BlockGen) {
 		switch i {
 		case 1:
 			receipt := types.NewReceipt(nil, false, 0)

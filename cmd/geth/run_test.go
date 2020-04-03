@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/intchain/ethermint/app"
 	"github.com/intfoundation/intchain/internal/cmdtest"
 )
 

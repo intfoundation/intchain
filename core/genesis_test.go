@@ -23,9 +23,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/intfoundation/intchain/common"
-	"github.com/intfoundation/intchain/consensus/ethash"
 	"github.com/intfoundation/intchain/core/rawdb"
-	"github.com/intfoundation/intchain/core/vm"
 	"github.com/intfoundation/intchain/intdb"
 	"github.com/intfoundation/intchain/params"
 )
@@ -66,7 +64,7 @@ func TestSetupGenesis(t *testing.T) {
 				return SetupGenesisBlock(db, new(Genesis))
 			},
 			wantErr:    errGenesisNoConfig,
-			wantConfig: params.AllEthashProtocolChanges,
+			wantConfig: params.MainnetChainConfig,
 		},
 		{
 			name: "no block in DB, genesis == nil",
@@ -115,20 +113,20 @@ func TestSetupGenesis(t *testing.T) {
 		},
 		{
 			name: "incompatible config in DB",
-			fn: func(db intdb.Database) (*params.ChainConfig, common.Hash, error) {
-				// Commit the 'old' genesis block with Homestead transition at #2.
-				// Advance to block #4, past the homestead transition block of customg.
-				genesis := oldcustomg.MustCommit(db)
-
-				bc, _ := NewBlockChain(db, nil, oldcustomg.Config, ethash.NewFullFaker(), vm.Config{}, nil)
-				defer bc.Stop()
-
-				blocks, _ := GenerateChain(oldcustomg.Config, genesis, ethash.NewFaker(), db, 4, nil)
-				bc.InsertChain(blocks)
-				bc.CurrentBlock()
-				// This should return a compatibility error.
-				return SetupGenesisBlock(db, &customg)
-			},
+			//fn: func(db intdb.Database) (*params.ChainConfig, common.Hash, error) {
+			//	// Commit the 'old' genesis block with Homestead transition at #2.
+			//	// Advance to block #4, past the homestead transition block of customg.
+			//	genesis := oldcustomg.MustCommit(db)
+			//
+			//	bc, _ := NewBlockChain(db, nil, oldcustomg.Config, ethash.NewFullFaker(), vm.Config{}, nil)
+			//	defer bc.Stop()
+			//
+			//	blocks, _ := GenerateChain(oldcustomg.Config, genesis, nil, db, 4, nil)
+			//	bc.InsertChain(blocks)
+			//	bc.CurrentBlock()
+			//	// This should return a compatibility error.
+			//	return SetupGenesisBlock(db, &customg)
+			//},
 			wantHash:   customghash,
 			wantConfig: customg.Config,
 			wantErr: &params.ConfigCompatError{

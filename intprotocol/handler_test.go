@@ -25,14 +25,11 @@ import (
 
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/consensus"
-	"github.com/intfoundation/intchain/consensus/ethash"
 	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/core/rawdb"
 	"github.com/intfoundation/intchain/core/state"
 	"github.com/intfoundation/intchain/core/types"
-	"github.com/intfoundation/intchain/core/vm"
 	"github.com/intfoundation/intchain/crypto"
-	"github.com/intfoundation/intchain/event"
 	"github.com/intfoundation/intchain/intprotocol/downloader"
 	"github.com/intfoundation/intchain/p2p"
 	"github.com/intfoundation/intchain/params"
@@ -338,17 +335,17 @@ func testGetNodeData(t *testing.T, protocol int) {
 		}
 	}
 	// Assemble the test environment
-	pm, db := newTestProtocolManagerMust(t, downloader.FullSync, 4, generator, nil)
+	pm, _ := newTestProtocolManagerMust(t, downloader.FullSync, 4, generator, nil)
 	peer, _ := newTestPeer("peer", protocol, pm, true)
 	defer peer.close()
 
 	// Fetch for now the entire chain db
 	hashes := []common.Hash{}
-	for _, key := range db.Keys() {
-		if len(key) == len(common.Hash{}) {
-			hashes = append(hashes, common.BytesToHash(key))
-		}
-	}
+	//for _, key := range db.Keys() {
+	//	if len(key) == len(common.Hash{}) {
+	//		hashes = append(hashes, common.BytesToHash(key))
+	//	}
+	//}
 	p2p.Send(peer.app, 0x0d, hashes)
 	msg, err := peer.app.ReadMsg()
 	if err != nil {
@@ -466,58 +463,6 @@ func testDAOChallenge(t *testing.T, localForked, remoteForked bool, timeout bool
 		daoChallengeTimeout = 500 * time.Millisecond
 	}
 	// Create a DAO aware protocol manager
-	var (
-		evmux         = new(event.TypeMux)
-		pow           = ethash.NewFaker()
-		db            = rawdb.NewMemoryDatabase()
-		config        = &params.ChainConfig{DAOForkBlock: big.NewInt(1), DAOForkSupport: localForked}
-		gspec         = &core.Genesis{Config: config}
-		genesis       = gspec.MustCommit(db)
-		blockchain, _ = core.NewBlockChain(db, nil, config, pow, vm.Config{}, nil)
-	)
-	pm, err := NewProtocolManager(config, downloader.FullSync, DefaultConfig.NetworkId, evmux, new(testTxPool), pow, blockchain, db, nil)
-	if err != nil {
-		t.Fatalf("failed to start test protocol manager: %v", err)
-	}
-	pm.Start(1000)
-	defer pm.Stop()
 
 	// Connect a new peer and check that we receive the DAO challenge
-	peer, _ := newTestPeer("peer", consensus.Eth63, pm, true)
-	defer peer.close()
-
-	challenge := &getBlockHeadersData{
-		Origin:  hashOrNumber{Number: config.DAOForkBlock.Uint64()},
-		Amount:  1,
-		Skip:    0,
-		Reverse: false,
-	}
-	if err := p2p.ExpectMsg(peer.app, GetBlockHeadersMsg, challenge); err != nil {
-		t.Fatalf("challenge mismatch: %v", err)
-	}
-	// Create a block to reply to the challenge if no timeout is simulated
-	if !timeout {
-		blocks, _ := core.GenerateChain(&params.ChainConfig{}, genesis, ethash.NewFaker(), db, 1, func(i int, block *core.BlockGen) {
-			if remoteForked {
-				block.SetExtra(params.DAOForkBlockExtra)
-			}
-		})
-		if err := p2p.Send(peer.app, BlockHeadersMsg, []*types.Header{blocks[0].Header()}); err != nil {
-			t.Fatalf("failed to answer challenge: %v", err)
-		}
-		time.Sleep(100 * time.Millisecond) // Sleep to avoid the verification racing with the drops
-	} else {
-		// Otherwise wait until the test timeout passes
-		time.Sleep(daoChallengeTimeout + 500*time.Millisecond)
-	}
-	// Verify that depending on fork side, the remote peer is maintained or dropped
-	if localForked == remoteForked && !timeout {
-		if peers := pm.peers.Len(); peers != 1 {
-			t.Fatalf("peer count mismatch: have %d, want %d", peers, 1)
-		}
-	} else {
-		if peers := pm.peers.Len(); peers != 0 {
-			t.Fatalf("peer count mismatch: have %d, want %d", peers, 0)
-		}
-	}
 }

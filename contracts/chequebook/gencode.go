@@ -21,13 +21,8 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
 	"math/big"
 
-	"github.com/intfoundation/intchain/accounts/abi/bind"
-	"github.com/intfoundation/intchain/accounts/abi/bind/backends"
-	"github.com/intfoundation/intchain/contracts/chequebook/contract"
 	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/crypto"
 )
@@ -38,33 +33,3 @@ var (
 		crypto.PubkeyToAddress(testKey.PublicKey): {Balance: big.NewInt(500000000000)},
 	}
 )
-
-func main() {
-	backend := backends.NewSimulatedBackend(testAlloc)
-	auth := bind.NewKeyedTransactor(testKey)
-
-	// Deploy the contract, get the code.
-	addr, _, _, err := contract.DeployChequebook(auth, backend)
-	if err != nil {
-		panic(err)
-	}
-	backend.Commit()
-	code, err := backend.CodeAt(nil, addr, nil)
-	if err != nil {
-		panic(err)
-	}
-	if len(code) == 0 {
-		panic("empty code")
-	}
-
-	// Write the output file.
-	content := fmt.Sprintf(`package contract
-
-// ContractDeployedCode is used to detect suicides. This constant needs to be
-// updated when the contract code is changed.
-const ContractDeployedCode = "%#x"
-`, code)
-	if err := ioutil.WriteFile("contract/code.go", []byte(content), 0644); err != nil {
-		panic(err)
-	}
-}
