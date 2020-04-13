@@ -46,7 +46,7 @@ require (
 	github.com/naoina/go-stringutil v0.1.0 // indirect
 	github.com/naoina/toml v0.1.1
 	github.com/nsf/termbox-go v0.0.0-20200204031403-4d2b513ad8be // indirect
-	github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5
+	github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5 // indirect
 	github.com/pborman/uuid v1.2.0
 	github.com/peterh/liner v1.2.0
 	github.com/pkg/errors v0.9.1

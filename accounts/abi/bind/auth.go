@@ -23,7 +23,6 @@ import (
 	"io/ioutil"
 
 	"github.com/intfoundation/intchain/accounts"
-	"github.com/intfoundation/intchain/accounts/external"
 	"github.com/intfoundation/intchain/accounts/keystore"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/core/types"
@@ -77,20 +76,6 @@ func NewKeyedTransactor(key *ecdsa.PrivateKey) *TransactOpts {
 				return nil, err
 			}
 			return tx.WithSignature(signer, signature)
-		},
-	}
-}
-
-// NewClefTransactor is a utility method to easily create a transaction signer
-// with a clef backend.
-func NewClefTransactor(clef *external.ExternalSigner, account accounts.Account) *TransactOpts {
-	return &TransactOpts{
-		From: account.Address,
-		Signer: func(signer types.Signer, address common.Address, transaction *types.Transaction) (*types.Transaction, error) {
-			if address != account.Address {
-				return nil, errors.New("not authorized to sign this account")
-			}
-			return clef.SignTx(account, transaction, nil) // Clef enforces its own chain id
 		},
 	}
 }

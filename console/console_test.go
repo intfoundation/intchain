@@ -27,7 +27,6 @@ import (
 	"time"
 
 	"github.com/intfoundation/intchain/common"
-	"github.com/intfoundation/intchain/consensus/ethash"
 	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/internal/jsre"
 	"github.com/intfoundation/intchain/intprotocol"
@@ -75,7 +74,7 @@ func (p *hookedPrompter) SetWordCompleter(completer WordCompleter) {}
 type tester struct {
 	workspace string
 	stack     *node.Node
-	ethereum  *intprotocol.Ethereum
+	ethereum  *intprotocol.IntChain
 	console   *Console
 	input     *hookedPrompter
 	output    *bytes.Buffer
@@ -95,16 +94,16 @@ func newTester(t *testing.T, confOverride func(*intprotocol.Config)) *tester {
 	if err != nil {
 		t.Fatalf("failed to create node: %v", err)
 	}
-	ethConf := &intprotocol.Config{
-		Genesis:   core.DeveloperGenesisBlock(15, common.Address{}),
-		Etherbase: common.HexToAddress(testAddress),
-		Ethash: ethash.Config{
-			PowMode: ethash.ModeTest,
-		},
-	}
-	if confOverride != nil {
-		confOverride(ethConf)
-	}
+	//ethConf := &intprotocol.Config{
+	//	Genesis:   core.DeveloperGenesisBlock(15, common.Address{}),
+	//	Etherbase: common.HexToAddress(testAddress),
+	//	Ethash: ethash.Config{
+	//		PowMode: ethash.ModeTest,
+	//	},
+	//}
+	//if confOverride != nil {
+	//	confOverride(ethConf)
+	//}
 	if err = stack.Register(func(ctx *node.ServiceContext) (node.Service, error) { return intprotocol.New(ctx, ethConf) }); err != nil {
 		t.Fatalf("failed to register Ethereum protocol: %v", err)
 	}
@@ -131,7 +130,7 @@ func newTester(t *testing.T, confOverride func(*intprotocol.Config)) *tester {
 		t.Fatalf("failed to create JavaScript console: %v", err)
 	}
 	// Create the final tester and return
-	var ethereum *intprotocol.Ethereum
+	var ethereum *intprotocol.IntChain
 	stack.Service(&ethereum)
 
 	return &tester{

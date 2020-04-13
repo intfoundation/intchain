@@ -27,7 +27,6 @@ import (
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/common/hexutil"
 	"github.com/intfoundation/intchain/common/math"
-	"github.com/intfoundation/intchain/consensus/ethash"
 	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/core/rawdb"
 	"github.com/intfoundation/intchain/core/state"
@@ -110,7 +109,7 @@ func (t *BlockTest) Run() error {
 		return fmt.Errorf("genesis block state root does not match test: computed=%x, test=%x", gblock.Root().Bytes()[:6], t.json.Genesis.StateRoot[:6])
 	}
 
-	chain, err := core.NewBlockChain(db, nil, config, ethash.NewShared(), vm.Config{}, nil)
+	chain, err := core.NewBlockChain(db, nil, config, nil, vm.Config{}, nil)
 	if err != nil {
 		return err
 	}
