@@ -54,9 +54,12 @@ data/intchain*
 data/child*
 
 
-#log
+# log
 log/intchain
 log/common
 
-#command
+# command
 bin
+
+# restore
+restore

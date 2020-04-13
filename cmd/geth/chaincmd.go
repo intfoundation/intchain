@@ -523,7 +523,7 @@ func countBlockState(ctx *cli.Context) error {
 
 	chainName := ctx.Args().Get(1)
 	if chainName == "" {
-		chainName = "pchain"
+		chainName = "intchain"
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)

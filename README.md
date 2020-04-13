@@ -1,8 +1,8 @@
-# INTChain
+# INT Chain
 
 ![intchain](https://raw.githubusercontent.com/intfoundation/intchain/master/docs/intchain.jpg)
 
-INT is the world's first bottom up new-generation blockchain of things (BoT) communication standard and base application platform. The ecosystem is specifically designed for easy integration with any IoT protocol.
+INT Chain is the world's first bottom up new-generation blockchain of things (BoT) communication standard and base application platform. The ecosystem is specifically designed for easy integration with any IoT protocol.
 
 To both improve and encourage device interconnectivity, we have built an economy driven ecosystem by providing token-incentives through a decentralized TCP/IP based architecture of IoT. This new business model, molded by IoT devices, will support an entirely new ecosystem of the Internet of Things.
 
@@ -11,12 +11,12 @@ To both improve and encourage device interconnectivity, we have built an economy
 
 ### Latest Version
 
-The latest INTChain version for Testnet is [v4.0.01](https://github.com/intfoundation/intchain/releases/latest)
+The latest INT Chain version for Testnet is [v4.0.01](https://github.com/intfoundation/intchain/releases/latest)
 
 ### Install `Go`
 
 
-**Go 1.12.5+** is required for building and installing the INTChain software.
+**Go 1.12.5+** is required for building and installing the INT Chain software.
 
 
 Install `Go` by following the [official docs](https://golang.org/doc/install).
@@ -63,14 +63,14 @@ Now check your `intchain` version.
 
 ## Running `intchain`
 
-`intchain` is the entry point into the INTChain network(main, test or private network). It can be used by other processes as a gateway into the INTChain network via JSON RPC endpoints exposed on top of HTTP, WebSocket and/or IPC transports.
+`intchain` is the entry point into the INT Chain network(main, test or private network). It can be used by other processes as a gateway into the INT Chain network via JSON RPC endpoints exposed on top of HTTP, WebSocket and/or IPC transports.
 
 We've enumerated a few common command to let you run your own `intchain` instance quickly. If you want to look over all command line options, please use `intchain --help`
 
 
 ### Main network
 
-The most common condition is that users want to simply interact with the INTChain network: create accounts; transfer funds; deploy and interact with contracts.
+The most common condition is that users want to simply interact with the INT Chain network: create accounts; transfer funds; deploy and interact with contracts.
 
 ```bash
 ./bin/intchain 
@@ -162,11 +162,12 @@ intchain attach <datadir>/intchain/intchain.ipc
 
 ### Become a Candidate
 
-INTChain is a blockchain system based on IPBFT consensus mechanism, which requires regular replacement of validators to ensure system security.
+INT Chain is a blockchain system based on IPBFT consensus mechanism, which requires regular replacement of validators to ensure system security.
 
 Epoch is the update cycle of the validator, which is about 2 hours.
 
 You can apply candidate to become a candidate.
+
 
 ```bash
 # applyCandidate
