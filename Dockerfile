@@ -12,5 +12,5 @@ FROM alpine:latest
 RUN apk add --no-cache ca-certificates
 COPY --from=builder /intchain/bin/intchain /usr/local/bin/
 
-EXPOSE 8555 8554 8553 8552 8551 8550 8550/udp
+EXPOSE 8556 8555 8554 8553 8552 8551 8550 8550/udp
 ENTRYPOINT ["intchain"]
