@@ -168,6 +168,8 @@ Epoch is the update cycle of the validator, which is about 2 hours.
 
 You can apply candidate to become a candidate.
 
+1、Apply Candidate
+
 Parameters
 
    * `from`: address, 32 Bytes - the address which generates the private validator before
@@ -190,6 +192,8 @@ To become a validator, you can participate by voting.
 
 #### Vote
 
+1、Get Vote Hash
+
 Parameters
 
    * `from`: address, 32 Bytes - the address which apply candidate before
@@ -205,6 +209,8 @@ Returns
 # getVoteHash
 curl -X POST --data '{"jsonrpc":"2.0","method":"tdm_getVoteHash","params":["INT3LJK4UctyCwv5mdvnpBYvMbRTZBia", "80DE91BD50F2C3E9F58780C7B739A53A9646DE04BD253D63ED584939B9DB0B381570CAA540D9A84EB5E709FE1D6F80D7AA616990F2177FE3A1F62468A0A26A8809D91C40016C22FA28BE3313F8118C6F4910C95F589980605B23295C9F3CD1FE53BD62F4774B6D29EC16DB98AF830A6E18DA8D1B68331B1C0DA5646FFF359A15", "0x54b40b1f852bda000000", "int"],"id":1}' -H 'content-type: application/json;' http://127.0.0.1:8556/testnet
 ```
+
+2、Vote Next Epoch
 
 Parameters
 
@@ -223,6 +229,8 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"tdm_voteNextEpoch","params":["IN
 
 #### Reveal Vote
 
+1、Sign Address
+
 Parameters
 
    * `form`: address, 32 Bytes - the address which apply candidate before
@@ -236,6 +244,8 @@ Returns
 # signAddress
 curl -X POST --data '{"jsonrpc":"2.0","method":"chain_signAddress","params":["INT3LJK4UctyCwv5mdvnpBYvMbRTZBia", "0xF1FBF3781FFDB1A80FA69DB034F4D25CFE27916983B172DC5F5E76384EE7BB2A"],"id":1}' -H 'content-type: application/json;' http://127.0.0.1:8556/testnet
 ```
+
+2、Reveal Vote
 
 Parameters
 
