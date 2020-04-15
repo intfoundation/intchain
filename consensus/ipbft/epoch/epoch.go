@@ -3,13 +3,13 @@ package epoch
 import (
 	"errors"
 	"fmt"
+	dbm "github.com/intfoundation/go-db"
+	"github.com/intfoundation/go-wire"
 	"github.com/intfoundation/intchain/common"
 	tmTypes "github.com/intfoundation/intchain/consensus/ipbft/types"
 	"github.com/intfoundation/intchain/core/state"
 	"github.com/intfoundation/intchain/core/types"
 	"github.com/intfoundation/intchain/log"
-	dbm "github.com/intfoundation/go-db"
-	"github.com/intfoundation/go-wire"
 	//"math"
 	"math/big"
 	"sort"
@@ -28,7 +28,7 @@ const (
 	EPOCH_SAVED                     // value --> 3
 
 	MinimumValidatorsSize = 13
-	MaximumValidatorsSize = 28
+	MaximumValidatorsSize = 28 // TODO the max validator size will increate to 100 in the future
 
 	epochKey       = "Epoch:%v"
 	latestEpochKey = "LatestEpoch"
