@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/common/hexutil"
 	"github.com/intfoundation/intchain/common/math"
@@ -14,7 +15,6 @@ import (
 	"github.com/intfoundation/intchain/core/types"
 	intcrypto "github.com/intfoundation/intchain/crypto"
 	intAbi "github.com/intfoundation/intchain/intabi/abi"
-	"github.com/intfoundation/go-crypto"
 	"math/big"
 	"time"
 )
@@ -314,7 +314,7 @@ func revealVoteValidation(from common.Address, tx *types.Transaction, state *sta
 	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.RevealVote.String(), data[4:]); err != nil {
 		return nil, err
 	}
-	//fmt.Printf("tdm api args %v\n", args)
+
 	var netProxied *big.Int
 	if state.IsCandidate(from) {
 		// is Candidate? Check Proxied Balance (Amount >= (proxiedBalance + depositProxiedBalance - pendingRefundBalance))
