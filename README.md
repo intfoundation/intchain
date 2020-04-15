@@ -255,7 +255,7 @@ curl -X POST --data '{"jsonrpc":"2.0","method":"tdm_revealVote","params":["INT3L
 ```
 
 #### Note
-Then, if your vote is in the top 100 validators, you will be the validator in the next epoch and you should restart intchain
+Then, if your vote is in the top 100 validators (the max validator size will increase to 100), you will be the validator in the next epoch and you should restart your own node
 
 ## Resources
     
