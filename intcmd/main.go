@@ -38,7 +38,7 @@ func main() {
 		{
 			Action:      chain.InitIntGenesis,
 			Name:        "init_int_genesis",
-			Usage:       "init_int_genesis balance:{\"1000000\",\"100\"}",
+			Usage:       "init_int_genesis balance:{\"1000000000000000000000000000\",\"100000000000000000000000\"}",
 			Description: "Initialize the balance of accounts",
 		},
 
@@ -52,7 +52,7 @@ func main() {
 		{
 			Action:      chain.InitChildChainCmd,
 			Name:        "init_child_chain",
-			Usage:       "./intchain --datadir=.intchain --childChain=child_0,child_1,child_2 init_child_chain",
+			Usage:       "./intchain --datadir=~/.intchain --childChain=child_0,child_1,child_2 init_child_chain",
 			Description: "Initialize child chain genesis from chain info db",
 		},
 
