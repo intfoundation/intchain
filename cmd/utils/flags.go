@@ -368,7 +368,7 @@ var (
 	}
 	WSApiFlag = cli.StringFlag{
 		Name:  "wsapi",
-		Usage: "API's offered over the WS-RPC interface",
+		Usage: "API is offered over the WS-RPC interface",
 		Value: "",
 	}
 	WSAllowedOriginsFlag = cli.StringFlag{
