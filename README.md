@@ -11,7 +11,7 @@ To both improve and encourage device interconnectivity, we have built an economy
 
 ### Latest Version
 
-The latest INT Chain version for Testnet is [v4.0.01](https://github.com/intfoundation/intchain/releases/latest)
+The latest INT Chain version for Testnet is [v4.0.02](https://github.com/intfoundation/intchain/releases/latest)
 
 ### Install `Go`
 
@@ -49,7 +49,7 @@ After setting up `Go` and `C compiler` correctly, you should be able to compile 
 Make sure that your server can access to google.com because our project depends on some libraries provided by google. (If you are not able to access google.com, you can also try to add a proxy: `export GOPROXY=https://goproxy.io`)
 
 ```bash
-git clone --branch v4.0.01 https://github.com/intfoundation/intchain
+git clone --branch testnet https://github.com/intfoundation/intchain
 cd intchain
 make intchain
 ```
