@@ -174,7 +174,7 @@ Parameters
 
    * `from`: address, 32 Bytes - the address which generates the private validator before
    * `securityDeposit`: hex string - amount of security deposit INT(minimum `0x3635c9adc5dea00000`), if you want to be a validator, but there is nobody can vote for you, you should deposit at least `0x152d02c7e14af6800000` INT
-   * `commission`: integer - the commission fee percentage (between 0 ~ 100) of each block reward be charged from delegator, when candiate become a validator
+   * `commission`: integer - the commission fee percentage (between 0 ~ 100) of each block reward be charged from delegator, when candidate become a validator
 
 Returns
 
