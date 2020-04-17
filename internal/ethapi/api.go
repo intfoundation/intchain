@@ -309,13 +309,13 @@ func fetchKeystore(am *accounts.Manager) *keystore.KeyStore {
 
 // ImportRawKey stores the given hex encoded ECDSA key into the key directory,
 // encrypting it with the passphrase.
-func (s *PrivateAccountAPI) ImportRawKey(privkey string, password string) (common.Address, error) {
+func (s *PrivateAccountAPI) ImportRawKey(privkey string, password string) (string, error) {
 	key, err := crypto.HexToECDSA(privkey)
 	if err != nil {
-		return common.Address{}, err
+		return "", err
 	}
 	acc, err := fetchKeystore(s.am).ImportECDSA(key, password)
-	return acc.Address, err
+	return acc.Address.String(), err
 }
 
 // UnlockAccount will unlock the account associated with the given address with
