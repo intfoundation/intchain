@@ -20,7 +20,7 @@ func intchainCmd(ctx *cli.Context) error {
 		return nil
 	}
 
-	log.Info("INTChain is the world's first bottom up new-generation blockchain of things (BoT) communication standard and base application platform.")
+	log.Info("INT Chain is the world's first bottom up new-generation blockchain of things (BoT) communication standard and base application platform.")
 
 	chainMgr := chain.GetCMInstance(ctx)
 
