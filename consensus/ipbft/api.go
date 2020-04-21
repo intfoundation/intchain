@@ -3,13 +3,13 @@ package ipbft
 import (
 	"errors"
 	"fmt"
+	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/common/hexutil"
 	"github.com/intfoundation/intchain/consensus"
 	"github.com/intfoundation/intchain/consensus/ipbft/epoch"
 	tdmTypes "github.com/intfoundation/intchain/consensus/ipbft/types"
 	intCrypto "github.com/intfoundation/intchain/crypto"
-	"github.com/intfoundation/go-crypto"
 	"math/big"
 )
 
@@ -141,9 +141,14 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidatorForConsole, 
 }
 
 // GeneratePrivateValidator
-func (api *API) GeneratePrivateValidator(from common.Address) (*tdmTypes.PrivValidator, error) {
+func (api *API) GeneratePrivateValidator(from common.Address) (*tdmTypes.PrivV, error) {
 	validator := tdmTypes.GenPrivValidatorKey(from)
-	return validator, nil
+	privV := &tdmTypes.PrivV{
+		Address: validator.Address.String(),
+		PubKey:  validator.PubKey,
+		PrivKey: validator.PrivKey,
+	}
+	return privV, nil
 }
 
 // decode extra data
