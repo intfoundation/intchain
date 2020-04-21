@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/intchain/accounts"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/common/hexutil"
@@ -15,7 +16,6 @@ import (
 	"github.com/intfoundation/intchain/params"
 	"github.com/intfoundation/intchain/rlp"
 	"github.com/intfoundation/intchain/rpc"
-	"github.com/intfoundation/go-crypto"
 	"math/big"
 	"strings"
 	"time"
@@ -356,7 +356,7 @@ func (s *PublicChainAPI) GetBlockReward(ctx context.Context, blockNr rpc.BlockNu
 	return (*hexutil.Big)(state.GetChildChainRewardPerBlock()), nil
 }
 
-func (api *PublicTdmAPI) WithdrawReward(ctx context.Context, from common.Address, delegateAddress common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
+func (api *PublicChainAPI) WithdrawReward(ctx context.Context, from common.Address, delegateAddress common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
 	input, err := intAbi.ChainABI.Pack(intAbi.WithdrawReward.String(), delegateAddress)
 	if err != nil {
 		return common.Hash{}, err
