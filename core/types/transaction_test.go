@@ -288,7 +288,7 @@ func TestSignTx(t *testing.T) {
 	address := common.StringToAddress("0x1Abd8338C42B3Ade3F97EC7BaB10FE74599D5e10")
 
 	d := txdata{
-		AccountNonce: 39,
+		AccountNonce: 0,
 		Recipient:    &address,
 		Payload:      []byte(""),
 		Amount:       big.NewInt(1),
