@@ -1,10 +1,10 @@
 package types
 
 import (
-	"github.com/intfoundation/intchain/common"
-	"github.com/intfoundation/intchain/common/hexutil"
 	. "github.com/intfoundation/go-common"
 	"github.com/intfoundation/go-crypto"
+	"github.com/intfoundation/intchain/common"
+	"github.com/intfoundation/intchain/common/hexutil"
 	"time"
 )
 
@@ -118,9 +118,9 @@ type ValidatorStatus struct {
 }
 
 type CandidateApi struct {
-	CandidateList []common.Address `json:"candidateList"`
+	CandidateList []string `json:"candidateList"`
 }
 
 type ForbiddenApi struct {
-	ForbiddenList []common.Address `json:"forbiddenList"`
+	ForbiddenList []string `json:"forbiddenList"`
 }

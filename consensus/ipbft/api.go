@@ -245,11 +245,11 @@ func (api *API) GetCandidateList() (*tdmTypes.CandidateApi, error) {
 		return nil, err
 	}
 
-	candidateList := make([]common.Address, 0)
+	candidateList := make([]string, 0)
 	candidateSet := state.GetCandidateSet()
 	fmt.Printf("candidate set %v", candidateSet)
 	for addr := range candidateSet {
-		candidateList = append(candidateList, addr)
+		candidateList = append(candidateList, addr.String())
 	}
 
 	candidates := &tdmTypes.CandidateApi{
@@ -266,11 +266,11 @@ func (api *API) GetForbiddenList() (*tdmTypes.ForbiddenApi, error) {
 		return nil, err
 	}
 
-	forbiddenList := make([]common.Address, 0)
+	forbiddenList := make([]string, 0)
 	forbiddenSet := state.GetForbiddenSet()
 	fmt.Printf("forbidden set %v", forbiddenSet)
 	for addr := range forbiddenSet {
-		forbiddenList = append(forbiddenList, addr)
+		forbiddenList = append(forbiddenList, addr.String())
 	}
 
 	forbiddenAddresses := &tdmTypes.ForbiddenApi{
