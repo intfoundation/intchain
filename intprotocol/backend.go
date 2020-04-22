@@ -395,29 +395,6 @@ func (s *IntChain) EthVersion() int                    { return int(s.protocolMa
 func (s *IntChain) NetVersion() uint64                 { return s.networkId }
 func (s *IntChain) Downloader() *downloader.Downloader { return s.protocolManager.downloader }
 
-//func (s *IntChain) Config() *params.ChainConfig  { return s.chainConfig }
-//func (s *IntChain) CurrentHeader() *types.Header { return s.BlockChain().CurrentHeader() }
-//func (s *IntChain) GetHeader(hash common.Hash, number uint64) *types.Header {
-//	return s.BlockChain().CurrentHeader()
-//}
-//func (s *IntChain) GetHeaderByNumber(number uint64) *types.Header {
-//	return s.BlockChain().GetHeaderByNumber(number)
-//}
-//func (s *IntChain) GetHeaderByHash(hash common.Hash) *types.Header {
-//	return s.BlockChain().GetHeaderByHash(hash)
-//}
-//func (s *IntChain) GetBlock(hash common.Hash, number uint64) *types.Block {
-//	return s.BlockChain().GetBlock(hash, number)
-//}
-//func (s *IntChain) GetBlockByNumber(number uint64) *types.Block {
-//	return s.BlockChain().GetBlockByNumber(number)
-//}
-//func (s *IntChain) GetTd(hash common.Hash, number uint64) *big.Int {
-//	return s.BlockChain().GetTd(hash, number)
-//}
-//func (s *IntChain) CurrentBlock() *types.Block     { return s.BlockChain().CurrentBlock() }
-//func (s *IntChain) State() (*state.StateDB, error) { return s.BlockChain().State() }
-
 // Protocols implements node.Service, returning all the currently configured
 // network protocols to start.
 func (s *IntChain) Protocols() []p2p.Protocol {
