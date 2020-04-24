@@ -34,7 +34,6 @@ import (
 	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/core/vm"
 	"github.com/intfoundation/intchain/crypto"
-	"github.com/intfoundation/intchain/dashboard"
 	"github.com/intfoundation/intchain/intdb"
 	"github.com/intfoundation/intchain/intprotocol"
 	"github.com/intfoundation/intchain/intprotocol/downloader"
@@ -157,26 +156,6 @@ var (
 		Name:  "gcmode",
 		Usage: `Blockchain garbage collection mode ("full", "archive")`,
 		Value: "archive",
-	}
-	// Dashboard settings
-	DashboardEnabledFlag = cli.BoolFlag{
-		Name:  metrics.DashboardEnabledFlag,
-		Usage: "Enable the dashboard",
-	}
-	DashboardAddrFlag = cli.StringFlag{
-		Name:  "dashboard.addr",
-		Usage: "Dashboard listening interface",
-		Value: dashboard.DefaultConfig.Host,
-	}
-	DashboardPortFlag = cli.IntFlag{
-		Name:  "dashboard.host",
-		Usage: "Dashboard listening port",
-		Value: dashboard.DefaultConfig.Port,
-	}
-	DashboardRefreshFlag = cli.DurationFlag{
-		Name:  "dashboard.refresh",
-		Usage: "Dashboard metrics collection refresh rate",
-		Value: dashboard.DefaultConfig.Refresh,
 	}
 
 	// Transaction pool settings
@@ -970,13 +949,6 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *intprotocol.Config) {
 	//cfg.PruneBlockData = ctx.GlobalBool(PruneBlockFlag.Name)
 }
 
-// SetDashboardConfig applies dashboard related command line flags to the config.
-func SetDashboardConfig(ctx *cli.Context, cfg *dashboard.Config) {
-	cfg.Host = ctx.GlobalString(DashboardAddrFlag.Name)
-	cfg.Port = ctx.GlobalInt(DashboardPortFlag.Name)
-	cfg.Refresh = ctx.GlobalDuration(DashboardRefreshFlag.Name)
-}
-
 func SetGeneralConfig(ctx *cli.Context) {
 	params.GenCfg.PerfTest = ctx.GlobalBool(PerfTestFlag.Name)
 }
@@ -995,13 +967,6 @@ func RegisterEthService(stack *node.Node, cfg *intprotocol.Config) {
 	if err != nil {
 		Fatalf("Failed to register the Ethereum service: %v", err)
 	}
-}
-
-// RegisterDashboardService adds a dashboard to the stack.
-func RegisterDashboardService(stack *node.Node, cfg *dashboard.Config, commit string) {
-	stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
-		return dashboard.New(cfg, commit, ctx.ResolvePath("logs")), nil
-	})
 }
 
 // RegisterShhService configures Whisper and adds it to the given node.

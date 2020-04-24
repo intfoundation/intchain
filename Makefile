@@ -1,7 +1,7 @@
 BUILD_FLAGS = -tags "$(BUILD_TAGS)" -ldflags "
 
 build:
-	go build -o $(GOPATH)/bin/intchain ./intcmd/
+	go build -o $(GOPATH)/bin/intchain ./cmd/intchain
 
 #.PHONY: intchain
 intchain:
@@ -10,4 +10,4 @@ intchain:
 	@echo "Run ./bin/intchain to launch intchain network."
 
 install:
-	go install -mod=readonly $(BUILD_FLAGS) ./intcmd/main
+	go install -mod=readonly $(BUILD_FLAGS) ./cmd/intchain

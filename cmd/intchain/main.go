@@ -57,13 +57,6 @@ func main() {
 		},
 
 		{
-			Action:      GenerateNodeInfoCmd,
-			Name:        "gen_node_info",
-			Usage:       "gen_node_info number", //generate node info for 'number' nodes
-			Description: "Generate node info for static-nodes.json",
-		},
-
-		{
 			//Action: GeneratePrivateValidatorCmd,
 			Action: utils.MigrateFlags(GeneratePrivateValidatorCmd),
 			Name:   "gen_priv_validator",
@@ -74,14 +67,11 @@ func main() {
 			Description: "Generate priv_validator.json for address",
 		},
 
-		// See consolecmd.go:
 		//gethmain.ConsoleCommand,
 		gethmain.AttachCommand,
 		//gethmain.JavascriptCommand,
 		gethmain.ImportChainCommand,
 		gethmain.ExportChainCommand,
-		gethmain.ImportPreimagesCommand,
-		gethmain.ExportPreimagesCommand,
 		gethmain.CountBlockStateCommand,
 
 		//walletCommand,
@@ -140,18 +130,6 @@ func newCliApp(version, usage string) *cli.App {
 		utils.DataDirFlag,
 		utils.KeyStoreDirFlag,
 		utils.NoUSBFlag,
-		/*
-			utils.DashboardEnabledFlag,
-			utils.DashboardAddrFlag,
-			utils.DashboardPortFlag,
-			utils.DashboardRefreshFlag,
-			utils.EthashCacheDirFlag,
-			utils.EthashCachesInMemoryFlag,
-			utils.EthashCachesOnDiskFlag,
-			utils.EthashDatasetDirFlag,
-			utils.EthashDatasetsInMemoryFlag,
-			utils.EthashDatasetsOnDiskFlag,
-		*/
 		utils.TxPoolNoLocalsFlag,
 		utils.TxPoolJournalFlag,
 		utils.TxPoolRejournalFlag,

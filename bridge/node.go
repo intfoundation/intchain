@@ -18,11 +18,6 @@ func MakeSystemNode(chainId string, ctx *cli.Context, cch core.CrossChainHelper)
 	//utils.RegisterEthService(stack, &cfg.Eth)
 	registerEthService(stack, &cfg.Eth, ctx, cch)
 
-	if ctx.GlobalBool(utils.DashboardEnabledFlag.Name) {
-		// Only Main Chain can start the dashboard, the dashboard is still not complete
-		utils.RegisterDashboardService(stack, &cfg.Dashboard, "" /*gitCommit*/)
-	}
-
 	// Add the Ethereum Stats daemon if requested.
 	//if cfg.Ethstats.URL != "" {
 	//	utils.RegisterEthStatsService(stack, cfg.Ethstats.URL)

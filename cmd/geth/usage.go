@@ -22,8 +22,6 @@ import (
 	"io"
 	"sort"
 
-	"strings"
-
 	"github.com/intfoundation/intchain/cmd/utils"
 	"github.com/intfoundation/intchain/internal/debug"
 	"gopkg.in/urfave/cli.v1"
@@ -77,16 +75,6 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.GCModeFlag,
 			utils.EthStatsURLFlag,
 			utils.IdentityFlag,
-		},
-	},
-	{
-		Name: "DASHBOARD",
-		Flags: []cli.Flag{
-			utils.DashboardEnabledFlag,
-			utils.DashboardAddrFlag,
-			utils.DashboardPortFlag,
-			utils.DashboardRefreshFlag,
-			//utils.DashboardAssetsFlag,
 		},
 	},
 	{
@@ -255,9 +243,6 @@ func init() {
 			uncategorized := []cli.Flag{}
 			for _, flag := range data.(*cli.App).Flags {
 				if _, ok := categorized[flag.String()]; !ok {
-					if strings.HasPrefix(flag.GetName(), "dashboard") {
-						continue
-					}
 					uncategorized = append(uncategorized, flag)
 				}
 			}

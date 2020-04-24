@@ -22,8 +22,6 @@ import (
 	"io"
 	"sort"
 
-	"strings"
-
 	"github.com/intfoundation/intchain/bridge"
 	"github.com/intfoundation/intchain/cmd/utils"
 	"gopkg.in/urfave/cli.v1"
@@ -85,66 +83,55 @@ var AppHelpFlagGroups = []flagGroup{
 		},
 	},
 	/*
-		{Name: "DEVELOPER CHAIN",
+			{Name: "DEVELOPER CHAIN",
+				Flags: []cli.Flag{
+					utils.DeveloperFlag,
+					utils.DeveloperPeriodFlag,
+				},
+			},
+			{
+				Name: "ETHASH",
+				Flags: []cli.Flag{
+					utils.EthashCacheDirFlag,
+					utils.EthashCachesInMemoryFlag,
+					utils.EthashCachesOnDiskFlag,
+					utils.EthashDatasetDirFlag,
+					utils.EthashDatasetsInMemoryFlag,
+					utils.EthashDatasetsOnDiskFlag,
+				},
+			},
+		{
+			Name: "TRANSACTION POOL",
 			Flags: []cli.Flag{
-				utils.DeveloperFlag,
-				utils.DeveloperPeriodFlag,
+				utils.TxPoolNoLocalsFlag,
+				utils.TxPoolJournalFlag,
+				utils.TxPoolRejournalFlag,
+				utils.TxPoolPriceLimitFlag,
+				utils.TxPoolPriceBumpFlag,
+				utils.TxPoolAccountSlotsFlag,
+				utils.TxPoolGlobalSlotsFlag,
+				utils.TxPoolAccountQueueFlag,
+				utils.TxPoolGlobalQueueFlag,
+				utils.TxPoolLifetimeFlag,
 			},
 		},
 		{
-			Name: "ETHASH",
+			Name: "PERFORMANCE TUNING",
 			Flags: []cli.Flag{
-				utils.EthashCacheDirFlag,
-				utils.EthashCachesInMemoryFlag,
-				utils.EthashCachesOnDiskFlag,
-				utils.EthashDatasetDirFlag,
-				utils.EthashDatasetsInMemoryFlag,
-				utils.EthashDatasetsOnDiskFlag,
+				utils.CacheFlag,
+				utils.CacheDatabaseFlag,
+				utils.CacheTrieFlag,
+				utils.CacheGCFlag,
 			},
 		},
-	*/
-	//{
-	//	Name: "DASHBOARD",
-	//	Flags: []cli.Flag{
-	//		utils.DashboardEnabledFlag,
-	//		utils.DashboardAddrFlag,
-	//		utils.DashboardPortFlag,
-	//		utils.DashboardRefreshFlag,
-	//		utils.DashboardAssetsFlag,
-	//	},
-	//},
-	{
-		Name: "TRANSACTION POOL",
-		Flags: []cli.Flag{
-			utils.TxPoolNoLocalsFlag,
-			utils.TxPoolJournalFlag,
-			utils.TxPoolRejournalFlag,
-			utils.TxPoolPriceLimitFlag,
-			utils.TxPoolPriceBumpFlag,
-			utils.TxPoolAccountSlotsFlag,
-			utils.TxPoolGlobalSlotsFlag,
-			utils.TxPoolAccountQueueFlag,
-			utils.TxPoolGlobalQueueFlag,
-			utils.TxPoolLifetimeFlag,
-		},
-	},
-	{
-		Name: "PERFORMANCE TUNING",
-		Flags: []cli.Flag{
-			utils.CacheFlag,
-			utils.CacheDatabaseFlag,
-			utils.CacheTrieFlag,
-			utils.CacheGCFlag,
-		},
-	},
-	/*
-		{
-			Name: "ACCOUNT",
-			Flags: []cli.Flag{
-				utils.UnlockedAccountFlag,
-				utils.PasswordFileFlag,
+		/*
+			{
+				Name: "ACCOUNT",
+				Flags: []cli.Flag{
+					utils.UnlockedAccountFlag,
+					utils.PasswordFileFlag,
+				},
 			},
-		},
 	*/
 	{
 		Name: "API AND CONSOLE",
@@ -301,9 +288,6 @@ func init() {
 			uncategorized := []cli.Flag{}
 			for _, flag := range data.(*cli.App).Flags {
 				if _, ok := categorized[flag.String()]; !ok {
-					if strings.HasPrefix(flag.GetName(), "dashboard") {
-						continue
-					}
 					uncategorized = append(uncategorized, flag)
 				}
 			}

@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/intfoundation/go-crypto"
+	"github.com/intfoundation/go-wire"
 	"github.com/intfoundation/intchain/cmd/utils"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/consensus/ipbft/types"
 	"github.com/intfoundation/intchain/log"
-	"github.com/intfoundation/go-crypto"
-	"github.com/intfoundation/go-wire"
 	"gopkg.in/urfave/cli.v1"
 	"os"
 	"path/filepath"

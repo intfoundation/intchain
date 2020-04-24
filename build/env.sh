@@ -28,4 +28,4 @@ cd "$intchaindir/intchain"
 PWD="$intchaindir/intchain"
 
 # build intchain client
-go build -o $root/bin/intchain ./intcmd/
+go build -o $root/bin/intchain ./cmd/intchain/

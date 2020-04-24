@@ -30,7 +30,6 @@ import (
 	"gopkg.in/urfave/cli.v1"
 
 	"github.com/intfoundation/intchain/cmd/utils"
-	"github.com/intfoundation/intchain/dashboard"
 	"github.com/intfoundation/intchain/intprotocol"
 	"github.com/intfoundation/intchain/node"
 	"github.com/intfoundation/intchain/params"
@@ -75,10 +74,9 @@ type ethstatsConfig struct {
 }
 
 type gethConfig struct {
-	Eth       intprotocol.Config
-	Node      node.Config
-	Ethstats  ethstatsConfig
-	Dashboard dashboard.Config
+	Eth      intprotocol.Config
+	Node     node.Config
+	Ethstats ethstatsConfig
 }
 
 func loadConfig(file string, cfg *gethConfig) error {
@@ -109,9 +107,8 @@ func defaultNodeConfig() node.Config {
 func makeConfigNode(ctx *cli.Context, chainId string) (*node.Node, gethConfig) {
 	// Load defaults.
 	cfg := gethConfig{
-		Eth:       intprotocol.DefaultConfig,
-		Node:      defaultNodeConfig(),
-		Dashboard: dashboard.DefaultConfig,
+		Eth:  intprotocol.DefaultConfig,
+		Node: defaultNodeConfig(),
 	}
 
 	// Load config file.
@@ -139,7 +136,6 @@ func makeConfigNode(ctx *cli.Context, chainId string) (*node.Node, gethConfig) {
 	}
 
 	//utils.SetShhConfig(ctx, stack, &cfg.Shh)
-	utils.SetDashboardConfig(ctx, &cfg.Dashboard)
 	utils.SetGeneralConfig(ctx)
 
 	return stack, cfg
@@ -150,9 +146,6 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 
 	utils.RegisterEthService(stack, &cfg.Eth)
 
-	if ctx.GlobalBool(utils.DashboardEnabledFlag.Name) {
-		utils.RegisterDashboardService(stack, &cfg.Dashboard, gitCommit)
-	}
 	// Whisper must be explicitly enabled by specifying at least 1 whisper flag or in dev mode
 	//shhEnabled := enableWhisper(ctx)
 	//shhAutoEnabled := !ctx.GlobalIsSet(utils.WhisperEnabledFlag.Name) && ctx.GlobalIsSet(utils.DeveloperFlag.Name)
