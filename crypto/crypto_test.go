@@ -430,15 +430,6 @@ func TestEthAddress(t *testing.T) {
 	fmt.Printf("ethereum address %v\n", ethAddress)
 }
 
-func TestByte(t *testing.T) {
-	ultTest := "Ultswap V1"
-	ultt := "ULT-V1"
-
-	byte1 := hexutil.Encode([]byte(ultTest))
-	byte2 := hexutil.Encode([]byte(ultt))
-	fmt.Printf("ultTest %v, ultt %v\n", byte1, byte2)
-}
-
 var messageByte = []byte("")
 
 func CheckDecode(input string) (result []byte, version byte, err error) {
