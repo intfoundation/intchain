@@ -517,14 +517,13 @@ func (s *PublicBlockChainAPI) GetFullBalance(ctx context.Context, address common
 	}
 
 	fields := map[string]interface{}{
-		"balance":                      (*hexutil.Big)(state.GetBalance(address)),
-		"total_depositBalance":         (*hexutil.Big)(state.GetDepositBalance(address)),
-		"total_delegateBalance":        (*hexutil.Big)(state.GetDelegateBalance(address)),
-		"total_proxiedBalance":         (*hexutil.Big)(state.GetTotalProxiedBalance(address)),
-		"total_depositProxiedBalance":  (*hexutil.Big)(state.GetTotalDepositProxiedBalance(address)),
-		"total_pendingRefundBalance":   (*hexutil.Big)(state.GetTotalPendingRefundBalance(address)),
-		"total_rewardBalance":          (*hexutil.Big)(state.GetTotalRewardBalance(address)),
-		"total_availableRewardBalance": (*hexutil.Big)(state.GetTotalAvailableRewardBalance(address)),
+		"balance":                     (*hexutil.Big)(state.GetBalance(address)),
+		"total_depositBalance":        (*hexutil.Big)(state.GetDepositBalance(address)),
+		"total_delegateBalance":       (*hexutil.Big)(state.GetDelegateBalance(address)),
+		"total_proxiedBalance":        (*hexutil.Big)(state.GetTotalProxiedBalance(address)),
+		"total_depositProxiedBalance": (*hexutil.Big)(state.GetTotalDepositProxiedBalance(address)),
+		"total_pendingRefundBalance":  (*hexutil.Big)(state.GetTotalPendingRefundBalance(address)),
+		"total_rewardBalance":         (*hexutil.Big)(state.GetTotalRewardBalance(address)),
 	}
 
 	if fullDetail {
