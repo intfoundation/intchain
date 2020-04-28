@@ -47,5 +47,8 @@ log/common
 # command
 bin
 
-# restore
-restore
+# start
+start/
+
+# data
+data/
