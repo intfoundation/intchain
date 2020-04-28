@@ -58,7 +58,7 @@ If your environment variables have set up correctly, you should not get any erro
 Now check your `intchain` version.
 
 ```bash
-./bin/intchain version
+intchain version
 ```
 
 ## Running `intchain`
@@ -73,13 +73,13 @@ We've enumerated a few common command to let you run your own `intchain` instanc
 The most common condition is that users want to simply interact with the INT Chain network: create accounts; transfer funds; deploy and interact with contracts.
 
 ```bash
-./bin/intchain 
+intchain 
 ```
 
 Then you can attach to an already running `intchain` instance with `intchain attach`, and you can invoke all official methods.
 
 ```bash
-./bin/intchain attach <datadir>/intchain/intchain.ipc
+intchain attach <datadir>/intchain/intchain.ipc
 ```
 
 
@@ -90,7 +90,7 @@ For developers, you would like to deploy contracts for testing, but you do not w
 In other words, instead of attaching to the main network, you want to join the test network with your node, which is fully equivalent to the main network.
 
 ```bash
-./bin/intchain --testnet
+intchain --testnet
 ```
 
 Specifying the `--testnet` flag, will reconfigure `intchain` instance a bit:
@@ -108,13 +108,13 @@ First, you need to create the genesis state of your network, which all nodes nee
 
 Init int genesis file and genesis validator
 ```bash
-./bin/intchain --datadir <some directory> init_int_genesis "{799600000000000000000000000, 400000000000000000000000}"
+intchain --datadir <some directory> init_int_genesis "{799600000000000000000000000, 400000000000000000000000}"
 ```
 
 Init genesis file
 
 ```bash
-./bin/intchain --datadir <some directory> init <datadir>/intchain/int_genesis.json
+intchain --datadir <some directory> init <datadir>/intchain/int_genesis.json
 ```
 
 
@@ -123,13 +123,13 @@ Init genesis file
 Starting up a validator node with the genesis state.
 
 ```bash
-./bin/intchain --datadir <some directory>
+intchain --datadir <some directory>
 ```
 
 Starting up a full node with the same genesis state without priv_validator.json file.
 
 ```bash
-./bin/intchain --datadir <other custom data directory> --bootnodes=<validator node bootnode url above>
+intchain --datadir <other custom data directory> --bootnodes=<validator node bootnode url above>
 ```
 
 ## Validator Node Based On Testnet
