@@ -1,128 +1,50 @@
-package main
+// Copyright 2014 The go-ethereum Authors
+// This file is part of go-ethereum.
+//
+// go-ethereum is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// go-ethereum is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
+
+// intchain is the official command-line client for INT Chain.
+package gethmain
 
 import (
-	"fmt"
-	"github.com/intfoundation/intchain/bridge"
-	"github.com/intfoundation/intchain/chain"
-	"github.com/intfoundation/intchain/cmd/geth"
+	"runtime"
+	"sort"
+	"time"
+
 	"github.com/intfoundation/intchain/cmd/utils"
 	"github.com/intfoundation/intchain/console"
-	"github.com/intfoundation/intchain/log"
+	"github.com/intfoundation/intchain/internal/debug"
 	"github.com/intfoundation/intchain/metrics"
-	"github.com/intfoundation/intchain/version"
 	"gopkg.in/urfave/cli.v1"
-	"os"
-	"path"
-	"path/filepath"
-	"runtime"
-	"time"
 )
 
 const (
-	clientIdentifier = "intchain" // Client identifier to advertise over the network; it also is the main chain's id
+	clientIdentifier = "intchain" // Client identifier to advertise over the network
 )
 
-func main() {
+//var ClientIdentifier = clientIdentifier
 
-	cliApp := newCliApp(version.Version, "the intchain command line interface")
-	cliApp.Action = intchainCmd
-	cliApp.Commands = []cli.Command{
+var (
+	// Git SHA1 commit hash of the release (set via linker flags)
+	gitCommit = ""
 
-		{
-			Action:      versionCmd,
-			Name:        "version",
-			Usage:       "",
-			Description: "Print the version",
-		},
-
-		{
-			Action:      chain.InitIntGenesis,
-			Name:        "init_int_genesis",
-			Usage:       "init_int_genesis balance:{\"1000000000000000000000000000\",\"100000000000000000000000\"}",
-			Description: "Initialize the balance of accounts",
-		},
-
-		{
-			Action:      chain.InitCmd,
-			Name:        "init",
-			Usage:       "init genesis.json",
-			Description: "Initialize the files",
-		},
-
-		{
-			Action:      chain.InitChildChainCmd,
-			Name:        "init_child_chain",
-			Usage:       "./intchain --datadir=~/.intchain --childChain=child_0,child_1,child_2 init_child_chain",
-			Description: "Initialize child chain genesis from chain info db",
-		},
-
-		{
-			//Action: GeneratePrivateValidatorCmd,
-			Action: utils.MigrateFlags(GeneratePrivateValidatorCmd),
-			Name:   "gen_priv_validator",
-			Usage:  "gen_priv_validator address", //generate priv_validator.json for address
-			Flags: []cli.Flag{
-				utils.DataDirFlag,
-			},
-			Description: "Generate priv_validator.json for address",
-		},
-
-		//gethmain.ConsoleCommand,
-		gethmain.AttachCommand,
-		//gethmain.JavascriptCommand,
-		gethmain.ImportChainCommand,
-		gethmain.ExportChainCommand,
-		gethmain.CountBlockStateCommand,
-
-		//walletCommand,
-		accountCommand,
-	}
-	cliApp.HideVersion = true // we have a command to print the version
-
-	cliApp.Before = func(ctx *cli.Context) error {
-
-		// Log Folder
-		logFolderFlag := ctx.GlobalString(LogDirFlag.Name)
-
-		// Setup the Global Logger
-		commonLogDir := path.Join(ctx.GlobalString("datadir"), logFolderFlag, "common")
-		log.NewLogger("", commonLogDir, ctx.GlobalInt(verbosityFlag.Name), ctx.GlobalBool(debugFlag.Name), ctx.GlobalString(vmoduleFlag.Name), ctx.GlobalString(backtraceAtFlag.Name))
-
-		runtime.GOMAXPROCS(runtime.NumCPU())
-
-		if err := bridge.Debug_Setup(ctx, logFolderFlag); err != nil {
-			return err
-		}
-
-		// Start system runtime metrics collection
-		go metrics.CollectProcessMetrics(3 * time.Second)
-
-		return nil
-	}
-
-	cliApp.After = func(ctx *cli.Context) error {
-		bridge.Debug_Exit()
-		console.Stdin.Close() // Resets terminal mode.
-		return nil
-	}
-
-	if err := cliApp.Run(os.Args); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
-func newCliApp(version, usage string) *cli.App {
-	app := cli.NewApp()
-	app.Name = filepath.Base(os.Args[0])
-	app.Author = ""
-	//app.Authors = nil
-	app.Email = ""
-	app.Version = version
-	app.Usage = usage
-	app.Flags = []cli.Flag{
+	// The app that holds all commands and flags.
+	app = utils.NewApp(gitCommit, "the intchain command line interface")
+	// flags that configure the node
+	nodeFlags = []cli.Flag{
 		utils.IdentityFlag,
-		//utils.UnlockedAccountFlag,
+		utils.UnlockedAccountFlag,
 		utils.PasswordFileFlag,
 		utils.BootnodesFlag,
 		utils.BootnodesV4Flag,
@@ -140,6 +62,7 @@ func newCliApp(version, usage string) *cli.App {
 		utils.TxPoolAccountQueueFlag,
 		utils.TxPoolGlobalQueueFlag,
 		utils.TxPoolLifetimeFlag,
+		//utils.FastSyncFlag,
 		utils.SyncModeFlag,
 		utils.GCModeFlag,
 		utils.CacheFlag,
@@ -149,6 +72,7 @@ func newCliApp(version, usage string) *cli.App {
 		utils.ListenPortFlag,
 		utils.MaxPeersFlag,
 		utils.MaxPendingPeersFlag,
+		utils.MiningEnabledFlag,
 		utils.MinerThreadsFlag,
 		utils.MinerGasTargetFlag,
 		utils.MinerGasLimitFlag,
@@ -163,57 +87,189 @@ func newCliApp(version, usage string) *cli.App {
 		utils.TestnetFlag,
 		utils.VMEnableDebugFlag,
 		utils.NetworkIdFlag,
-		utils.PruneFlag,
-		//utils.PruneBlockFlag,
-
+		utils.RPCCORSDomainFlag,
+		utils.RPCVirtualHostsFlag,
 		utils.EthStatsURLFlag,
 		utils.MetricsEnabledFlag,
 		utils.NoCompactionFlag,
 		utils.GpoBlocksFlag,
 		utils.GpoPercentileFlag,
 		utils.ExtraDataFlag,
-		//gethmain.ConfigFileFlag,
-		// RPC HTTP Flag
+		//configFileFlag,
+
+		utils.LogDirFlag,
+		utils.ChildChainFlag,
+	}
+
+	rpcFlags = []cli.Flag{
 		utils.RPCEnabledFlag,
 		utils.RPCListenAddrFlag,
 		utils.RPCPortFlag,
 		utils.RPCApiFlag,
-		utils.RPCCORSDomainFlag,
-		utils.RPCVirtualHostsFlag,
-		// RPC WS Flag
 		utils.WSEnabledFlag,
 		utils.WSListenAddrFlag,
 		utils.WSPortFlag,
 		utils.WSApiFlag,
 		utils.WSAllowedOriginsFlag,
-
 		utils.IPCDisabledFlag,
 		utils.IPCPathFlag,
-
-		utils.SolcPathFlag,
-
-		utils.PerfTestFlag,
-
-		LogDirFlag,
-		ChildChainFlag,
-
-		/*
-			//Tendermint flags
-			MonikerFlag,
-			NodeLaddrFlag,
-			SeedsFlag,
-			FastSyncFlag,
-			SkipUpnpFlag,
-			RpcLaddrFlag,
-			AddrFlag,
-		*/
 	}
-	app.Flags = append(app.Flags, DebugFlags...)
+)
 
-	return app
+func init() {
+	// Initialize the CLI app and start intchain
+	app.Action = intchainCmd
+	app.HideVersion = true // we have a command to print the version
+	app.Copyright = "Copyright 2018-2020 The INT Chain Authors"
+	app.Commands = []cli.Command{
+		// See chaincmd.go:
+		initINTGenesisCommand,
+		initCommand,
+		initChildChainCmd,
+		initCommand,
+		importCommand,
+		exportCommand,
+		copydbCommand,
+		removedbCommand,
+		dumpCommand,
+		// See monitorcmd.go:
+		monitorCommand,
+		// See accountcmd.go:
+		accountCommand,
+		//walletCommand,
+		// See consolecmd.go:
+		consoleCommand,
+		attachCommand,
+		javascriptCommand,
+		// See misccmd.go:
+
+		bugCommand,
+		// See config.go
+		dumpConfigCommand,
+	}
+	sort.Sort(cli.CommandsByName(app.Commands))
+
+	app.Flags = append(app.Flags, nodeFlags...)
+	app.Flags = append(app.Flags, rpcFlags...)
+	app.Flags = append(app.Flags, consoleFlags...)
+	app.Flags = append(app.Flags, debug.Flags...)
+
+	app.Before = func(ctx *cli.Context) error {
+		runtime.GOMAXPROCS(runtime.NumCPU())
+
+		logdir := ""
+		if err := debug.Setup(ctx, logdir); err != nil {
+			return err
+		}
+
+		// Start system runtime metrics collection
+		go metrics.CollectProcessMetrics(3 * time.Second)
+
+		return nil
+	}
+
+	app.After = func(ctx *cli.Context) error {
+		debug.Exit()
+		console.Stdin.Close() // Resets terminal mode.
+		return nil
+	}
 }
 
-func versionCmd(ctx *cli.Context) error {
-	fmt.Println(version.Version)
-	return nil
-}
+//func main() {
+//	if err := app.Run(os.Args); err != nil {
+//		fmt.Fprintln(os.Stderr, err)
+//		os.Exit(1)
+//	}
+//}
+//
+//// intchain is the main entry point into the system if no special subcommand is ran.
+//// It creates a default node based on the command line arguments and runs it in
+//// blocking mode, waiting for it to be shut down.
+//func intchain(ctx *cli.Context) error {
+//	node := makeFullNode(ctx)
+//	defer node.Close()
+//	startNode(ctx, node)
+//	node.Wait()
+//	return nil
+//}
+//
+//// startNode boots up the system node and all registered protocols, after which
+//// it unlocks any requested accounts, and starts the RPC/IPC interfaces and the
+//// miner.
+//func startNode(ctx *cli.Context, stack *node.Node) {
+//	// Start up the node itself
+//	utils.StartNode(stack)
+//
+//	// Unlock any account specifically requested
+//	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
+//
+//	passwords := utils.MakePasswordList(ctx)
+//	unlocks := strings.Split(ctx.GlobalString(utils.UnlockedAccountFlag.Name), ",")
+//	for i, account := range unlocks {
+//		if trimmed := strings.TrimSpace(account); trimmed != "" {
+//			unlockAccount(ctx, ks, trimmed, i, passwords)
+//		}
+//	}
+//	// Register wallet event handlers to open and auto-derive wallets
+//	events := make(chan accounts.WalletEvent, 16)
+//	stack.AccountManager().Subscribe(events)
+//
+//	go func() {
+//		// Create an chain state reader for self-derivation
+//		rpcClient, err := stack.Attach()
+//		if err != nil {
+//			utils.Fatalf("Failed to attach to self: %v", err)
+//		}
+//		stateReader := intclient.NewClient(rpcClient)
+//
+//		// Open any wallets already attached
+//		for _, wallet := range stack.AccountManager().Wallets() {
+//			if err := wallet.Open(""); err != nil {
+//				log.Warn("Failed to open wallet", "url", wallet.URL(), "err", err)
+//			}
+//		}
+//		// Listen for wallet event till termination
+//		for event := range events {
+//			switch event.Kind {
+//			case accounts.WalletArrived:
+//				if err := event.Wallet.Open(""); err != nil {
+//					log.Warn("New wallet appeared, failed to open", "url", event.Wallet.URL(), "err", err)
+//				}
+//			case accounts.WalletOpened:
+//				status, _ := event.Wallet.Status()
+//				log.Info("New wallet appeared", "url", event.Wallet.URL(), "status", status)
+//
+//				if event.Wallet.URL().Scheme == "ledger" {
+//					event.Wallet.SelfDerive(accounts.DefaultLedgerBaseDerivationPath, stateReader)
+//				} else {
+//					event.Wallet.SelfDerive(accounts.DefaultBaseDerivationPath, stateReader)
+//				}
+//
+//			case accounts.WalletDropped:
+//				log.Info("Old wallet dropped", "url", event.Wallet.URL())
+//				event.Wallet.Close()
+//			}
+//		}
+//	}()
+//	// Start auxiliary services if enabled
+//	if ctx.GlobalBool(utils.MiningEnabledFlag.Name) {
+//		var ethereum *intprotocol.IntChain
+//		if err := stack.Service(&ethereum); err != nil {
+//			utils.Fatalf("Ethereum service not running: %v", err)
+//		}
+//		// Use a reduced number of threads if requested
+//		if threads := ctx.GlobalInt(utils.MinerThreadsFlag.Name); threads > 0 {
+//			type threaded interface {
+//				SetThreads(threads int)
+//			}
+//			if th, ok := ethereum.Engine().(threaded); ok {
+//				th.SetThreads(threads)
+//			}
+//		}
+//		// Set the gas price to the limits from the CLI and start mining
+//		ethereum.TxPool().SetGasPrice(utils.GlobalBig(ctx, utils.MinerGasPriceFlag.Name))
+//		if err := ethereum.StartMining(true); err != nil {
+//			utils.Fatalf("Failed to start mining: %v", err)
+//		}
+//	}
+//}

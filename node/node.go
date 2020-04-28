@@ -27,7 +27,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/intfoundation/prometheus-flock"
 	"github.com/intfoundation/intchain/accounts"
 	"github.com/intfoundation/intchain/event"
 	"github.com/intfoundation/intchain/intdb"
@@ -35,6 +34,7 @@ import (
 	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/p2p"
 	"github.com/intfoundation/intchain/rpc"
+	"github.com/intfoundation/prometheus-flock"
 )
 
 // Node is a container on which services can be registered.
@@ -99,7 +99,7 @@ func New(conf *Config) (*Node, error) {
 		return nil, errors.New(`Config.Name cannot end in ".ipc"`)
 	}
 	// Ensure that the AccountManager method works before the node has started.
-	// We rely on this in cmd/geth.
+	// We rely on this in cmd/intchain.
 	am, ephemeralKeystore, err := makeAccountManager(conf)
 	if err != nil {
 		return nil, err

@@ -504,7 +504,7 @@ const tmplSourceJava = `
 
 package {{.Package}};
 
-import org.ethereum.geth.*;
+import org.ethereum.intchain.*;
 import java.util.*;
 
 {{$structs := .Structs}}

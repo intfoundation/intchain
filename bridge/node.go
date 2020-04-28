@@ -1,7 +1,7 @@
 package bridge
 
 import (
-	"github.com/intfoundation/intchain/cmd/geth"
+	"github.com/intfoundation/intchain/cmd/intchain"
 	"github.com/intfoundation/intchain/cmd/utils"
 	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/intprotocol"

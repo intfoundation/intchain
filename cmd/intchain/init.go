@@ -1,4 +1,4 @@
-package chain
+package gethmain
 
 import (
 	"fmt"
@@ -13,17 +13,16 @@ import (
 	"gopkg.in/urfave/cli.v1"
 
 	"encoding/json"
+	cmn "github.com/intfoundation/go-common"
+	cfg "github.com/intfoundation/go-config"
+	dbm "github.com/intfoundation/go-db"
 	"github.com/intfoundation/intchain/accounts/keystore"
-	"github.com/intfoundation/intchain/cmd/geth"
 	"github.com/intfoundation/intchain/cmd/utils"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/consensus/ipbft/types"
 	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/params"
 	"github.com/pkg/errors"
-	cmn "github.com/intfoundation/go-common"
-	cfg "github.com/intfoundation/go-config"
-	dbm "github.com/intfoundation/go-db"
 	"io/ioutil"
 	"math/big"
 	"regexp"
@@ -54,7 +53,7 @@ func (invalid InvalidArgs) Error() string {
 	return "invalid args:" + invalid.args
 }
 
-func InitIntGenesis(ctx *cli.Context) error {
+func initIntGenesis(ctx *cli.Context) error {
 	log.Info("this is init_int_genesis")
 	args := ctx.Args()
 	if len(args) != 1 {
@@ -125,7 +124,7 @@ func init_int_genesis(config cfg.Config, balanceStr string, isMainnet bool) erro
 	return nil
 }
 
-func InitCmd(ctx *cli.Context) error {
+func initCmd(ctx *cli.Context) error {
 
 	// int genesis.json
 	intGenesisPath := ctx.Args().First()

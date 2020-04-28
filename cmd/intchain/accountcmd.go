@@ -1,18 +1,3 @@
-package main
-
-import (
-	"fmt"
-	"github.com/intfoundation/intchain/accounts"
-	"github.com/intfoundation/intchain/accounts/keystore"
-	"github.com/intfoundation/intchain/cmd/geth"
-	"github.com/intfoundation/intchain/cmd/utils"
-	"github.com/intfoundation/intchain/console"
-	"github.com/intfoundation/intchain/crypto"
-	"github.com/intfoundation/intchain/log"
-	"gopkg.in/urfave/cli.v1"
-	"io/ioutil"
-)
-
 // Copyright 2016 The go-ethereum Authors
 // This file is part of go-ethereum.
 //
@@ -29,43 +14,56 @@ import (
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
+package gethmain
+
+import (
+	"fmt"
+	"io/ioutil"
+
+	"github.com/intfoundation/intchain/accounts"
+	"github.com/intfoundation/intchain/accounts/keystore"
+	"github.com/intfoundation/intchain/cmd/utils"
+	"github.com/intfoundation/intchain/console"
+	"github.com/intfoundation/intchain/crypto"
+	"github.com/intfoundation/intchain/log"
+	"gopkg.in/urfave/cli.v1"
+)
+
 var (
-	/*
-			walletCommand = cli.Command{
-				Name:      "wallet",
-				Usage:     "Manage intchain presale wallets",
-				ArgsUsage: "",
+	walletCommand = cli.Command{
+		Name:      "wallet",
+		Usage:     "Manage Ethereum presale wallets",
+		ArgsUsage: "",
+		Category:  "ACCOUNT COMMANDS",
+		Description: `
+    intchain wallet import /path/to/my/presale.wallet
+
+will prompt for your password and imports your ether presale account.
+It can be used non-interactively with the --password option taking a
+passwordfile as argument containing the wallet password in plaintext.`,
+		Subcommands: []cli.Command{
+			{
+
+				Name:      "import",
+				Usage:     "Import Ethereum presale wallet",
+				ArgsUsage: "<keyFile>",
+				Action:    utils.MigrateFlags(importWallet),
 				Category:  "ACCOUNT COMMANDS",
-				Description: `
-		    intchain wallet import /path/to/my/presale.wallet
-
-		will prompt for your password and imports your IntChain presale account.
-		It can be used non-interactively with the --password option taking a
-		passwordfile as argument containing the wallet password in plaintext.`,
-				Subcommands: []cli.Command{
-					{
-
-						Name:      "import",
-						Usage:     "Import intchain presale wallet",
-						ArgsUsage: "<keyFile>",
-						Action:    utils.MigrateFlags(importWallet),
-						Category:  "ACCOUNT COMMANDS",
-						Flags: []cli.Flag{
-							utils.DataDirFlag,
-							utils.KeyStoreDirFlag,
-							utils.PasswordFileFlag,
-							utils.LightKDFFlag,
-						},
-						Description: `
-			intchain wallet [options] /path/to/my/presale.wallet
-
-		will prompt for your password and imports your IntChain presale account.
-		It can be used non-interactively with the --password option taking a
-		passwordfile as argument containing the wallet password in plaintext.`,
-					},
+				Flags: []cli.Flag{
+					utils.DataDirFlag,
+					utils.KeyStoreDirFlag,
+					utils.PasswordFileFlag,
 				},
-			}
-	*/
+				Description: `
+	intchain wallet [options] /path/to/my/presale.wallet
+
+will prompt for your password and imports your ether presale account.
+It can be used non-interactively with the --password option taking a
+passwordfile as argument containing the wallet password in plaintext.`,
+			},
+		},
+	}
+
 	accountCommand = cli.Command{
 		Name:     "account",
 		Usage:    "Manage accounts",
@@ -87,7 +85,7 @@ Note that exporting your key in unencrypted format is NOT supported.
 
 Keys are stored under <DATADIR>/keystore.
 It is safe to transfer the entire directory or the individual keys therein
-between intchain nodes by simply copying.
+between ethereum nodes by simply copying.
 
 Make sure you backup your keys regularly.`,
 		Subcommands: []cli.Command{
@@ -181,7 +179,7 @@ For non-interactive use the passphrase can be specified with the -password flag:
     intchain account import [options] <keyfile>
 
 Note:
-As you can directly copy your encrypted accounts to another intchain instance,
+As you can directly copy your encrypted accounts to another ethereum instance,
 this import mechanism is not needed when you transfer an account between
 nodes.
 `,
@@ -191,9 +189,7 @@ nodes.
 )
 
 func accountList(ctx *cli.Context) error {
-
-	stack, _ := gethmain.MakeConfigNode(ctx, clientIdentifier)
-
+	stack, _ := makeConfigNode(ctx, clientIdentifier)
 	var index int
 	for _, wallet := range stack.AccountManager().Wallets() {
 		for _, account := range wallet.Accounts() {
@@ -293,11 +289,10 @@ func ambiguousAddrRecovery(ks *keystore.KeyStore, err *keystore.AmbiguousAddrErr
 
 // accountCreate creates a new account into the keystore defined by the CLI flags.
 func accountCreate(ctx *cli.Context) error {
-
-	cfg := gethmain.GethConfig{Node: gethmain.DefaultNodeConfig()}
+	cfg := gethConfig{Node: defaultNodeConfig()}
 	// Load config file.
-	if file := ctx.GlobalString(gethmain.ConfigFileFlag.Name); file != "" {
-		if err := gethmain.LoadConfig(file, &cfg); err != nil {
+	if file := ctx.GlobalString(configFileFlag.Name); file != "" {
+		if err := loadConfig(file, &cfg); err != nil {
 			utils.Fatalf("%v", err)
 		}
 	}
@@ -325,11 +320,10 @@ func accountCreate(ctx *cli.Context) error {
 // accountUpdate transitions an account from a previous format to the current
 // one, also providing the possibility to change the pass-phrase.
 func accountUpdate(ctx *cli.Context) error {
-
 	if len(ctx.Args()) == 0 {
 		utils.Fatalf("No accounts specified to update")
 	}
-	stack, _ := gethmain.MakeConfigNode(ctx, clientIdentifier)
+	stack, _ := makeConfigNode(ctx, clientIdentifier)
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
 
 	for _, addr := range ctx.Args() {
@@ -352,7 +346,7 @@ func importWallet(ctx *cli.Context) error {
 		utils.Fatalf("Could not read wallet file: %v", err)
 	}
 
-	stack, _ := gethmain.MakeConfigNode(ctx, clientIdentifier)
+	stack, _ := makeConfigNode(ctx, clientIdentifier)
 	passphrase := getPassPhrase("", false, 0, utils.MakePasswordList(ctx))
 
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)
@@ -365,7 +359,6 @@ func importWallet(ctx *cli.Context) error {
 }
 
 func accountImport(ctx *cli.Context) error {
-
 	keyfile := ctx.Args().First()
 	if len(keyfile) == 0 {
 		utils.Fatalf("keyfile must be given as argument")
@@ -374,7 +367,7 @@ func accountImport(ctx *cli.Context) error {
 	if err != nil {
 		utils.Fatalf("Failed to load the private key: %v", err)
 	}
-	stack, _ := gethmain.MakeConfigNode(ctx, clientIdentifier)
+	stack, _ := makeConfigNode(ctx, clientIdentifier)
 	passphrase := getPassPhrase("Your new account is locked with a password. Please give a password. Do not forget this password.", true, 0, utils.MakePasswordList(ctx))
 
 	ks := stack.AccountManager().Backends(keystore.KeyStoreType)[0].(*keystore.KeyStore)

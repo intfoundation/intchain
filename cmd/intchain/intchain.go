@@ -1,10 +1,10 @@
-package main
+package gethmain
 
 import (
 	"fmt"
-	"github.com/intfoundation/intchain/bridge"
 	"github.com/intfoundation/intchain/chain"
 	"github.com/intfoundation/intchain/consensus/ipbft/consensus"
+	"github.com/intfoundation/intchain/internal/debug"
 	"github.com/intfoundation/intchain/log"
 	"gopkg.in/urfave/cli.v1"
 	"os"
@@ -90,8 +90,8 @@ func intchainCmd(ctx *cli.Context) error {
 				log.Info(fmt.Sprintf("Already shutting down, interrupt %d more times for panic.", i-1))
 			}
 		}
-		bridge.Debug_Exit() // ensure trace and CPU profile data is flushed.
-		bridge.Debug_LoadPanic("boom")
+		debug.Exit() // ensure trace and CPU profile data is flushed.
+		debug.LoudPanic("boom")
 	}()
 
 	chainMgr.Wait()

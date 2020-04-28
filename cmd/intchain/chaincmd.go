@@ -41,8 +41,20 @@ import (
 )
 
 var (
+	initINTGenesisCommand = cli.Command{
+		Action:    utils.MigrateFlags(initIntGenesis),
+		Name:      "init_int_genesis",
+		Usage:     "Initialize INT genesis.json file. init_int_genesis {\"1000000000000000000000000000\",\"100000000000000000000000\"}",
+		ArgsUsage: "<genesisPath>",
+		Flags: []cli.Flag{
+			utils.DataDirFlag,
+		},
+		Category:    "BLOCKCHAIN COMMANDS",
+		Description: "The initINTGenesis initializes a new INT genesis.json file for the network.",
+	}
+
 	initCommand = cli.Command{
-		Action:    utils.MigrateFlags(initGenesis),
+		Action:    utils.MigrateFlags(initCmd),
 		Name:      "init",
 		Usage:     "Bootstrap and initialize a new genesis block",
 		ArgsUsage: "<genesisPath>",
@@ -57,6 +69,40 @@ participating.
 
 It expects the genesis file as argument.`,
 	}
+	initChildChainCmd = cli.Command{
+		Action:      utils.MigrateFlags(InitChildChainCmd),
+		Name:        "init_child_chain",
+		Usage:       "intchain --childChain=child_0,child_1,child_2 init_child_chain",
+		Description: "Initialize child chain genesis from chain info db",
+	}
+	//	initCommand = cli.Command{
+	//		Action:    utils.MigrateFlags(initGenesis),
+	//		Name:      "init",
+	//		Usage:     "Bootstrap and initialize a new genesis block",
+	//		ArgsUsage: "<genesisPath>",
+	//		Flags: []cli.Flag{
+	//			utils.DataDirFlag,
+	//		},
+	//		Category: "BLOCKCHAIN COMMANDS",
+	//		Description: `
+	//The init command initializes a new genesis block and definition for the network.
+	//This is a destructive action and changes the network in which you will be
+	//participating.
+
+	//It expects the genesis file as argument.`,
+	//	}
+
+	generatePrivateValidatorCmd = cli.Command{
+		//Action: GeneratePrivateValidatorCmd,
+		Action: utils.MigrateFlags(GeneratePrivateValidatorCmd),
+		Name:   "gen_priv_validator",
+		Usage:  "gen_priv_validator address", //generate priv_validator.json for address
+		Flags: []cli.Flag{
+			utils.DataDirFlag,
+		},
+		Description: "Generate priv_validator.json for address",
+	}
+
 	importCommand = cli.Command{
 		Action:    utils.MigrateFlags(importChain),
 		Name:      "import",

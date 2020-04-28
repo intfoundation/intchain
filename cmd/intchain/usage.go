@@ -14,16 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-// Contains the geth command usage template and generator.
+// Contains the intchain command usage template and generator.
 
-package main
+package gethmain
 
 import (
 	"io"
 	"sort"
 
-	"github.com/intfoundation/intchain/bridge"
 	"github.com/intfoundation/intchain/cmd/utils"
+	"github.com/intfoundation/intchain/internal/debug"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -65,74 +65,49 @@ var AppHelpFlagGroups = []flagGroup{
 	{
 		Name: "INTCHAIN",
 		Flags: []cli.Flag{
-			//configFileFlag,
+			configFileFlag,
 			utils.DataDirFlag,
 			utils.KeyStoreDirFlag,
 			utils.NoUSBFlag,
 			utils.NetworkIdFlag,
 			utils.TestnetFlag,
-			//utils.RinkebyFlag,
-			//utils.OttomanFlag,
 			utils.SyncModeFlag,
 			utils.GCModeFlag,
 			utils.EthStatsURLFlag,
 			utils.IdentityFlag,
-			//utils.LightServFlag,
-			//utils.LightPeersFlag,
-			//utils.LightKDFFlag,
 		},
 	},
-	/*
-			{Name: "DEVELOPER CHAIN",
-				Flags: []cli.Flag{
-					utils.DeveloperFlag,
-					utils.DeveloperPeriodFlag,
-				},
-			},
-			{
-				Name: "ETHASH",
-				Flags: []cli.Flag{
-					utils.EthashCacheDirFlag,
-					utils.EthashCachesInMemoryFlag,
-					utils.EthashCachesOnDiskFlag,
-					utils.EthashDatasetDirFlag,
-					utils.EthashDatasetsInMemoryFlag,
-					utils.EthashDatasetsOnDiskFlag,
-				},
-			},
-		{
-			Name: "TRANSACTION POOL",
-			Flags: []cli.Flag{
-				utils.TxPoolNoLocalsFlag,
-				utils.TxPoolJournalFlag,
-				utils.TxPoolRejournalFlag,
-				utils.TxPoolPriceLimitFlag,
-				utils.TxPoolPriceBumpFlag,
-				utils.TxPoolAccountSlotsFlag,
-				utils.TxPoolGlobalSlotsFlag,
-				utils.TxPoolAccountQueueFlag,
-				utils.TxPoolGlobalQueueFlag,
-				utils.TxPoolLifetimeFlag,
-			},
+	{
+		Name: "TRANSACTION POOL",
+		Flags: []cli.Flag{
+			utils.TxPoolNoLocalsFlag,
+			utils.TxPoolJournalFlag,
+			utils.TxPoolRejournalFlag,
+			utils.TxPoolPriceLimitFlag,
+			utils.TxPoolPriceBumpFlag,
+			utils.TxPoolAccountSlotsFlag,
+			utils.TxPoolGlobalSlotsFlag,
+			utils.TxPoolAccountQueueFlag,
+			utils.TxPoolGlobalQueueFlag,
+			utils.TxPoolLifetimeFlag,
 		},
-		{
-			Name: "PERFORMANCE TUNING",
-			Flags: []cli.Flag{
-				utils.CacheFlag,
-				utils.CacheDatabaseFlag,
-				utils.CacheTrieFlag,
-				utils.CacheGCFlag,
-			},
+	},
+	{
+		Name: "PERFORMANCE TUNING",
+		Flags: []cli.Flag{
+			utils.CacheFlag,
+			utils.CacheDatabaseFlag,
+			utils.CacheTrieFlag,
+			utils.CacheGCFlag,
 		},
-		/*
-			{
-				Name: "ACCOUNT",
-				Flags: []cli.Flag{
-					utils.UnlockedAccountFlag,
-					utils.PasswordFileFlag,
-				},
-			},
-	*/
+	},
+	{
+		Name: "ACCOUNT",
+		Flags: []cli.Flag{
+			utils.UnlockedAccountFlag,
+			utils.PasswordFileFlag,
+		},
+	},
 	{
 		Name: "API AND CONSOLE",
 		Flags: []cli.Flag{
@@ -140,20 +115,18 @@ var AppHelpFlagGroups = []flagGroup{
 			utils.RPCListenAddrFlag,
 			utils.RPCPortFlag,
 			utils.RPCApiFlag,
-
 			utils.WSEnabledFlag,
 			utils.WSListenAddrFlag,
 			utils.WSPortFlag,
 			utils.WSApiFlag,
 			utils.WSAllowedOriginsFlag,
-
 			utils.IPCDisabledFlag,
 			utils.IPCPathFlag,
 			utils.RPCCORSDomainFlag,
 			utils.RPCVirtualHostsFlag,
-			//utils.JSpathFlag,
-			//utils.ExecFlag,
-			//utils.PreloadJSFlag,
+			utils.JSpathFlag,
+			utils.ExecFlag,
+			utils.PreloadJSFlag,
 		},
 	},
 	{
@@ -176,6 +149,7 @@ var AppHelpFlagGroups = []flagGroup{
 	{
 		Name: "MINER",
 		Flags: []cli.Flag{
+			utils.MiningEnabledFlag,
 			utils.MinerThreadsFlag,
 			utils.MinerGasPriceFlag,
 			utils.MinerGasTargetFlag,
@@ -202,33 +176,14 @@ var AppHelpFlagGroups = []flagGroup{
 		Flags: append([]cli.Flag{
 			utils.MetricsEnabledFlag,
 			utils.NoCompactionFlag,
-		}, bridge.DebugFlags...),
+		}, debug.Flags...),
 	},
-	/*
-		{
-			Name:  "WHISPER (EXPERIMENTAL)",
-			Flags: gethmain.WhisperFlags,
-		},
-		{
-			Name: "DEPRECATED",
-			Flags: []cli.Flag{
-				utils.FastSyncFlag,
-				utils.LightModeFlag,
-			},
-		},
-	*/
 	{
-		Name: "MISC",
-	},
-	/*
-		{
-			Name: "ISTANBUL",
-			Flags: []cli.Flag{
-				utils.IstanbulRequestTimeoutFlag,
-				utils.IstanbulBlockPeriodFlag,
-			},
+		Name: "DEPRECATED",
+		Flags: []cli.Flag{
+			utils.FastSyncFlag,
 		},
-	*/
+	},
 }
 
 // byCategory sorts an array of flagGroup by Name in the order
@@ -321,7 +276,7 @@ func init() {
 
 			// add sorted array to data and render with default printer
 			originalHelpPrinter(w, tmpl, map[string]interface{}{
-				"intcmd":           data,
+				"cmd":              data,
 				"categorizedFlags": sorted,
 			})
 		} else {

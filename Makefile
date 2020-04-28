@@ -7,7 +7,7 @@ build:
 #.PHONY: intchain
 intchain:
 	@ echo "start building......"
-	@ go build -o $(GOPATH)/bin/intchain ./cmd/intchain/
+	@ go build -o ./bin/intchain ./cmd/intchain/
 	@ echo "Done building."
 	@ echo "Run intchain to launch intchain network."
 

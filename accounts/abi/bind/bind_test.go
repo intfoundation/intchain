@@ -1700,7 +1700,7 @@ func TestJavaBindings(t *testing.T) {
 
 package bindtest;
 
-import org.ethereum.geth.*;
+import org.ethereum.intchain.*;
 import java.util.*;
 
 
