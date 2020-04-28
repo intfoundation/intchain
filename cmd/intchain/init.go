@@ -1,4 +1,4 @@
-package gethmain
+package main
 
 import (
 	"fmt"
@@ -70,7 +70,7 @@ func initIntGenesis(ctx *cli.Context) error {
 	}
 	log.Infof("this is init_int_genesis chainId %v", chainId)
 	log.Info("this is init_int_genesis" + ctx.GlobalString(utils.DataDirFlag.Name) + "--" + ctx.Args()[0])
-	return init_int_genesis(GetTendermintConfig(chainId, ctx), balance_str, isMainnet)
+	return init_int_genesis(utils.GetTendermintConfig(chainId, ctx), balance_str, isMainnet)
 }
 
 func init_int_genesis(config cfg.Config, balanceStr string, isMainnet bool) error {
@@ -141,7 +141,7 @@ func initCmd(ctx *cli.Context) error {
 		}
 	}
 
-	return init_cmd(ctx, GetTendermintConfig(chainId, ctx), chainId, intGenesisPath)
+	return init_cmd(ctx, utils.GetTendermintConfig(chainId, ctx), chainId, intGenesisPath)
 }
 
 func InitChildChainCmd(ctx *cli.Context) error {
@@ -165,7 +165,7 @@ func InitChildChainCmd(ctx *cli.Context) error {
 			return errors.New(fmt.Sprintf("unable to retrieve the genesis file for child chain %s", chainId))
 		}
 
-		childConfig := GetTendermintConfig(chainId, ctx)
+		childConfig := utils.GetTendermintConfig(chainId, ctx)
 
 		// Write down genesis and get the genesis path
 		ethGenesisPath := childConfig.GetString("int_genesis_file")
@@ -202,7 +202,7 @@ func init_int_blockchain(chainId string, intGenesisPath string, ctx *cli.Context
 	dbPath := filepath.Join(utils.MakeDataDir(ctx), chainId, "int/chaindata")
 	log.Infof("init_int_blockchain 0 with dbPath: %s", dbPath)
 
-	chainDb, err := rawdb.NewLevelDBDatabase(filepath.Join(utils.MakeDataDir(ctx), chainId, gethmain.ClientIdentifier, "chaindata"), 0, 0, "int/db/chaindata/")
+	chainDb, err := rawdb.NewLevelDBDatabase(filepath.Join(utils.MakeDataDir(ctx), chainId, clientIdentifier, "chaindata"), 0, 0, "int/db/chaindata/")
 	if err != nil {
 		utils.Fatalf("could not open database: %v", err)
 	}

@@ -1,4 +1,4 @@
-package gethmain
+package main
 
 import (
 	"fmt"

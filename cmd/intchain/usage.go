@@ -16,7 +16,7 @@
 
 // Contains the intchain command usage template and generator.
 
-package gethmain
+package main
 
 import (
 	"io"

@@ -14,10 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-package gethmain
+package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/intfoundation/intchain/intdb"
 	"os"
@@ -228,37 +227,37 @@ Use "ethereum dump 0" to dump the genesis block.`,
 
 // initGenesis will initialise the given JSON format genesis file and writes it as
 // the zero'd block (i.e. genesis) or will fail hard if it can't succeed.
-func initGenesis(ctx *cli.Context) error {
-	// Make sure we have a valid genesis JSON
-	genesisPath := ctx.Args().First()
-	if len(genesisPath) == 0 {
-		utils.Fatalf("Must supply path to genesis JSON file")
-	}
-	file, err := os.Open(genesisPath)
-	if err != nil {
-		utils.Fatalf("Failed to read genesis file: %v", err)
-	}
-	defer file.Close()
-
-	genesis := new(core.Genesis)
-	if err := json.NewDecoder(file).Decode(genesis); err != nil {
-		utils.Fatalf("invalid genesis file: %v", err)
-	}
-	// Open an initialise both full and light databases
-	stack := makeFullNode(ctx)
-	for _, name := range []string{"chaindata", "lightchaindata"} {
-		chaindb, err := stack.OpenDatabase(name, 0, 0, "")
-		if err != nil {
-			utils.Fatalf("Failed to open database: %v", err)
-		}
-		_, hash, err := core.SetupGenesisBlock(chaindb, genesis)
-		if err != nil {
-			utils.Fatalf("Failed to write genesis block: %v", err)
-		}
-		log.Info("Successfully wrote genesis state", "database", name, "hash", hash)
-	}
-	return nil
-}
+//func initGenesis(ctx *cli.Context) error {
+//	// Make sure we have a valid genesis JSON
+//	genesisPath := ctx.Args().First()
+//	if len(genesisPath) == 0 {
+//		utils.Fatalf("Must supply path to genesis JSON file")
+//	}
+//	file, err := os.Open(genesisPath)
+//	if err != nil {
+//		utils.Fatalf("Failed to read genesis file: %v", err)
+//	}
+//	defer file.Close()
+//
+//	genesis := new(core.Genesis)
+//	if err := json.NewDecoder(file).Decode(genesis); err != nil {
+//		utils.Fatalf("invalid genesis file: %v", err)
+//	}
+//	// Open an initialise both full and light databases
+//	stack := makeFullNode(ctx)
+//	for _, name := range []string{"chaindata", "lightchaindata"} {
+//		chaindb, err := stack.OpenDatabase(name, 0, 0, "")
+//		if err != nil {
+//			utils.Fatalf("Failed to open database: %v", err)
+//		}
+//		_, hash, err := core.SetupGenesisBlock(chaindb, genesis)
+//		if err != nil {
+//			utils.Fatalf("Failed to write genesis block: %v", err)
+//		}
+//		log.Info("Successfully wrote genesis state", "database", name, "hash", hash)
+//	}
+//	return nil
+//}
 
 func importChain(ctx *cli.Context) error {
 	if len(ctx.Args()) < 1 {
@@ -271,7 +270,8 @@ func importChain(ctx *cli.Context) error {
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
-	utils.RegisterEthService(stack, &cfg.Eth)
+	cch := GetCMInstance(ctx).cch
+	utils.RegisterEthService(stack, &cfg.Eth, ctx, cch)
 	//stack := makeFullNode(ctx)
 	defer stack.Close()
 
@@ -373,7 +373,7 @@ func exportChain(ctx *cli.Context) error {
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
-	utils.RegisterEthService(stack, &cfg.Eth)
+	utils.RegisterEthService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
 	//stack := makeFullNode(ctx)
 	defer stack.Close()
 
@@ -416,7 +416,7 @@ func importPreimages(ctx *cli.Context) error {
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
-	utils.RegisterEthService(stack, &cfg.Eth)
+	utils.RegisterEthService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
 	defer stack.Close()
 
 	db := utils.MakeChainDatabase(ctx, stack)
@@ -441,7 +441,7 @@ func exportPreimages(ctx *cli.Context) error {
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
-	utils.RegisterEthService(stack, &cfg.Eth)
+	utils.RegisterEthService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
 	defer stack.Close()
 
 	db := utils.MakeChainDatabase(ctx, stack)
@@ -459,7 +459,7 @@ func copyDb(ctx *cli.Context) error {
 		utils.Fatalf("Source chaindata directory path argument missing")
 	}
 	// Initialize a new chain for the running node to sync into
-	stack := makeFullNode(ctx)
+	stack := makeFullNode(ctx, GetCMInstance(ctx).cch)
 	chain, chainDb := utils.MakeChain(ctx, stack)
 
 	syncmode := *utils.GlobalTextMarshaler(ctx, utils.SyncModeFlag.Name).(*downloader.SyncMode)
@@ -531,7 +531,7 @@ func removeDB(ctx *cli.Context) error {
 }
 
 func dump(ctx *cli.Context) error {
-	stack := makeFullNode(ctx)
+	stack := makeFullNode(ctx, GetCMInstance(ctx).cch)
 	chain, chainDb := utils.MakeChain(ctx, stack)
 	for _, arg := range ctx.Args() {
 		var block *types.Block
@@ -573,7 +573,7 @@ func countBlockState(ctx *cli.Context) error {
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
-	utils.RegisterEthService(stack, &cfg.Eth)
+	utils.RegisterEthService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
 	defer stack.Close()
 
 	chainDb := utils.MakeChainDatabase(ctx, stack)

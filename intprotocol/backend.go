@@ -59,7 +59,7 @@ type LesServer interface {
 	SetBloomBitsIndexer(bbIndexer *core.ChainIndexer)
 }
 
-// IntChain implements the IntChain full node service.
+// IntChain implements the INT Chain full node service.
 type IntChain struct {
 	config      *Config
 	chainConfig *params.ChainConfig
@@ -96,8 +96,8 @@ type IntChain struct {
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
 }
 
-// New creates a new IntChain object (including the
-// initialisation of the common IntChain object)
+// New creates a new INT Chain object (including the
+// initialisation of the common INT Chain object)
 func New(ctx *node.ServiceContext, config *Config, cliCtx *cli.Context,
 	cch core.CrossChainHelper, logger log.Logger, isTestnet bool) (*IntChain, error) {
 

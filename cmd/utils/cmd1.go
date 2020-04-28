@@ -19,9 +19,9 @@ func StartNodeEx(ctx *cli.Context, stack *node.Node) error {
 
 	// Mine or not?
 	mining := false
-	var ethereum *intprotocol.IntChain
-	if err := stack.Service(&ethereum); err == nil {
-		if ipbft, ok := ethereum.Engine().(consensus.IPBFT); ok {
+	var intchain *intprotocol.IntChain
+	if err := stack.Service(&intchain); err == nil {
+		if ipbft, ok := intchain.Engine().(consensus.IPBFT); ok {
 			mining = ipbft.ShouldStart()
 			if mining {
 				stack.GetLogger().Info("IPBFT Consensus Engine will be start shortly")
@@ -32,9 +32,9 @@ func StartNodeEx(ctx *cli.Context, stack *node.Node) error {
 	// Start auxiliary services if enabled
 	if mining || ctx.GlobalBool(DeveloperFlag.Name) {
 		stack.GetLogger().Info("Mine will be start shortly")
-		// Mining only makes sense if a full Ethereum node is running
-		var ethereum *intprotocol.IntChain
-		if err := stack.Service(&ethereum); err != nil {
+		// Mining only makes sense if a full intchain node is running
+		var intchain *intprotocol.IntChain
+		if err := stack.Service(&intchain); err != nil {
 			Fatalf("INT Chain service not running: %v", err)
 		}
 
@@ -43,13 +43,13 @@ func StartNodeEx(ctx *cli.Context, stack *node.Node) error {
 			type threaded interface {
 				SetThreads(threads int)
 			}
-			if th, ok := ethereum.Engine().(threaded); ok {
+			if th, ok := intchain.Engine().(threaded); ok {
 				th.SetThreads(threads)
 			}
 		}
 		// Set the gas price to the limits from the CLI and start mining
-		ethereum.TxPool().SetGasPrice(GlobalBig(ctx, MinerGasPriceFlag.Name))
-		if err := ethereum.StartMining(true); err != nil {
+		intchain.TxPool().SetGasPrice(GlobalBig(ctx, MinerGasPriceFlag.Name))
+		if err := intchain.StartMining(true); err != nil {
 			Fatalf("Failed to start mining: %v", err)
 		}
 	}

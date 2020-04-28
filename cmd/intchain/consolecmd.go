@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-package gethmain
+package main
 
 import (
 	"fmt"
@@ -77,8 +77,8 @@ JavaScript API. See https://github.com/intfoundation/intchain/wiki/JavaScript-Co
 // same time.
 func localConsole(ctx *cli.Context) error {
 	// Create and start the node based on the CLI flags
-	node := makeFullNode(ctx)
-	startNode(ctx, node)
+	node := makeFullNode(ctx, GetCMInstance(ctx).cch)
+	utils.StartNodeEx(ctx, node)
 	defer node.Close()
 
 	// Attach to the newly started node and start the JavaScript console
@@ -175,8 +175,8 @@ func dialRPC(endpoint string) (*rpc.Client, error) {
 // everything down.
 func ephemeralConsole(ctx *cli.Context) error {
 	// Create and start the node based on the CLI flags
-	node := makeFullNode(ctx)
-	startNode(ctx, node)
+	node := makeFullNode(ctx, GetCMInstance(ctx).cch)
+	utils.StartNodeEx(ctx, node)
 	defer node.Close()
 
 	// Attach to the newly started node and start the JavaScript console

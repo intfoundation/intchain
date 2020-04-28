@@ -1,8 +1,8 @@
-package gethmain
+package main
 
 import (
 	"fmt"
-	"github.com/intfoundation/intchain/chain"
+	"github.com/intfoundation/intchain/cmd/utils"
 	"github.com/intfoundation/intchain/consensus/ipbft/consensus"
 	"github.com/intfoundation/intchain/internal/debug"
 	"github.com/intfoundation/intchain/log"
@@ -22,10 +22,10 @@ func intchainCmd(ctx *cli.Context) error {
 
 	log.Info("INT Chain is the world's first bottom up new-generation blockchain of things (BoT) communication standard and base application platform.")
 
-	chainMgr := chain.GetCMInstance(ctx)
+	chainMgr := GetCMInstance(ctx)
 
 	// ChildChainFlag flag
-	requestChildChain := strings.Split(ctx.GlobalString(ChildChainFlag.Name), ",")
+	requestChildChain := strings.Split(ctx.GlobalString(utils.ChildChainFlag.Name), ",")
 
 	// Initial P2P Server
 	chainMgr.InitP2P()
