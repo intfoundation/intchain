@@ -1,13 +1,12 @@
-package chain
+package main
 
 import (
+	cfg "github.com/intfoundation/go-config"
 	"github.com/intfoundation/intchain/accounts/keystore"
-	"github.com/intfoundation/intchain/bridge"
 	"github.com/intfoundation/intchain/cmd/utils"
 	tdmTypes "github.com/intfoundation/intchain/consensus/ipbft/types"
 	"github.com/intfoundation/intchain/log"
 	intnode "github.com/intfoundation/intchain/node"
-	cfg "github.com/intfoundation/go-config"
 	"gopkg.in/urfave/cli.v1"
 	"path/filepath"
 )
@@ -27,12 +26,11 @@ type Chain struct {
 func LoadMainChain(ctx *cli.Context, chainId string) *Chain {
 
 	chain := &Chain{Id: chainId}
-	config := GetTendermintConfig(chainId, ctx)
+	config := utils.GetTendermintConfig(chainId, ctx)
 	chain.Config = config
 
-	//always start bridge
-	log.Info("bridge.MakeSystemNode")
-	stack := bridge.MakeSystemNode(chainId, ctx, GetCMInstance(ctx).cch)
+	log.Info("Make full node")
+	stack := makeFullNode(ctx, GetCMInstance(ctx).cch)
 	chain.IntNode = stack
 
 	return chain
@@ -50,13 +48,12 @@ func LoadChildChain(ctx *cli.Context, chainId string) *Chain {
 	//	return nil
 	//}
 	chain := &Chain{Id: chainId}
-	config := GetTendermintConfig(chainId, ctx)
+	config := utils.GetTendermintConfig(chainId, ctx)
 	chain.Config = config
 
-	//always start bridge
-	log.Infof("chainId: %s, bridge.MakeSystemNode", chainId)
+	log.Infof("chainId: %s, makeFullNode", chainId)
 	cch := GetCMInstance(ctx).cch
-	stack := bridge.MakeSystemNode(chainId, ctx, cch)
+	stack := makeFullNode(ctx, cch)
 	if stack == nil {
 		return nil
 	} else {
@@ -83,7 +80,7 @@ func StartChain(ctx *cli.Context, chain *Chain, startDone chan<- struct{}) error
 func CreateChildChain(ctx *cli.Context, chainId string, validator tdmTypes.PrivValidator, keyJson []byte, validators []tdmTypes.GenesisValidator) error {
 
 	// Get Tendermint config base on chain id
-	config := GetTendermintConfig(chainId, ctx)
+	config := utils.GetTendermintConfig(chainId, ctx)
 
 	// Save the KeyStore File (Optional)
 	if len(keyJson) > 0 {

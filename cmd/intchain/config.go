@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
 
-package gethmain
+package main
 
 import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/log"
 	"io"
 	"os"
@@ -141,10 +142,10 @@ func makeConfigNode(ctx *cli.Context, chainId string) (*node.Node, gethConfig) {
 	return stack, cfg
 }
 
-func makeFullNode(ctx *cli.Context) *node.Node {
+func makeFullNode(ctx *cli.Context, cch core.CrossChainHelper) *node.Node {
 	stack, cfg := makeConfigNode(ctx, clientIdentifier)
 
-	utils.RegisterEthService(stack, &cfg.Eth)
+	utils.RegisterEthService(stack, &cfg.Eth, ctx, cch)
 
 	// Whisper must be explicitly enabled by specifying at least 1 whisper flag or in dev mode
 	//shhEnabled := enableWhisper(ctx)
@@ -163,7 +164,11 @@ func makeFullNode(ctx *cli.Context) *node.Node {
 	//if cfg.Ethstats.URL != "" {
 	//	utils.RegisterEthStatsService(stack, cfg.Ethstats.URL)
 	//}
-	return stack
+	if err := stack.GatherServices(); err != nil {
+		return nil
+	} else {
+		return stack
+	}
 }
 
 // dumpConfig is the dumpconfig command.

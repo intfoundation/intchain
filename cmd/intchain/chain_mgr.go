@@ -1,6 +1,8 @@
-package chain
+package main
 
 import (
+	"github.com/intfoundation/go-crypto"
+	dbm "github.com/intfoundation/go-db"
 	"github.com/intfoundation/intchain/accounts"
 	"github.com/intfoundation/intchain/cmd/utils"
 	"github.com/intfoundation/intchain/common"
@@ -16,8 +18,6 @@ import (
 	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/node"
 	"github.com/pkg/errors"
-	"github.com/intfoundation/go-crypto"
-	dbm "github.com/intfoundation/go-db"
 	"gopkg.in/urfave/cli.v1"
 	"io/ioutil"
 	"net"

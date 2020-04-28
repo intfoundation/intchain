@@ -1,9 +1,11 @@
-package chain
+package main
 
 import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/intfoundation/go-crypto"
+	dbm "github.com/intfoundation/go-db"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/common/math"
 	"github.com/intfoundation/intchain/consensus"
@@ -22,8 +24,6 @@ import (
 	"github.com/intfoundation/intchain/params"
 	"github.com/intfoundation/intchain/rlp"
 	"github.com/intfoundation/intchain/trie"
-	"github.com/intfoundation/go-crypto"
-	dbm "github.com/intfoundation/go-db"
 	"math/big"
 	"regexp"
 	"strings"

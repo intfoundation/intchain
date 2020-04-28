@@ -48,6 +48,10 @@ import (
 	"github.com/intfoundation/intchain/p2p/netutil"
 	"github.com/intfoundation/intchain/params"
 	"gopkg.in/urfave/cli.v1"
+
+	// import tendermint config
+	cfg "github.com/intfoundation/go-config"
+	tmcfg "github.com/intfoundation/intchain/consensus/ipbft/config/tendermint"
 )
 
 var (
@@ -1073,11 +1077,12 @@ func SetGeneralConfig(ctx *cli.Context) {
 	params.GenCfg.PerfTest = ctx.GlobalBool(PerfTestFlag.Name)
 }
 
-// RegisterEthService adds an Ethereum client to the stack.
-func RegisterEthService(stack *node.Node, cfg *intprotocol.Config) {
+// registerEthService adds an INT Chain client to the stack.
+func RegisterEthService(stack *node.Node, cfg *intprotocol.Config, cliCtx *cli.Context, cch core.CrossChainHelper) {
 	var err error
 	err = stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
-		fullNode, err := intprotocol.New(ctx, cfg, nil, nil, stack.GetLogger(), false)
+		//return NewBackend(ctx, cfg, cliCtx, pNode, cch)
+		fullNode, err := intprotocol.New(ctx, cfg, cliCtx, cch, stack.GetLogger(), cliCtx.GlobalBool(TestnetFlag.Name))
 		//if fullNode != nil && cfg.LightServ > 0 {
 		//	ls, _ := les.NewLesServer(fullNode, cfg)
 		//	fullNode.AddLesServer(ls)
@@ -1085,9 +1090,25 @@ func RegisterEthService(stack *node.Node, cfg *intprotocol.Config) {
 		return fullNode, err
 	})
 	if err != nil {
-		Fatalf("Failed to register the Ethereum service: %v", err)
+		Fatalf("Failed to register the intchain service: %v", err)
 	}
 }
+
+//// RegisterEthService adds an INT Chain client to the stack.
+//func RegisterEthService(stack *node.Node, cfg *intprotocol.Config) {
+//	var err error
+//	err = stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
+//		fullNode, err := intprotocol.New(ctx, cfg, nil, nil, stack.GetLogger(), false)
+//		//if fullNode != nil && cfg.LightServ > 0 {
+//		//	ls, _ := les.NewLesServer(fullNode, cfg)
+//		//	fullNode.AddLesServer(ls)
+//		//}
+//		return fullNode, err
+//	})
+//	if err != nil {
+//		Fatalf("Failed to register the intchain service: %v", err)
+//	}
+//}
 
 // RegisterShhService configures Whisper and adds it to the given node.
 //func RegisterShhService(stack *node.Node, cfg *whisper.Config) {
@@ -1221,4 +1242,16 @@ func MigrateFlags(action func(ctx *cli.Context) error) func(*cli.Context) error 
 		}
 		return action(ctx)
 	}
+}
+
+var (
+	// ipbft config
+	Config cfg.Config
+)
+
+func GetTendermintConfig(chainId string, ctx *cli.Context) cfg.Config {
+	datadir := ctx.GlobalString(DataDirFlag.Name)
+	config := tmcfg.GetConfig(datadir, chainId)
+
+	return config
 }
