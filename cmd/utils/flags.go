@@ -1119,23 +1119,6 @@ func RegisterEthService(stack *node.Node, cfg *intprotocol.Config, cliCtx *cli.C
 //	}
 //}
 
-// RegisterEthStatsService configures the Ethereum Stats daemon and adds it to
-// th egiven node.
-//func RegisterEthStatsService(stack *node.Node, url string) {
-//	if err := stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
-//		// Retrieve both intprotocol and les services
-//		var ethServ *intprotocol.Ethereum
-//		ctx.Service(&ethServ)
-//
-//		var lesServ *les.LightEthereum
-//		ctx.Service(&lesServ)
-//
-//		return intstats.New(url, ethServ, lesServ)
-//	}); err != nil {
-//		Fatalf("Failed to register the Ethereum Stats service: %v", err)
-//	}
-//}
-
 // MakeChainDatabase open an LevelDB using the flags passed to the client and will hard crash if it fails.
 func MakeChainDatabase(ctx *cli.Context, stack *node.Node) intdb.Database {
 	var (
