@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/golang-lru"
+	"github.com/intfoundation/go-wire"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/consensus"
 	"github.com/intfoundation/intchain/consensus/ipbft/epoch"
@@ -13,7 +14,6 @@ import (
 	"github.com/intfoundation/intchain/core/types"
 	"github.com/intfoundation/intchain/params"
 	"github.com/intfoundation/intchain/rpc"
-	"github.com/intfoundation/go-wire"
 	"math/big"
 	"time"
 )
@@ -372,7 +372,7 @@ func (sb *backend) verifyCommittedSeals(chain consensus.ChainReader, header *typ
 	}
 
 	valSet := epoch.Validators
-	fmt.Printf("verifyCommittedSeals verifyCommittedSeals valSet %v\n", valSet)
+	//fmt.Printf("verifyCommittedSeals verifyCommittedSeals valSet %v\n", valSet)
 	if !bytes.Equal(valSet.Hash(), tdmExtra.ValidatorsHash) {
 		sb.logger.Errorf("verifyCommittedSeals error. Our Validator Set %x, tdmExtra Valdiator %x", valSet.Hash(), tdmExtra.ValidatorsHash)
 		return errInconsistentValidatorSet

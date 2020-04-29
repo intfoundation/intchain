@@ -99,7 +99,7 @@ func (self *Miner) update() {
 			}
 			switch ev.Data.(type) {
 			case downloader.StartEvent:
-				self.logger.Debug("(self *Miner) update(); downloader.StartEvent received\n")
+				self.logger.Debug("(self *Miner) update(); downloader.StartEvent received")
 				atomic.StoreInt32(&self.canStart, 0)
 				if self.Mining() {
 					self.Stop()
@@ -108,7 +108,7 @@ func (self *Miner) update() {
 				}
 			case downloader.DoneEvent, downloader.FailedEvent:
 
-				self.logger.Debug("(self *Miner) update(); downloader.DoneEvent, downloader.FailedEvent received\n")
+				self.logger.Debug("(self *Miner) update(); downloader.DoneEvent, downloader.FailedEvent received")
 				shouldStart := atomic.LoadInt32(&self.shouldStart) == 1
 
 				atomic.StoreInt32(&self.canStart, 1)
