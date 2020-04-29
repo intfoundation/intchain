@@ -412,7 +412,7 @@ func importPreimages(ctx *cli.Context) error {
 
 	chainName := ctx.Args().Get(1)
 	if chainName == "" {
-		chainName = "intchain"
+		utils.Fatalf("This command requires chain name specified.")
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
@@ -437,7 +437,7 @@ func exportPreimages(ctx *cli.Context) error {
 
 	chainName := ctx.Args().Get(1)
 	if chainName == "" {
-		chainName = "intchain"
+		utils.Fatalf("This command requires chain name specified.")
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
@@ -458,8 +458,14 @@ func copyDb(ctx *cli.Context) error {
 	if len(ctx.Args()) != 1 {
 		utils.Fatalf("Source chaindata directory path argument missing")
 	}
+
+	chainName := ctx.Args().Get(1)
+	if chainName == "" {
+		utils.Fatalf("This command requires chain name specified.")
+	}
+
 	// Initialize a new chain for the running node to sync into
-	stack := makeFullNode(ctx, GetCMInstance(ctx).cch)
+	stack, _ := makeConfigNode(ctx, chainName)
 	chain, chainDb := utils.MakeChain(ctx, stack)
 
 	syncmode := *utils.GlobalTextMarshaler(ctx, utils.SyncModeFlag.Name).(*downloader.SyncMode)
@@ -502,7 +508,12 @@ func copyDb(ctx *cli.Context) error {
 }
 
 func removeDB(ctx *cli.Context) error {
-	stack, _ := makeConfigNode(ctx, clientIdentifier)
+	chainName := ctx.Args().Get(1)
+	if chainName == "" {
+		utils.Fatalf("This command requires chain name specified.")
+	}
+
+	stack, _ := makeConfigNode(ctx, chainName)
 
 	for _, name := range []string{"chaindata", "lightchaindata"} {
 		// Ensure the database exists in the first place
@@ -531,7 +542,12 @@ func removeDB(ctx *cli.Context) error {
 }
 
 func dump(ctx *cli.Context) error {
-	stack := makeFullNode(ctx, GetCMInstance(ctx).cch)
+	chainName := ctx.Args().Get(1)
+	if chainName == "" {
+		utils.Fatalf("This command requires chain name specified.")
+	}
+
+	stack, _ := makeConfigNode(ctx, chainName)
 	chain, chainDb := utils.MakeChain(ctx, stack)
 	for _, arg := range ctx.Args() {
 		var block *types.Block
@@ -569,7 +585,7 @@ func countBlockState(ctx *cli.Context) error {
 
 	chainName := ctx.Args().Get(1)
 	if chainName == "" {
-		chainName = "intchain"
+		utils.Fatalf("This command requires chain name specified.")
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)

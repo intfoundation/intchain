@@ -141,8 +141,8 @@ func makeConfigNode(ctx *cli.Context, chainId string) (*node.Node, gethConfig) {
 	return stack, cfg
 }
 
-func makeFullNode(ctx *cli.Context, cch core.CrossChainHelper) *node.Node {
-	stack, cfg := makeConfigNode(ctx, clientIdentifier)
+func makeFullNode(ctx *cli.Context, cch core.CrossChainHelper, chainId string) *node.Node {
+	stack, cfg := makeConfigNode(ctx, chainId)
 
 	utils.RegisterEthService(stack, &cfg.Eth, ctx, cch)
 

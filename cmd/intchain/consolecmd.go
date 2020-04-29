@@ -76,8 +76,13 @@ JavaScript API. See https://github.com/intfoundation/intchain/wiki/JavaScript-Co
 // localConsole starts a new intchain node, attaching a JavaScript console to it at the
 // same time.
 func localConsole(ctx *cli.Context) error {
+	chainName := ctx.Args().First()
+	if chainName == "" {
+		utils.Fatalf("This command requires chain name specified.")
+	}
+
 	// Create and start the node based on the CLI flags
-	node := makeFullNode(ctx, GetCMInstance(ctx).cch)
+	node := makeFullNode(ctx, GetCMInstance(ctx).cch, chainName)
 	utils.StartNodeEx(ctx, node)
 	defer node.Close()
 
@@ -174,8 +179,13 @@ func dialRPC(endpoint string) (*rpc.Client, error) {
 // console to it, executes each of the files specified as arguments and tears
 // everything down.
 func ephemeralConsole(ctx *cli.Context) error {
+	chainName := ctx.Args().First()
+	if chainName == "" {
+		utils.Fatalf("This command requires chain name specified.")
+	}
+
 	// Create and start the node based on the CLI flags
-	node := makeFullNode(ctx, GetCMInstance(ctx).cch)
+	node := makeFullNode(ctx, GetCMInstance(ctx).cch, chainName)
 	utils.StartNodeEx(ctx, node)
 	defer node.Close()
 

@@ -30,7 +30,7 @@ func LoadMainChain(ctx *cli.Context, chainId string) *Chain {
 	chain.Config = config
 
 	log.Info("Make full node")
-	stack := makeFullNode(ctx, GetCMInstance(ctx).cch)
+	stack := makeFullNode(ctx, GetCMInstance(ctx).cch, chainId)
 	chain.IntNode = stack
 
 	return chain
@@ -53,7 +53,7 @@ func LoadChildChain(ctx *cli.Context, chainId string) *Chain {
 
 	log.Infof("chainId: %s, makeFullNode", chainId)
 	cch := GetCMInstance(ctx).cch
-	stack := makeFullNode(ctx, cch)
+	stack := makeFullNode(ctx, cch, chainId)
 	if stack == nil {
 		return nil
 	} else {

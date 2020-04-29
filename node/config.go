@@ -238,9 +238,9 @@ func DefaultWSEndpoint() string {
 func (c *Config) NodeName() string {
 	name := c.name()
 	// Backwards compatibility: previous versions used title-cased "Geth", keep that.
-	if name == "intchain" || name == "intchain-testnet" {
-		name = "intchain"
-	}
+	//if name == "intchain" || name == "intchain-testnet" {
+	//	name = "intchain"
+	//}
 	if c.UserIdent != "" {
 		name += "/" + c.UserIdent
 	}
@@ -288,16 +288,16 @@ func (c *Config) ResolvePath(path string) string {
 		return ""
 	}
 	// Backwards-compatibility: ensure that data directory files created
-	//if c.name() == "intchain" && isOldGethResource[path] {
-	//	oldpath := ""
-	//	if c.Name == "intchain" {
-	//		oldpath = filepath.Join(c.DataDir, path)
-	//	}
-	//	if oldpath != "" && common.FileExist(oldpath) {
-	//		// TODO: print warning
-	//		return oldpath
-	//	}
-	//}
+	if c.name() == "intchain" && isOldGethResource[path] {
+		oldpath := ""
+		if c.Name == "intchain" {
+			oldpath = filepath.Join(c.DataDir, path)
+		}
+		if oldpath != "" && common.FileExist(oldpath) {
+			// TODO: print warning
+			return oldpath
+		}
+	}
 
 	if isGeneralResource[path] {
 		return filepath.Join(c.GeneralDataDir, path)
@@ -310,6 +310,7 @@ func (c *Config) instanceDir() string {
 	if c.DataDir == "" {
 		return ""
 	}
+	fmt.Printf("============================================= %v, %v\n", c.DataDir, c.name())
 	return filepath.Join(c.DataDir, c.name())
 }
 

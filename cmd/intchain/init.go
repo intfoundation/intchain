@@ -199,10 +199,10 @@ func init_cmd(ctx *cli.Context, config cfg.Config, chainId string, intGenesisPat
 
 func init_int_blockchain(chainId string, intGenesisPath string, ctx *cli.Context) {
 
-	dbPath := filepath.Join(utils.MakeDataDir(ctx), chainId, "int/chaindata")
+	dbPath := filepath.Join(utils.MakeDataDir(ctx), chainId, clientIdentifier, "/chaindata")
 	log.Infof("init_int_blockchain 0 with dbPath: %s", dbPath)
 
-	chainDb, err := rawdb.NewLevelDBDatabase(filepath.Join(utils.MakeDataDir(ctx), chainId, clientIdentifier, "chaindata"), 0, 0, "int/db/chaindata/")
+	chainDb, err := rawdb.NewLevelDBDatabase(filepath.Join(utils.MakeDataDir(ctx), chainId, clientIdentifier, "/chaindata"), 0, 0, "intchain/db/chaindata/")
 	if err != nil {
 		utils.Fatalf("could not open database: %v", err)
 	}

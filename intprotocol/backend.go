@@ -104,7 +104,7 @@ func New(ctx *node.ServiceContext, config *Config, cliCtx *cli.Context,
 	if !config.SyncMode.IsValid() {
 		return nil, fmt.Errorf("invalid sync mode %d", config.SyncMode)
 	}
-	chainDb, err := ctx.OpenDatabase("chaindata", config.DatabaseCache, config.DatabaseHandles, "eth/db/chaindata/")
+	chainDb, err := ctx.OpenDatabase("chaindata", config.DatabaseCache, config.DatabaseHandles, "intchain/db/chaindata/")
 	if err != nil {
 		return nil, err
 	}
