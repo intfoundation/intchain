@@ -888,7 +888,7 @@ func SetNodeConfig(ctx *cli.Context, cfg *node.Config) {
 	SetHTTP(ctx, cfg)
 	SetWS(ctx, cfg)
 	setNodeUserIdent(ctx, cfg)
-	fmt.Printf("++++++++++++++++++++++++ %v\n", cfg.ChainId)
+
 	switch {
 	case ctx.GlobalIsSet(DataDirFlag.Name):
 		cfg.GeneralDataDir = ctx.GlobalString(DataDirFlag.Name)

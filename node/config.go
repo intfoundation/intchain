@@ -310,7 +310,7 @@ func (c *Config) instanceDir() string {
 	if c.DataDir == "" {
 		return ""
 	}
-	fmt.Printf("============================================= %v, %v\n", c.DataDir, c.name())
+
 	return filepath.Join(c.DataDir, c.name())
 }
 
