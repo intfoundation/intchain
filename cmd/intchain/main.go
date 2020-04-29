@@ -35,8 +35,6 @@ const (
 	clientIdentifier = "intchain" // Client identifier to advertise over the network
 )
 
-//var ClientIdentifier = clientIdentifier
-
 var (
 	// Git SHA1 commit hash of the release (set via linker flags)
 	gitCommit = ""
