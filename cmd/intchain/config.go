@@ -24,7 +24,6 @@ import (
 	"github.com/intfoundation/intchain/log"
 	"io"
 	"os"
-	"path"
 	"reflect"
 	"unicode"
 
@@ -123,8 +122,8 @@ func makeConfigNode(ctx *cli.Context, chainId string) (*node.Node, gethConfig) {
 	cfg.Node.ChainId = chainId
 
 	// Setup Log
-	logDir := path.Join(ctx.GlobalString("datadir"), ctx.GlobalString("logDir"), chainId)
-	cfg.Node.Logger = log.NewLogger(chainId, logDir, ctx.GlobalInt("verbosity"), ctx.GlobalBool("debug"), ctx.GlobalString("vmodule"), ctx.GlobalString("backtrace"))
+	//logDir := path.Join(ctx.GlobalString("datadir"), ctx.GlobalString("logDir"), chainId)
+	cfg.Node.Logger = log.NewLogger(chainId, "", ctx.GlobalInt("verbosity"), ctx.GlobalBool("debug"), ctx.GlobalString("vmodule"), ctx.GlobalString("backtrace"))
 
 	utils.SetNodeConfig(ctx, &cfg.Node)
 	stack, err := node.New(&cfg.Node)
