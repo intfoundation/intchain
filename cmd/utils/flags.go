@@ -23,7 +23,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -523,64 +522,63 @@ var (
 	}
 
 	// Flags holds all command-line flags required for debugging.
-	DebugFlags = []cli.Flag{
-		verbosityFlag, vmoduleFlag, backtraceAtFlag, debugFlag,
-		pprofFlag, pprofAddrFlag, pprofPortFlag,
-		memprofilerateFlag, blockprofilerateFlag, cpuprofileFlag, traceFlag,
-	}
+	//DebugFlags = []cli.Flag{
+	//	verbosityFlag, vmoduleFlag, backtraceAtFlag, debugFlag,
+	//	pprofFlag, pprofAddrFlag, pprofPortFlag,
+	//	memprofilerateFlag, blockprofilerateFlag, cpuprofileFlag, traceFlag,
+	//}
 
 	//from debug module
-	// Not exposed by go-ethereum
-	verbosityFlag = cli.IntFlag{
-		Name:  "verbosity",
-		Usage: "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail",
-		Value: 3,
-	}
-	vmoduleFlag = cli.StringFlag{
-		Name:  "vmodule",
-		Usage: "Per-module verbosity: comma-separated list of <pattern>=<level> (e.g. eth/*=5,intp2p=4)",
-		Value: "",
-	}
-	backtraceAtFlag = cli.StringFlag{
-		Name:  "backtrace",
-		Usage: "Request a stack trace at a specific logging statement (e.g. \"block.go:271\")",
-		Value: "",
-	}
-	debugFlag = cli.BoolFlag{
-		Name:  "debug",
-		Usage: "Prepends log messages with call-site location (file and line number)",
-	}
-	pprofFlag = cli.BoolFlag{
-		Name:  "pprof",
-		Usage: "Enable the pprof HTTP server",
-	}
-	pprofPortFlag = cli.IntFlag{
-		Name:  "pprofport",
-		Usage: "pprof HTTP server listening port",
-		Value: 6060,
-	}
-	pprofAddrFlag = cli.StringFlag{
-		Name:  "pprofaddr",
-		Usage: "pprof HTTP server listening interface",
-		Value: "127.0.0.1",
-	}
-	memprofilerateFlag = cli.IntFlag{
-		Name:  "memprofilerate",
-		Usage: "Turn on memory profiling with the given rate",
-		Value: runtime.MemProfileRate,
-	}
-	blockprofilerateFlag = cli.IntFlag{
-		Name:  "blockprofilerate",
-		Usage: "Turn on block profiling with the given rate",
-	}
-	cpuprofileFlag = cli.StringFlag{
-		Name:  "cpuprofile",
-		Usage: "Write CPU profile to the given file",
-	}
-	traceFlag = cli.StringFlag{
-		Name:  "trace",
-		Usage: "Write execution trace to the given file",
-	}
+	//verbosityFlag = cli.IntFlag{
+	//	Name:  "verbosity",
+	//	Usage: "Logging verbosity: 0=silent, 1=error, 2=warn, 3=info, 4=debug, 5=detail",
+	//	Value: 3,
+	//}
+	//vmoduleFlag = cli.StringFlag{
+	//	Name:  "vmodule",
+	//	Usage: "Per-module verbosity: comma-separated list of <pattern>=<level> (e.g. eth/*=5,intp2p=4)",
+	//	Value: "",
+	//}
+	//backtraceAtFlag = cli.StringFlag{
+	//	Name:  "backtrace",
+	//	Usage: "Request a stack trace at a specific logging statement (e.g. \"block.go:271\")",
+	//	Value: "",
+	//}
+	//debugFlag = cli.BoolFlag{
+	//	Name:  "debug",
+	//	Usage: "Prepends log messages with call-site location (file and line number)",
+	//}
+	//pprofFlag = cli.BoolFlag{
+	//	Name:  "pprof",
+	//	Usage: "Enable the pprof HTTP server",
+	//}
+	//pprofPortFlag = cli.IntFlag{
+	//	Name:  "pprofport",
+	//	Usage: "pprof HTTP server listening port",
+	//	Value: 6060,
+	//}
+	//pprofAddrFlag = cli.StringFlag{
+	//	Name:  "pprofaddr",
+	//	Usage: "pprof HTTP server listening interface",
+	//	Value: "127.0.0.1",
+	//}
+	//memprofilerateFlag = cli.IntFlag{
+	//	Name:  "memprofilerate",
+	//	Usage: "Turn on memory profiling with the given rate",
+	//	Value: runtime.MemProfileRate,
+	//}
+	//blockprofilerateFlag = cli.IntFlag{
+	//	Name:  "blockprofilerate",
+	//	Usage: "Turn on block profiling with the given rate",
+	//}
+	//cpuprofileFlag = cli.StringFlag{
+	//	Name:  "cpuprofile",
+	//	Usage: "Write CPU profile to the given file",
+	//}
+	//traceFlag = cli.StringFlag{
+	//	Name:  "trace",
+	//	Usage: "Write execution trace to the given file",
+	//}
 )
 
 // MakeDataDir retrieves the currently requested data directory, terminating
