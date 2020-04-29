@@ -19,6 +19,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/intfoundation/intchain/log"
 	"os"
 	"runtime"
 	"sort"
@@ -97,7 +98,7 @@ var (
 		utils.ExtraDataFlag,
 		//configFileFlag,
 
-		utils.LogDirFlag,
+		//utils.LogDirFlag,
 		utils.ChildChainFlag,
 	}
 
@@ -157,8 +158,11 @@ func init() {
 	app.Before = func(ctx *cli.Context) error {
 		runtime.GOMAXPROCS(runtime.NumCPU())
 
-		logdir := ""
-		if err := debug.Setup(ctx, logdir); err != nil {
+		// Setup the Global Logger
+
+		log.NewLogger("", "", ctx.GlobalInt("verbosity"), ctx.GlobalBool("debug"), ctx.GlobalString("vmodule"), ctx.GlobalString("backtrace"))
+
+		if err := debug.Setup(ctx); err != nil {
 			return err
 		}
 

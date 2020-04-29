@@ -109,7 +109,7 @@ func init() {
 
 // Setup initializes profiling and logging based on the CLI flags.
 // It should be called as early as possible in the program.
-func Setup(ctx *cli.Context, logdir string) error {
+func Setup(ctx *cli.Context) error {
 	// logging
 	// (Update, Logging has been setup in the main intchain cmd)
 	//log.PrintOrigins(ctx.GlobalBool(debugFlag.Name))

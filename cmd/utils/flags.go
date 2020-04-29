@@ -466,11 +466,11 @@ var (
 	// IntChain Flags
 
 	// Log Folder
-	LogDirFlag = DirectoryFlag{
-		Name:  "logDir",
-		Usage: "IntChain Log Data directory",
-		Value: DirectoryString{"log"},
-	}
+	//LogDirFlag = DirectoryFlag{
+	//	Name:  "logDir",
+	//	Usage: "IntChain Log Data directory",
+	//	Value: DirectoryString{"log"},
+	//}
 
 	// Child Chain Flag
 	ChildChainFlag = cli.StringFlag{
