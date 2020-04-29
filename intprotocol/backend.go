@@ -145,7 +145,7 @@ func New(ctx *node.ServiceContext, config *Config, cliCtx *cli.Context,
 		dbVer = fmt.Sprintf("%d", *bcVersion)
 	}
 	//logger.Info("Initialising IntChain protocol", "versions", eth.engine.Protocol().Versions, "network", config.NetworkId, "dbversion", dbVer)
-	logger.Info("Initialising IntChain protocol", "network", config.NetworkId, "dbversion", dbVer)
+	logger.Info("Initialising intchain protocol", "network", config.NetworkId, "dbversion", dbVer)
 
 	if !config.SkipBcVersionCheck {
 		if bcVersion != nil && *bcVersion > core.BlockChainVersion {
