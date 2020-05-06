@@ -1294,7 +1294,7 @@ func (srv *Server) validatorDelPeer(nodeId discover.NodeID) error {
 
 	srv.nodeInfoList = srv.nodeInfoList[:tailIndex]
 
-	log.Debug("removed %v node info to send to %v", removedCount, nodeId)
+	log.Debugf("removed %v node info to send to %v", removedCount, nodeId)
 
 	return nil
 }
