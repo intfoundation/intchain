@@ -724,7 +724,7 @@ running:
 					log.Debugf("add valNodeInfo to local failed with %v", err)
 				}
 
-				log.Debugf("Got refresh validation node infomation from validation %x", valNodeInfo.Validator.Address)
+				log.Debugf("Got refresh validation node infomation from validation %v", valNodeInfo.Validator.Address.String())
 
 			case PeerEventTypeRemoveValidator:
 				var valNodeInfo P2PValidatorNodeInfo
@@ -741,7 +741,7 @@ running:
 					log.Debugf("remove valNodeInfo from local failed with %v", err)
 				}
 
-				log.Debugf("Got remove validation node infomation from validation %x", valNodeInfo.Validator.Address)
+				log.Debugf("Got remove validation node infomation from validation %v", valNodeInfo.Validator.Address.String())
 
 			}
 		}
@@ -1373,8 +1373,8 @@ func (srv *Server) sendValidatorNodeInfoMessages() {
 
 				Send(nodeInfo.p.rw, nodeInfo.action, nodeInfo.valNodeInfo)
 
-				log.Debugf("send node info (%x, %v) to %v",
-					nodeInfo.valNodeInfo.Validator.Address, nodeInfo.valNodeInfo.Node.ID,
+				log.Debugf("send node info (%v, %v) to %v",
+					nodeInfo.valNodeInfo.Validator.Address.String(), nodeInfo.valNodeInfo.Node.ID,
 					nodeInfo.p.ID())
 			}
 		}
