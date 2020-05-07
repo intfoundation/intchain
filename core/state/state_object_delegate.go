@@ -47,7 +47,7 @@ type Proxied map[common.Address]*accountProxiedBalance
 
 func (p Proxied) String() (str string) {
 	for key, value := range p {
-		str += fmt.Sprintf("%X : %X\n", key, value)
+		str += fmt.Sprintf("%v : %X\n", key.String(), value)
 	}
 	return
 }

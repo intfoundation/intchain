@@ -8,7 +8,6 @@ import (
 )
 
 // ----- Type
-//type Reward map[uint64]*big.Int // key = Epoch Number, value = Reward Amount
 type Reward map[common.Address]*big.Int // key = Delegate Address, value = Reward Amount   TODO: whether the key of reward need to be point
 
 func (p Reward) String() (str string) {
