@@ -605,18 +605,18 @@ web3._extend({
 			params: 4
 		}),
 		new web3._extend.Method({
-			name: 'cancelDelegate',
-			call: 'int_cancelDelegate',
+			name: 'unBond',
+			call: 'int_unBond',
 			params: 4
 		}),
 		new web3._extend.Method({
-			name: 'applyCandidate',
-			call: 'int_applyCandidate',
+			name: 'register',
+			call: 'int_register',
 			params: 4
 		}),
 		new web3._extend.Method({
-			name: 'cancelCandidate',
-			call: 'int_cancelCandidate',
+			name: 'unRegister',
+			call: 'int_unRegister',
 			params: 2
 		}),
 		new web3._extend.Method({
@@ -877,196 +877,5 @@ web3._extend({
 			getter: 'istanbul_candidates'
 		}),
 	]
-});
-`
-
-const Chain_JS = `
-web3._extend({
-	property: 'chain',
-	methods:
-	[
-		new web3._extend.Method({
-			name: 'createChildChain',
-			call: 'chain_createChildChain',
-			params: 7
-		}),
-		new web3._extend.Method({
-			name: 'joinChildChain',
-			call: 'chain_joinChildChain',
-			params: 6
-		}),
-		new web3._extend.Method({
-			name: 'depositInMainChain',
-			call: 'chain_depositInMainChain',
-			params: 4
-		}),
-		new web3._extend.Method({
-			name: 'depositInChildChain',
-			call: 'chain_depositInChildChain',
-			params: 2
-		}),
-		new web3._extend.Method({
-			name: 'withdrawFromChildChain',
-			call: 'chain_withdrawFromChildChain',
-			params: 3
-		}),
-		new web3._extend.Method({
-			name: 'withdrawFromMainChain',
-			call: 'chain_withdrawFromMainChain',
-			params: 4
-		}),
-		new web3._extend.Method({
-			name: 'getAllChains',
-			call: 'chain_getAllChains'
-		}),
-		new web3._extend.Method({
-			name: 'signAddress',
-			call: 'chain_signAddress',
-			params: 2
-		}),
-		new web3._extend.Method({
-			name: 'setBlockReward',
-			call: 'chain_setBlockReward',
-			params: 3
-		}),
-		new web3._extend.Method({
-			name: 'getBlockReward',
-			call: 'chain_getBlockReward',
-			params: 1
-		}),
-		new web3._extend.Method({
-			name: 'withdrawReward',
-			call: 'chain_withdrawReward',
-			params: 3,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null]
-		})
-	],
-	properties:
-	[]
-});
-`
-
-const Tdm_JS = `
-web3._extend({
-	property: 'tdm',
-	methods:
-	[
-		new web3._extend.Method({
-			name: 'voteNextEpoch',
-			call: 'tdm_voteNextEpoch',
-			params: 3
-		}),
-		new web3._extend.Method({
-			name: 'revealVote',
-			call: 'tdm_revealVote',
-			params: 6
-		}),
-		new web3._extend.Method({
-			name: 'getCurrentEpochNumber',
-			call: 'tdm_getCurrentEpochNumber'
-		}),
-		new web3._extend.Method({
-			name: 'getEpoch',
-			call: 'tdm_getEpoch',
-			params: 1
-		}),
-		new web3._extend.Method({
-			name: 'getNextEpochVote',
-			call: 'tdm_getNextEpochVote'
-		}),
-		new web3._extend.Method({
-			name: 'getNextEpochValidators',
-			call: 'tdm_getNextEpochValidators'
-		}),
-		new web3._extend.Method({
-			name: 'getValidatorStatus',
-			call: 'tdm_getValidatorStatus',
-			params: 1,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
-		}),
-		new web3._extend.Method({
-			name: 'unForbid',
-			call: 'tdm_unForbid',
-			params: 2,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null]
-		}),
-		new web3._extend.Method({
-			name: 'editValidator',
-			call: 'tdm_editValidator',
-			params: 6,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null, null, null]
-		}),
-		new web3._extend.Method({
-			name: 'getVoteHash',
-			call: 'tdm_getVoteHash',
-			params: 4,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null]
-		}),
-		new web3._extend.Method({
-			name: 'getConsensusPublicKey',
-			call: 'tdm_getConsensusPublicKey',
-			params: 1
-		}),
-		new web3._extend.Method({
-			name: 'decodeExtraData',
-			call: 'tdm_decodeExtraData',
-			params: 1
-		}),
-		new web3._extend.Method({
-			name: 'getCandidateList',
-			call: 'tdm_getCandidateList',
-			params: 0
-		}),
-		new web3._extend.Method({
-			name: 'getForbiddenList',
-			call: 'tdm_getForbiddenList',
-			params: 0
-		})
-	],
-	properties:
-	[]
-});
-`
-
-const Del_JS = `
-web3._extend({
-	property: 'del',
-	methods:
-	[
-		new web3._extend.Method({
-			name: 'delegate',
-			call: 'del_delegate',
-			params: 4
-		}),
-		new web3._extend.Method({
-			name: 'cancelDelegate',
-			call: 'del_cancelDelegate',
-			params: 4
-		}),
-		new web3._extend.Method({
-			name: 'applyCandidate',
-			call: 'del_applyCandidate',
-			params: 4
-		}),
-		new web3._extend.Method({
-			name: 'cancelCandidate',
-			call: 'del_cancelCandidate',
-			params: 2
-		}),
-		new web3._extend.Method({
-			name: 'checkCandidate',
-			call: 'del_checkCandidate',
-			params: 2,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputDefaultBlockNumberFormatter]
-		}),
-		new web3._extend.Method({
-			name: 'setCommission',
-			call: 'del_setCommission',
-			params: 3,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null]
-		})
-	],
-	properties:
-	[]
 });
 `

@@ -1686,14 +1686,14 @@ func (api *PublicINTAPI) Delegate(ctx context.Context, from, candidate common.Ad
 	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
 }
 
-func (api *PublicINTAPI) CancelDelegate(ctx context.Context, from, candidate common.Address, amount *hexutil.Big, gasPrice *hexutil.Big) (common.Hash, error) {
+func (api *PublicINTAPI) UnBond(ctx context.Context, from, candidate common.Address, amount *hexutil.Big, gasPrice *hexutil.Big) (common.Hash, error) {
 
-	input, err := intAbi.ChainABI.Pack(intAbi.CancelDelegate.String(), candidate, (*big.Int)(amount))
+	input, err := intAbi.ChainABI.Pack(intAbi.UnBond.String(), candidate, (*big.Int)(amount))
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	defaultGas := intAbi.CancelDelegate.RequiredGas()
+	defaultGas := intAbi.UnBond.RequiredGas()
 
 	args := SendTxArgs{
 		From:     from,
@@ -1708,14 +1708,14 @@ func (api *PublicINTAPI) CancelDelegate(ctx context.Context, from, candidate com
 	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
 }
 
-func (api *PublicINTAPI) ApplyCandidate(ctx context.Context, from common.Address, securityDeposit *hexutil.Big, commission uint8, gasPrice *hexutil.Big) (common.Hash, error) {
+func (api *PublicINTAPI) Register(ctx context.Context, from common.Address, securityDeposit *hexutil.Big, commission uint8, gasPrice *hexutil.Big) (common.Hash, error) {
 
-	input, err := intAbi.ChainABI.Pack(intAbi.Candidate.String(), commission)
+	input, err := intAbi.ChainABI.Pack(intAbi.Register.String(), commission)
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	defaultGas := intAbi.Candidate.RequiredGas()
+	defaultGas := intAbi.Register.RequiredGas()
 
 	args := SendTxArgs{
 		From:     from,
@@ -1729,14 +1729,14 @@ func (api *PublicINTAPI) ApplyCandidate(ctx context.Context, from common.Address
 	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
 }
 
-func (api *PublicINTAPI) CancelCandidate(ctx context.Context, from common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
+func (api *PublicINTAPI) UnRegister(ctx context.Context, from common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
 
-	input, err := intAbi.ChainABI.Pack(intAbi.CancelCandidate.String())
+	input, err := intAbi.ChainABI.Pack(intAbi.UnRegister.String())
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	defaultGas := intAbi.CancelCandidate.RequiredGas()
+	defaultGas := intAbi.UnRegister.RequiredGas()
 
 	args := SendTxArgs{
 		From:     from,
@@ -1755,8 +1755,6 @@ func (api *PublicINTAPI) CheckCandidate(ctx context.Context, address common.Addr
 	if state == nil || err != nil {
 		return nil, err
 	}
-
-	//fmt.Printf("ethapi delegate api CheckCandidate address %v\n", address)
 
 	fields := map[string]interface{}{
 		"candidate":  state.IsCandidate(address),
@@ -1882,16 +1880,16 @@ func init() {
 	core.RegisterApplyCb(intAbi.Delegate, delegateApplyCb)
 
 	// Cancel Delegate
-	core.RegisterValidateCb(intAbi.CancelDelegate, cancelDelegateValidateCb)
-	core.RegisterApplyCb(intAbi.CancelDelegate, cancelDelegateApplyCb)
+	core.RegisterValidateCb(intAbi.UnBond, unBondValidateCb)
+	core.RegisterApplyCb(intAbi.UnBond, unBondApplyCb)
 
 	// Candidate
-	core.RegisterValidateCb(intAbi.Candidate, applyCandidateValidateCb)
-	core.RegisterApplyCb(intAbi.Candidate, applyCandidateApplyCb)
+	core.RegisterValidateCb(intAbi.Register, registerValidateCb)
+	core.RegisterApplyCb(intAbi.Register, registerApplyCb)
 
 	// Cancel Candidate
-	core.RegisterValidateCb(intAbi.CancelCandidate, cancelCandidateValidateCb)
-	core.RegisterApplyCb(intAbi.CancelCandidate, cancelCandidateApplyCb)
+	core.RegisterValidateCb(intAbi.UnRegister, unRegisterValidateCb)
+	core.RegisterApplyCb(intAbi.UnRegister, unRegisterApplyCb)
 
 	// Set Commission
 	core.RegisterValidateCb(intAbi.SetCommission, setCommisstionValidateCb)
@@ -1986,19 +1984,19 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	return nil
 }
 
-func cancelDelegateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+func unBondValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)
-	_, verror := cancelDelegateValidation(from, tx, state, bc)
+	_, verror := UnBondValidation(from, tx, state, bc)
 	if verror != nil {
 		return verror
 	}
 	return nil
 }
 
-func cancelDelegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+func unBondApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
 	// Validate first
 	from := derivedAddressFromTx(tx)
-	args, verror := cancelDelegateValidation(from, tx, state, bc)
+	args, verror := UnBondValidation(from, tx, state, bc)
 	if verror != nil {
 		return verror
 	}
@@ -2025,19 +2023,19 @@ func cancelDelegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core
 	return nil
 }
 
-func applyCandidateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+func registerValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)
-	_, verror := candidateValidation(from, tx, state, bc)
+	_, verror := registerValidation(from, tx, state, bc)
 	if verror != nil {
 		return verror
 	}
 	return nil
 }
 
-func applyCandidateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
 	// Validate first
 	from := derivedAddressFromTx(tx)
-	args, verror := candidateValidation(from, tx, state, bc)
+	args, verror := registerValidation(from, tx, state, bc)
 	if verror != nil {
 		return verror
 	}
@@ -2056,7 +2054,7 @@ func applyCandidateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core
 	return nil
 }
 
-func cancelCandidateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+func unRegisterValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)
 	verror := cancelCandidateValidation(from, tx, state, bc)
 	if verror != nil {
@@ -2065,7 +2063,7 @@ func cancelCandidateValidateCb(tx *types.Transaction, state *state.StateDB, bc *
 	return nil
 }
 
-func cancelCandidateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+func unRegisterApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
 	// Validate first
 	from := derivedAddressFromTx(tx)
 	verror := cancelCandidateValidation(from, tx, state, bc)
@@ -2170,11 +2168,11 @@ func delegateValidation(from common.Address, tx *types.Transaction, state *state
 	return &args, nil
 }
 
-func cancelDelegateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.CancelDelegateArgs, error) {
+func UnBondValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.UnBondArgs, error) {
 
-	var args intAbi.CancelDelegateArgs
+	var args intAbi.UnBondArgs
 	data := tx.Data()
-	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.CancelDelegate.String(), data[4:]); err != nil {
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.UnBond.String(), data[4:]); err != nil {
 		return nil, err
 	}
 
@@ -2189,7 +2187,7 @@ func cancelDelegateValidation(from common.Address, tx *types.Transaction, state 
 		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
 	}
 	if _, supernode := ep.Validators.GetByAddress(args.Candidate.Bytes()); supernode != nil && supernode.RemainingEpoch > 0 {
-		return nil, core.ErrCannotCancelDelegate
+		return nil, core.ErrCannotUnBond
 	}
 
 	// Check Proxied Amount in Candidate Balance
@@ -2217,7 +2215,7 @@ func cancelDelegateValidation(from common.Address, tx *types.Transaction, state 
 	return &args, nil
 }
 
-func candidateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.CandidateArgs, error) {
+func registerValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.RegisterArgs, error) {
 	// Check cleaned Candidate
 	if !state.IsCleanAddress(from) {
 		return nil, core.ErrAlreadyCandidate
@@ -2228,9 +2226,9 @@ func candidateValidation(from common.Address, tx *types.Transaction, state *stat
 		return nil, core.ErrMinimumSecurityDeposit
 	}
 
-	var args intAbi.CandidateArgs
+	var args intAbi.RegisterArgs
 	data := tx.Data()
-	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.Candidate.String(), data[4:]); err != nil {
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.Register.String(), data[4:]); err != nil {
 		return nil, err
 	}
 

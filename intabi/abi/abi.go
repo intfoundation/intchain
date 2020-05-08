@@ -25,16 +25,16 @@ var (
 	SaveDataToMainChain    = FunctionType{6, true, true, false}
 	SetBlockReward         = FunctionType{7, true, false, true}
 	// Non-Cross Chain Function
-	VoteNextEpoch   = FunctionType{10, false, true, true}
-	RevealVote      = FunctionType{11, false, true, true}
-	Delegate        = FunctionType{12, false, true, true}
-	CancelDelegate  = FunctionType{13, false, true, true}
-	Candidate       = FunctionType{14, false, true, true}
-	CancelCandidate = FunctionType{15, false, true, true}
-	EditValidator   = FunctionType{16, false, true, true}
-	WithdrawReward  = FunctionType{17, false, true, true}
-	UnForbid        = FunctionType{18, false, true, true}
-	SetCommission   = FunctionType{19, false, true, true}
+	VoteNextEpoch  = FunctionType{10, false, true, true}
+	RevealVote     = FunctionType{11, false, true, true}
+	Delegate       = FunctionType{12, false, true, true}
+	UnBond         = FunctionType{13, false, true, true}
+	Register       = FunctionType{14, false, true, true}
+	UnRegister     = FunctionType{15, false, true, true}
+	EditValidator  = FunctionType{16, false, true, true}
+	WithdrawReward = FunctionType{17, false, true, true}
+	UnForbid       = FunctionType{18, false, true, true}
+	SetCommission  = FunctionType{19, false, true, true}
 	// Unknown
 	Unknown = FunctionType{-1, false, false, false}
 )
@@ -71,10 +71,8 @@ func (t FunctionType) RequiredGas() uint64 {
 		return 21000
 	case RevealVote:
 		return 21000
-	case Delegate, CancelDelegate, Candidate:
+	case Delegate, UnBond, Register, UnRegister:
 		return 21000
-	case CancelCandidate:
-		return 100000
 	case SetBlockReward:
 		return 21000
 	case EditValidator:
@@ -112,12 +110,12 @@ func (t FunctionType) String() string {
 		return "RevealVote"
 	case Delegate:
 		return "Delegate"
-	case CancelDelegate:
-		return "CancelDelegate"
-	case Candidate:
-		return "Candidate"
-	case CancelCandidate:
-		return "CancelCandidate"
+	case UnBond:
+		return "UnBond"
+	case Register:
+		return "Register"
+	case UnRegister:
+		return "UnRegister"
 	case SetBlockReward:
 		return "SetBlockReward"
 	case EditValidator:
@@ -155,12 +153,12 @@ func StringToFunctionType(s string) FunctionType {
 		return RevealVote
 	case "Delegate":
 		return Delegate
-	case "CancelDelegate":
-		return CancelDelegate
-	case "Candidate":
-		return Candidate
-	case "CancelCandidate":
-		return CancelCandidate
+	case "UnBond":
+		return UnBond
+	case "Register":
+		return Register
+	case "UnRegister":
+		return UnRegister
 	case "SetBlockReward":
 		return SetBlockReward
 	case "EditValidator":
@@ -224,12 +222,12 @@ type DelegateArgs struct {
 	Candidate common.Address
 }
 
-type CancelDelegateArgs struct {
+type UnBondArgs struct {
 	Candidate common.Address
 	Amount    *big.Int
 }
 
-type CandidateArgs struct {
+type RegisterArgs struct {
 	Commission uint8
 }
 
@@ -418,7 +416,7 @@ const jsonChainABI = `
 	},
 	{
 		"type": "function",
-		"name": "CancelDelegate",
+		"name": "UnBond",
 		"constant": false,
 		"inputs": [
 			{
@@ -433,7 +431,7 @@ const jsonChainABI = `
 	},
 	{
 		"type": "function",
-		"name": "Candidate",
+		"name": "Register",
 		"constant": false,
 		"inputs": [
 			{
@@ -444,7 +442,7 @@ const jsonChainABI = `
 	},
 	{
 		"type": "function",
-		"name": "CancelCandidate",
+		"name": "UnRegister",
 		"constant": false,
 		"inputs": []
 	},

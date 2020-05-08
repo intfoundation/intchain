@@ -46,8 +46,8 @@ var (
 	// ErrCannotDelegate is returned if the request address does not have deposit balance in Annual/SemiAnnual Supernode
 	ErrCannotDelegate = errors.New("Annual/SemiAnnual Supernode candidate not accept new delegator")
 
-	// ErrCannotCancelDelegate is returned if the request address belongs to Annual/SemiAnnual Supernode
-	ErrCannotCancelDelegate = errors.New("Annual/SemiAnnual Supernode candidate can not cancel delegation")
+	// ErrCannotUnbond is returned if the request address belongs to Annual/SemiAnnual Supernode
+	ErrCannotUnBond = errors.New("Annual/SemiAnnual Supernode candidate can not cancel delegation")
 
 	// ErrDelegateAmount is returned if the delegate amount less than 0
 	ErrDelegateAmount = errors.New("delegation amount must be greater or equal to 1000 INT")
