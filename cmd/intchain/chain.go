@@ -66,8 +66,7 @@ func StartChain(ctx *cli.Context, chain *Chain, startDone chan<- struct{}) error
 
 	log.Infof("Start Chain: %s", chain.Id)
 	go func() {
-		log.Info("StartChain()->utils.StartNode(stack)")
-		utils.StartNodeEx(ctx, chain.IntNode)
+		utils.StartNode(ctx, chain.IntNode)
 
 		if startDone != nil {
 			startDone <- struct{}{}
