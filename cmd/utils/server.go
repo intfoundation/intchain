@@ -1,8 +1,7 @@
-package intrpc
+package utils
 
 import (
 	"fmt"
-	"github.com/intfoundation/intchain/cmd/utils"
 	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/node"
 	"github.com/intfoundation/intchain/rpc"
@@ -29,8 +28,8 @@ func StartRPC(ctx *cli.Context) error {
 	rpcConfig := node.DefaultConfig
 
 	// Setup the config from context
-	utils.SetHTTP(ctx, &rpcConfig)
-	utils.SetWS(ctx, &rpcConfig)
+	SetHTTP(ctx, &rpcConfig)
+	SetWS(ctx, &rpcConfig)
 	wsOrigins = rpcConfig.WSOrigins
 
 	httperr := startHTTP(rpcConfig.HTTPEndpoint(), rpcConfig.HTTPCors, rpcConfig.HTTPVirtualHosts, rpcConfig.HTTPTimeouts)

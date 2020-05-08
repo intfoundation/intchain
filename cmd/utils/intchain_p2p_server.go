@@ -1,7 +1,6 @@
-package intp2p
+package utils
 
 import (
-	"github.com/intfoundation/intchain/cmd/utils"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/node"
@@ -18,13 +17,13 @@ func NewP2PServer(ctx *cli.Context) *IntChainP2PServer {
 
 	// Load Default P2P config
 	config := &node.Config{
-		GeneralDataDir: utils.MakeDataDir(ctx),
-		DataDir:        utils.MakeDataDir(ctx), // Just for pass the check, P2P always use GeneralDataDir
+		GeneralDataDir: MakeDataDir(ctx),
+		DataDir:        MakeDataDir(ctx), // Just for pass the check, P2P always use GeneralDataDir
 		P2P:            node.DefaultConfig.P2P,
 	}
 
 	// Setup the config from context
-	utils.SetP2PConfig(ctx, &config.P2P)
+	SetP2PConfig(ctx, &config.P2P)
 
 	// Initialize the intp2p server. This creates the node key and
 	// discovery databases.
