@@ -70,8 +70,8 @@ type Backend interface {
 	ChainConfig() *params.ChainConfig
 	CurrentBlock() *types.Block
 
-	SetInnerAPIBridge(inBridge InnerAPIBridge)
-	GetInnerAPIBridge() InnerAPIBridge
+	//SetInnerAPIBridge(inBridge InnerAPIBridge)
+	//GetInnerAPIBridge() InnerAPIBridge
 	GetCrossChainHelper() core.CrossChainHelper
 
 	BroadcastTX3ProofData(proofData *types.TX3ProofData)
@@ -81,7 +81,7 @@ func GetAPIs(apiBackend Backend, solcPath string) []rpc.API {
 	compiler := makeCompilerAPIs(solcPath)
 	nonceLock := new(AddrLocker)
 	txapi := NewPublicTransactionPoolAPI(apiBackend, nonceLock)
-	apiBackend.SetInnerAPIBridge(&APIBridge{txapi: txapi})
+	//apiBackend.SetInnerAPIBridge(&APIBridge{txapi: txapi})
 
 	all := []rpc.API{
 		{
@@ -144,19 +144,9 @@ func GetAPIs(apiBackend Backend, solcPath string) []rpc.API {
 			Service:   NewPrivateAccountAPI(apiBackend, nonceLock),
 			Public:    false,
 		}, {
-			Namespace: "chain",
+			Namespace: "int",
 			Version:   "1.0",
-			Service:   NewPublicChainAPI(apiBackend),
-			Public:    true,
-		}, {
-			Namespace: "tdm",
-			Version:   "1.0",
-			Service:   NewPublicTdmAPI(apiBackend),
-			Public:    true,
-		}, {
-			Namespace: "del",
-			Version:   "1.0",
-			Service:   NewPublicDelegateAPI(apiBackend),
+			Service:   NewPublicINTAPI(apiBackend, nonceLock),
 			Public:    true,
 		},
 	}

@@ -32,10 +32,10 @@ var Modules = map[string]string{
 	"swarmfs":    SWARMFS_JS,
 	"txpool":     TxPool_JS,
 	"istanbul":   Istanbul_JS,
-	// IntChain JS
-	"chain": Chain_JS,
-	"tdm":   Tdm_JS,
-	"del":   Del_JS,
+	//// IntChain JS
+	//"chain": Chain_JS,
+	//"tdm":   Tdm_JS,
+	//"del":   Del_JS,
 }
 
 const Chequebook_JS = `
@@ -512,6 +512,125 @@ web3._extend({
 			params: 3,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputDefaultBlockNumberFormatter, null]
 		}),
+		new web3._extend.Method({
+			name: 'signAddress',
+			call: 'int_signAddress',
+			params: 2
+		}),
+		new web3._extend.Method({
+			name: 'getBlockReward',
+			call: 'int_getBlockReward',
+			params: 1
+		}),
+		new web3._extend.Method({
+			name: 'withdrawReward',
+			call: 'int_withdrawReward',
+			params: 3,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null]
+		}),
+		new web3._extend.Method({
+			name: 'voteNextEpoch',
+			call: 'int_voteNextEpoch',
+			params: 3
+		}),
+		new web3._extend.Method({
+			name: 'revealVote',
+			call: 'int_revealVote',
+			params: 6
+		}),
+		new web3._extend.Method({
+			name: 'getCurrentEpochNumber',
+			call: 'int_getCurrentEpochNumber'
+		}),
+		new web3._extend.Method({
+			name: 'getEpoch',
+			call: 'int_getEpoch',
+			params: 1
+		}),
+		new web3._extend.Method({
+			name: 'getNextEpochVote',
+			call: 'int_getNextEpochVote'
+		}),
+		new web3._extend.Method({
+			name: 'getNextEpochValidators',
+			call: 'int_getNextEpochValidators'
+		}),
+		new web3._extend.Method({
+			name: 'getValidatorStatus',
+			call: 'int_getValidatorStatus',
+			params: 1,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
+		}),
+		new web3._extend.Method({
+			name: 'unForbid',
+			call: 'int_unForbid',
+			params: 2,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null]
+		}),
+		new web3._extend.Method({
+			name: 'editValidator',
+			call: 'int_editValidator',
+			params: 6,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null, null, null]
+		}),
+		new web3._extend.Method({
+			name: 'getVoteHash',
+			call: 'int_getVoteHash',
+			params: 4,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null]
+		}),
+		new web3._extend.Method({
+			name: 'getConsensusPublicKey',
+			call: 'int_getConsensusPublicKey',
+			params: 1
+		}),
+		new web3._extend.Method({
+			name: 'decodeExtraData',
+			call: 'int_decodeExtraData',
+			params: 1
+		}),
+		new web3._extend.Method({
+			name: 'getCandidateList',
+			call: 'int_getCandidateList',
+			params: 0
+		}),
+		new web3._extend.Method({
+			name: 'getForbiddenList',
+			call: 'int_getForbiddenList',
+			params: 0
+		}),
+		new web3._extend.Method({
+			name: 'delegate',
+			call: 'int_delegate',
+			params: 4
+		}),
+		new web3._extend.Method({
+			name: 'cancelDelegate',
+			call: 'int_cancelDelegate',
+			params: 4
+		}),
+		new web3._extend.Method({
+			name: 'applyCandidate',
+			call: 'int_applyCandidate',
+			params: 4
+		}),
+		new web3._extend.Method({
+			name: 'cancelCandidate',
+			call: 'int_cancelCandidate',
+			params: 2
+		}),
+		new web3._extend.Method({
+			name: 'checkCandidate',
+			call: 'int_checkCandidate',
+			params: 2,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputDefaultBlockNumberFormatter]
+		}),
+		new web3._extend.Method({
+			name: 'setCommission',
+			call: 'int_setCommission',
+			params: 3,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null]
+		})
 	],
 	properties: [
 		new web3._extend.Property({

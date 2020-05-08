@@ -21,10 +21,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/intfoundation/intchain/consensus"
+	"github.com/intfoundation/intchain/consensus/ipbft/epoch"
+	"github.com/intfoundation/intchain/core/state"
 	"math/big"
 	"strings"
 	"time"
 
+	goCrypto "github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/intchain/accounts"
 	"github.com/intfoundation/intchain/accounts/keystore"
 	"github.com/intfoundation/intchain/common"
@@ -421,7 +425,7 @@ func signHash(data []byte) []byte {
 	return crypto.Keccak256([]byte(msg))
 }
 
-// Sign calculates an Ethereum ECDSA signature for:
+// Sign calculates an INT Chain ECDSA signature for:
 // keccack256("\x19INT Chain Signed Message:\n" + len(message) + message))
 //
 // Note, the produced signature conforms to the secp256k1 curve R, S and V values,
@@ -462,7 +466,7 @@ func (s *PrivateAccountAPI) EcRecover(ctx context.Context, data, sig hexutil.Byt
 		return "", fmt.Errorf("signature must be 65 bytes long")
 	}
 	if sig[64] != 27 && sig[64] != 28 {
-		return "", fmt.Errorf("invalid Ethereum signature (V is not 27 or 28)")
+		return "", fmt.Errorf("invalid INT Chain signature (V is not 27 or 28)")
 	}
 	sig[64] -= 27 // Transform yellow paper V from 27/28 to 0/1
 
@@ -479,13 +483,13 @@ func (s *PrivateAccountAPI) SignAndSendTransaction(ctx context.Context, args Sen
 	return s.SendTransaction(ctx, args, passwd)
 }
 
-// PublicBlockChainAPI provides an API to access the Ethereum blockchain.
+// PublicBlockChainAPI provides an API to access the INT blockchain.
 // It offers only methods that operate on public data that is freely available to anyone.
 type PublicBlockChainAPI struct {
 	b Backend
 }
 
-// NewPublicBlockChainAPI creates a new Ethereum blockchain API.
+// NewPublicBlockChainAPI creates a new INT blockchain API.
 func NewPublicBlockChainAPI(b Backend) *PublicBlockChainAPI {
 	return &PublicBlockChainAPI{b}
 }
@@ -1334,6 +1338,41 @@ func (s *PublicTransactionPoolAPI) SendTransaction(ctx context.Context, args Sen
 	return submitTransaction(ctx, s.b, signed)
 }
 
+func SendTransaction(ctx context.Context, args SendTxArgs, am *accounts.Manager, b Backend, nonceLock *AddrLocker) (common.Hash, error) {
+	fmt.Printf("transaction args PublicTransactionPoolAPI args %v\n", args)
+	// Look up the wallet containing the requested signer
+	account := accounts.Account{Address: args.From}
+
+	wallet, err := am.Find(account)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	if args.Nonce == nil {
+		// Hold the addresse's mutex around signing to prevent concurrent assignment of
+		// the same nonce to multiple accounts.
+		nonceLock.LockAddr(args.From)
+		defer nonceLock.UnlockAddr(args.From)
+	}
+
+	// Set some sanity defaults and terminate on failure
+	if err := args.setDefaults(ctx, b); err != nil {
+		return common.Hash{}, err
+	}
+	// Assemble the transaction and sign with the wallet
+	tx := args.toTransaction()
+
+	var chainID *big.Int
+	if config := b.ChainConfig(); config.IsEIP155(b.CurrentBlock().Number()) {
+		chainID = config.ChainId
+	}
+	signed, err := wallet.SignTxWithAddress(account, tx, chainID)
+	if err != nil {
+		return common.Hash{}, err
+	}
+	return submitTransaction(ctx, b, signed)
+}
+
 // SendRawTransaction will add the signed transaction to the transaction pool.
 // The sender is responsible for signing the transaction and using the correct nonce.
 func (s *PublicTransactionPoolAPI) SendRawTransaction(ctx context.Context, encodedTx hexutil.Bytes) (common.Hash, error) {
@@ -1352,7 +1391,6 @@ func (s *PublicTransactionPoolAPI) SendRawTransaction(ctx context.Context, encod
 //
 // The account associated with addr must be unlocked.
 //
-// https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign
 func (s *PublicTransactionPoolAPI) Sign(addr common.Address, data hexutil.Bytes) (hexutil.Bytes, error) {
 	// Look up the wallet containing the requested signer
 	account := accounts.Account{Address: addr}
@@ -1468,14 +1506,14 @@ func (s *PublicTransactionPoolAPI) Resend(ctx context.Context, sendArgs SendTxAr
 	return common.Hash{}, fmt.Errorf("Transaction %#x not found", matchTx.Hash())
 }
 
-// PublicDebugAPI is the collection of Ethereum APIs exposed over the public
+// PublicDebugAPI is the collection of INT Chain APIs exposed over the public
 // debugging endpoint.
 type PublicDebugAPI struct {
 	b Backend
 }
 
 // NewPublicDebugAPI creates a new API definition for the public debug methods
-// of the Ethereum service.
+// of the INT Chain service.
 func NewPublicDebugAPI(b Backend) *PublicDebugAPI {
 	return &PublicDebugAPI{b: b}
 }
@@ -1502,14 +1540,14 @@ func (api *PublicDebugAPI) PrintBlock(ctx context.Context, number uint64) (strin
 	return block.String(), nil
 }
 
-// PrivateDebugAPI is the collection of Ethereum APIs exposed over the private
+// PrivateDebugAPI is the collection of INT Chain APIs exposed over the private
 // debugging endpoint.
 type PrivateDebugAPI struct {
 	b Backend
 }
 
 // NewPrivateDebugAPI creates a new API definition for the private debug methods
-// of the Ethereum service.
+// of the INT Chain service.
 func NewPrivateDebugAPI(b Backend) *PrivateDebugAPI {
 	return &PrivateDebugAPI{b: b}
 }
@@ -1567,7 +1605,1046 @@ func (s *PublicNetAPI) PeerCount() hexutil.Uint {
 	return hexutil.Uint(s.net.PeerCount())
 }
 
-// Version returns the current ethereum protocol version.
+// Version returns the current intchain protocol version.
 func (s *PublicNetAPI) Version() string {
 	return fmt.Sprintf("%d", s.networkVersion)
+}
+
+var (
+	defaultSelfSecurityDeposit = math.MustParseBig256("10000000000000000000000") // 10,000 * e18
+	minimumDelegationAmount    = math.MustParseBig256("1000000000000000000000")  // 1000 * e18
+
+	maxDelegationAddresses = 1000
+
+	minimumVoteAmount      = math.MustParseBig256("100000000000000000000000") // 100,000 * e18
+	maxEditValidatorLength = 100
+)
+
+type PublicINTAPI struct {
+	am        *accounts.Manager
+	b         Backend
+	nonceLock *AddrLocker
+}
+
+// NewPublicINTAPI creates a new INT API instance.
+func NewPublicINTAPI(b Backend, nonceLock *AddrLocker) *PublicINTAPI {
+	return &PublicINTAPI{b.AccountManager(), b, nonceLock}
+}
+
+func (s *PublicINTAPI) SignAddress(from common.Address, consensusPrivateKey hexutil.Bytes) (goCrypto.Signature, error) {
+	if len(consensusPrivateKey) != 32 {
+		return nil, errors.New("invalid consensus private key")
+	}
+
+	var blsPriv goCrypto.BLSPrivKey
+	copy(blsPriv[:], consensusPrivateKey)
+
+	blsSign := blsPriv.Sign(from.Bytes())
+
+	return blsSign, nil
+}
+
+func (api *PublicINTAPI) WithdrawReward(ctx context.Context, from common.Address, delegateAddress common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
+	input, err := intAbi.ChainABI.Pack(intAbi.WithdrawReward.String(), delegateAddress)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.WithdrawReward.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    nil,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
+
+func (api *PublicINTAPI) Delegate(ctx context.Context, from, candidate common.Address, amount *hexutil.Big, gasPrice *hexutil.Big) (common.Hash, error) {
+
+	input, err := intAbi.ChainABI.Pack(intAbi.Delegate.String(), candidate)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.Delegate.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    amount,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
+
+func (api *PublicINTAPI) CancelDelegate(ctx context.Context, from, candidate common.Address, amount *hexutil.Big, gasPrice *hexutil.Big) (common.Hash, error) {
+
+	input, err := intAbi.ChainABI.Pack(intAbi.CancelDelegate.String(), candidate, (*big.Int)(amount))
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.CancelDelegate.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    nil,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
+
+func (api *PublicINTAPI) ApplyCandidate(ctx context.Context, from common.Address, securityDeposit *hexutil.Big, commission uint8, gasPrice *hexutil.Big) (common.Hash, error) {
+
+	input, err := intAbi.ChainABI.Pack(intAbi.Candidate.String(), commission)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.Candidate.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    securityDeposit,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
+
+func (api *PublicINTAPI) CancelCandidate(ctx context.Context, from common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
+
+	input, err := intAbi.ChainABI.Pack(intAbi.CancelCandidate.String())
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.CancelCandidate.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    nil,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
+
+func (api *PublicINTAPI) CheckCandidate(ctx context.Context, address common.Address, blockNr rpc.BlockNumber) (map[string]interface{}, error) {
+	state, _, err := api.b.StateAndHeaderByNumber(ctx, blockNr)
+	if state == nil || err != nil {
+		return nil, err
+	}
+
+	//fmt.Printf("ethapi delegate api CheckCandidate address %v\n", address)
+
+	fields := map[string]interface{}{
+		"candidate":  state.IsCandidate(address),
+		"commission": state.GetCommission(address),
+	}
+	return fields, state.Error()
+}
+
+func (api *PublicINTAPI) SetCommission(ctx context.Context, from common.Address, commission uint8, gasPrice *hexutil.Big) (common.Hash, error) {
+	input, err := intAbi.ChainABI.Pack(intAbi.SetCommission.String(), commission)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.SetCommission.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    nil,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
+
+func (api *PublicINTAPI) VoteNextEpoch(ctx context.Context, from common.Address, voteHash common.Hash, gasPrice *hexutil.Big) (common.Hash, error) {
+
+	input, err := intAbi.ChainABI.Pack(intAbi.VoteNextEpoch.String(), voteHash)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.VoteNextEpoch.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    nil,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
+
+func (api *PublicINTAPI) RevealVote(ctx context.Context, from common.Address, pubkey goCrypto.BLSPubKey, amount *hexutil.Big, salt string, signature hexutil.Bytes, gasPrice *hexutil.Big) (common.Hash, error) {
+
+	input, err := intAbi.ChainABI.Pack(intAbi.RevealVote.String(), pubkey.Bytes(), (*big.Int)(amount), salt, signature)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.RevealVote.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    nil,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
+
+func (api *PublicINTAPI) EditValidator(ctx context.Context, from common.Address, moniker, website string, identity string, details string, gasPrice *hexutil.Big) (common.Hash, error) {
+	input, err := intAbi.ChainABI.Pack(intAbi.EditValidator.String(), moniker, website, identity, details)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.EditValidator.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    nil,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
+
+func (api *PublicINTAPI) UnForbid(ctx context.Context, from common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
+	input, err := intAbi.ChainABI.Pack(intAbi.UnForbid.String())
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.UnForbid.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    nil,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
+
+func init() {
+	// Withdraw reward
+	core.RegisterValidateCb(intAbi.WithdrawReward, withdrawRewardValidateCb)
+	core.RegisterApplyCb(intAbi.WithdrawReward, withdrawRewardApplyCb)
+
+	// Delegate
+	core.RegisterValidateCb(intAbi.Delegate, delegateValidateCb)
+	core.RegisterApplyCb(intAbi.Delegate, delegateApplyCb)
+
+	// Cancel Delegate
+	core.RegisterValidateCb(intAbi.CancelDelegate, cancelDelegateValidateCb)
+	core.RegisterApplyCb(intAbi.CancelDelegate, cancelDelegateApplyCb)
+
+	// Candidate
+	core.RegisterValidateCb(intAbi.Candidate, applyCandidateValidateCb)
+	core.RegisterApplyCb(intAbi.Candidate, applyCandidateApplyCb)
+
+	// Cancel Candidate
+	core.RegisterValidateCb(intAbi.CancelCandidate, cancelCandidateValidateCb)
+	core.RegisterApplyCb(intAbi.CancelCandidate, cancelCandidateApplyCb)
+
+	// Set Commission
+	core.RegisterValidateCb(intAbi.SetCommission, setCommisstionValidateCb)
+	core.RegisterApplyCb(intAbi.SetCommission, setCommisstionApplyCb)
+
+	// Vote for Next Epoch
+	core.RegisterValidateCb(intAbi.VoteNextEpoch, voteNextEpochValidateCb)
+	core.RegisterApplyCb(intAbi.VoteNextEpoch, voteNextEpochApplyCb)
+
+	// Reveal Vote
+	core.RegisterValidateCb(intAbi.RevealVote, revealVoteValidateCb)
+	core.RegisterApplyCb(intAbi.RevealVote, revealVoteApplyCb)
+
+	// Edit Validator
+	core.RegisterValidateCb(intAbi.EditValidator, editValidatorValidateCb)
+
+	// UnForbid
+	core.RegisterValidateCb(intAbi.UnForbid, unForbidValidateCb)
+	core.RegisterApplyCb(intAbi.UnForbid, unForbidApplyCb)
+}
+
+func withdrawRewardValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, err := withDrawRewardValidation(from, tx, state, bc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func withdrawRewardApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	from := derivedAddressFromTx(tx)
+
+	args, err := withDrawRewardValidation(from, tx, state, bc)
+	if err != nil {
+		return err
+	}
+
+	reward := state.GetRewardBalanceByDelegateAddress(from, args.DelegateAddress)
+	state.SubRewardBalanceByDelegateAddress(from, args.DelegateAddress, reward)
+	state.AddBalance(from, reward)
+
+	return nil
+}
+
+func withDrawRewardValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.WithdrawRewardArgs, error) {
+
+	var args intAbi.WithdrawRewardArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.WithdrawReward.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	reward := state.GetRewardBalanceByDelegateAddress(from, args.DelegateAddress)
+
+	if reward.Sign() < 1 {
+		return nil, fmt.Errorf("have no reward to withdraw")
+	}
+
+	//if args.Amount.Cmp(reward) == 1 {
+	//	return nil, fmt.Errorf("reward balance not enough, withdraw amount %v, but balance %v, delegate address %v", args.Amount, reward, args.DelegateAddress)
+	//}
+	return &args, nil
+}
+
+func delegateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, verror := delegateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+	return nil
+}
+
+func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	args, verror := delegateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	// Do job
+	amount := tx.Value()
+	// Move Balance to delegate balance
+	state.SubBalance(from, amount)
+	state.AddDelegateBalance(from, amount)
+	// Add Balance to Candidate's Proxied Balance
+	state.AddProxiedBalanceByUser(args.Candidate, from, amount)
+
+	return nil
+}
+
+func cancelDelegateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, verror := cancelDelegateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+	return nil
+}
+
+func cancelDelegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	args, verror := cancelDelegateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	// Apply Logic
+	// if request amount < proxied amount, refund it immediately
+	// otherwise, refund the proxied amount, and put the rest to pending refund balance
+	proxiedBalance := state.GetProxiedBalanceByUser(args.Candidate, from)
+	var immediatelyRefund *big.Int
+	if args.Amount.Cmp(proxiedBalance) <= 0 {
+		immediatelyRefund = args.Amount
+	} else {
+		immediatelyRefund = proxiedBalance
+		restRefund := new(big.Int).Sub(args.Amount, proxiedBalance)
+		state.AddPendingRefundBalanceByUser(args.Candidate, from, restRefund)
+		// TODO Add Pending Refund Set, Commit the Refund Set
+		state.MarkDelegateAddressRefund(args.Candidate)
+	}
+
+	state.SubProxiedBalanceByUser(args.Candidate, from, immediatelyRefund)
+	state.SubDelegateBalance(from, immediatelyRefund)
+	state.AddBalance(from, immediatelyRefund)
+
+	return nil
+}
+
+func applyCandidateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, verror := candidateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+	return nil
+}
+
+func applyCandidateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	args, verror := candidateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	amount := tx.Value()
+	// Add security deposit to self
+	state.SubBalance(from, amount)
+	state.AddDelegateBalance(from, amount)
+	state.AddProxiedBalanceByUser(from, from, amount)
+	// Become a Candidate
+	state.ApplyForCandidate(from, args.Commission)
+
+	// mark address candidate
+	state.MarkAddressCandidate(from)
+
+	return nil
+}
+
+func cancelCandidateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	verror := cancelCandidateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+	return nil
+}
+
+func cancelCandidateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	verror := cancelCandidateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	// Do job
+	allRefund := true
+	// Refund all the amount back to users
+	state.ForEachProxied(from, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+		// Refund Proxied Amount
+		state.SubProxiedBalanceByUser(from, key, proxiedBalance)
+		state.SubDelegateBalance(key, proxiedBalance)
+		state.AddBalance(key, proxiedBalance)
+
+		if depositProxiedBalance.Sign() > 0 {
+			allRefund = false
+			// Refund Deposit to PendingRefund if deposit > 0
+			state.AddPendingRefundBalanceByUser(from, key, depositProxiedBalance)
+			// TODO Add Pending Refund Set, Commit the Refund Set
+			state.MarkDelegateAddressRefund(from)
+		}
+		return true
+	})
+
+	state.CancelCandidate(from, allRefund)
+
+	// remove address form candidate set
+	state.ClearCandidateSetByAddress(from)
+
+	return nil
+}
+
+// set commission
+func setCommisstionValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, err := setCommissionValidation(from, tx, state, bc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setCommisstionApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	from := derivedAddressFromTx(tx)
+	args, err := setCommissionValidation(from, tx, state, bc)
+	if err != nil {
+		return err
+	}
+
+	state.SetCommission(from, args.Commission)
+
+	return nil
+}
+
+// Validation
+
+func delegateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.DelegateArgs, error) {
+	// Check minimum delegate amount
+	if tx.Value().Cmp(minimumDelegationAmount) < 0 {
+		return nil, core.ErrDelegateAmount
+	}
+
+	var args intAbi.DelegateArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.Delegate.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	// Check Candidate
+	if !state.IsCandidate(args.Candidate) {
+		return nil, core.ErrNotCandidate
+	}
+
+	depositBalance := state.GetDepositProxiedBalanceByUser(args.Candidate, from)
+	if depositBalance.Sign() == 0 {
+		// Check if exceed the limit of delegated addresses
+		// if exceed the limit of delegation address number, return error
+		delegatedAddressNumber := state.GetProxiedAddressNumber(args.Candidate)
+		if delegatedAddressNumber >= maxDelegationAddresses {
+			return nil, core.ErrExceedDelegationAddressLimit
+		}
+	}
+
+	// If Candidate is supernode, only allow to increase the stack(whitelist proxied list), not allow to create the new stack
+	var ep *epoch.Epoch
+	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
+		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
+	}
+	if _, supernode := ep.Validators.GetByAddress(args.Candidate.Bytes()); supernode != nil && supernode.RemainingEpoch > 0 {
+		if depositBalance.Sign() == 0 {
+			return nil, core.ErrCannotDelegate
+		}
+	}
+
+	// Check Epoch Height
+	if err := checkEpochInNormalStage(bc); err != nil {
+		return nil, err
+	}
+	return &args, nil
+}
+
+func cancelDelegateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.CancelDelegateArgs, error) {
+
+	var args intAbi.CancelDelegateArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.CancelDelegate.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	// Check Self Address
+	if from == args.Candidate {
+		return nil, core.ErrCancelSelfDelegate
+	}
+
+	// Super node Candidate can't decrease balance
+	var ep *epoch.Epoch
+	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
+		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
+	}
+	if _, supernode := ep.Validators.GetByAddress(args.Candidate.Bytes()); supernode != nil && supernode.RemainingEpoch > 0 {
+		return nil, core.ErrCannotCancelDelegate
+	}
+
+	// Check Proxied Amount in Candidate Balance
+	proxiedBalance := state.GetProxiedBalanceByUser(args.Candidate, from)
+	depositProxiedBalance := state.GetDepositProxiedBalanceByUser(args.Candidate, from)
+	pendingRefundBalance := state.GetPendingRefundBalanceByUser(args.Candidate, from)
+	// net = deposit - pending refund
+	netDeposit := new(big.Int).Sub(depositProxiedBalance, pendingRefundBalance)
+	// available = proxied + net
+	availableRefundBalance := new(big.Int).Add(proxiedBalance, netDeposit)
+	if args.Amount.Cmp(availableRefundBalance) == 1 {
+		return nil, core.ErrInsufficientProxiedBalance
+	}
+
+	remainingBalance := new(big.Int).Sub(availableRefundBalance, args.Amount)
+	if remainingBalance.Sign() == 1 && remainingBalance.Cmp(minimumDelegationAmount) == -1 {
+		return nil, core.ErrDelegateAmount
+	}
+
+	// Check Epoch Height
+	if err := checkEpochInNormalStage(bc); err != nil {
+		return nil, err
+	}
+
+	return &args, nil
+}
+
+func candidateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.CandidateArgs, error) {
+	// Check cleaned Candidate
+	if !state.IsCleanAddress(from) {
+		return nil, core.ErrAlreadyCandidate
+	}
+
+	// Check minimum Security Deposit
+	if tx.Value().Cmp(defaultSelfSecurityDeposit) == -1 {
+		return nil, core.ErrMinimumSecurityDeposit
+	}
+
+	var args intAbi.CandidateArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.Candidate.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	// Check Commission Range
+	if args.Commission > 100 {
+		return nil, core.ErrCommission
+	}
+
+	// Check Epoch Height
+	if err := checkEpochInNormalStage(bc); err != nil {
+		return nil, err
+	}
+
+	// Annual/SemiAnnual supernode can not become candidate
+	var ep *epoch.Epoch
+	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
+		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
+	}
+	if _, supernode := ep.Validators.GetByAddress(from.Bytes()); supernode != nil && supernode.RemainingEpoch > 0 {
+		return nil, core.ErrCannotCandidate
+	}
+
+	return &args, nil
+}
+
+func cancelCandidateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	// Check already Candidate
+	if !state.IsCandidate(from) {
+		return core.ErrNotCandidate
+	}
+
+	// Super node can't cancel Candidate
+	var ep *epoch.Epoch
+	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
+		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
+	}
+	if _, supernode := ep.Validators.GetByAddress(from.Bytes()); supernode != nil && supernode.RemainingEpoch > 0 {
+		return core.ErrCannotCancelCandidate
+	}
+
+	// Check Epoch Height
+	if err := checkEpochInNormalStage(bc); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setCommissionValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.SetCommissionArgs, error) {
+	if !state.IsCandidate(from) {
+		return nil, core.ErrNotCandidate
+	}
+
+	var args intAbi.SetCommissionArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.SetCommission.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	if args.Commission > 100 {
+		return nil, core.ErrCommission
+	}
+
+	return &args, nil
+}
+
+// Common
+func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
+	signer := types.NewEIP155Signer(tx.ChainId())
+	from, _ = types.Sender(signer, tx)
+	return
+}
+
+func checkEpochInNormalStage(bc *core.BlockChain) error {
+	var ep *epoch.Epoch
+	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
+		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
+	}
+
+	if ep == nil {
+		return errors.New("epoch is nil, are you running on IPBFT Consensus Engine")
+	}
+
+	return nil
+}
+
+func voteNextEpochValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+
+	_, verror := voteNextEpochValidation(tx, bc)
+	if verror != nil {
+		return verror
+	}
+
+	return nil
+}
+
+func voteNextEpochApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	args, verror := voteNextEpochValidation(tx, bc)
+	if verror != nil {
+		return verror
+	}
+
+	op := types.VoteNextEpochOp{
+		From:     from,
+		VoteHash: args.VoteHash,
+		TxHash:   tx.Hash(),
+	}
+
+	if ok := ops.Append(&op); !ok {
+		return fmt.Errorf("pending ops conflict: %v", op)
+	}
+
+	return nil
+}
+
+func revealVoteValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, verror := revealVoteValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+	return nil
+}
+
+func revealVoteApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	args, verror := revealVoteValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	// Apply Logic
+	if state.IsCandidate(from) {
+		// Move delegate amount first if Candidate
+		state.ForEachProxied(from, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+			// Move Proxied Amount to Deposit Proxied Amount
+			state.SubProxiedBalanceByUser(from, key, proxiedBalance)
+			state.AddDepositProxiedBalanceByUser(from, key, proxiedBalance)
+			return true
+		})
+	}
+
+	// Rest Vote Amount
+	proxiedBalance := state.GetTotalProxiedBalance(from)
+	depositProxiedBalance := state.GetTotalDepositProxiedBalance(from)
+	pendingRefundBalance := state.GetTotalPendingRefundBalance(from)
+	netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
+	netSelfAmount := new(big.Int).Sub(args.Amount, netProxied)
+
+	// if lock balance less than net self amount, then add enough amount to locked balance
+	if state.GetDepositBalance(from).Cmp(netSelfAmount) == -1 {
+		difference := new(big.Int).Sub(netSelfAmount, state.GetDepositBalance(from))
+		state.SubBalance(from, difference)
+		state.AddDepositBalance(from, difference)
+	}
+
+	var pub goCrypto.BLSPubKey
+	copy(pub[:], args.PubKey)
+
+	op := types.RevealVoteOp{
+		From:   from,
+		Pubkey: pub,
+		Amount: args.Amount,
+		Salt:   args.Salt,
+		TxHash: tx.Hash(),
+	}
+
+	if ok := ops.Append(&op); !ok {
+		return fmt.Errorf("pending ops conflict: %v", op)
+	}
+
+	return nil
+}
+
+func editValidatorValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	if !state.IsCandidate(from) {
+		return errors.New("you are not a validator or candidate")
+	}
+
+	var args intAbi.EditValidatorArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.EditValidator.String(), data[4:]); err != nil {
+		return err
+	}
+
+	if len([]byte(args.Details)) > maxEditValidatorLength ||
+		len([]byte(args.Identity)) > maxEditValidatorLength ||
+		len([]byte(args.Moniker)) > maxEditValidatorLength ||
+		len([]byte(args.Website)) > maxEditValidatorLength {
+		//fmt.Printf("args details length %v, identity length %v, moniker lenth %v, website length %v\n", len([]byte(args.Details)),len([]byte(args.Identity)),len([]byte(args.Moniker)),len([]byte(args.Website)))
+		return fmt.Errorf("args length too long, more than %v", maxEditValidatorLength)
+	}
+
+	return nil
+}
+
+func unForbidValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+
+	err := unForbidValidation(from, state, bc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func unForbidApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	err := unForbidValidation(from, state, bc)
+	if err != nil {
+		return err
+	}
+
+	state.GetOrNewStateObject(from).SetForbidden(false)
+
+	// remove address from forbidden set
+	state.ClearForbiddenSetByAddress(from)
+
+	return nil
+}
+
+// Validation
+
+func voteNextEpochValidation(tx *types.Transaction, bc *core.BlockChain) (*intAbi.VoteNextEpochArgs, error) {
+	var args intAbi.VoteNextEpochArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.VoteNextEpoch.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	// Check Epoch Height
+	if err := checkEpochInHashVoteStage(bc); err != nil {
+		return nil, err
+	}
+
+	return &args, nil
+}
+
+func revealVoteValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.RevealVoteArgs, error) {
+	var args intAbi.RevealVoteArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.RevealVote.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	var netProxied *big.Int
+	if state.IsCandidate(from) {
+		// is Candidate? Check Proxied Balance (Amount >= (proxiedBalance + depositProxiedBalance - pendingRefundBalance))
+		proxiedBalance := state.GetTotalProxiedBalance(from)
+		depositProxiedBalance := state.GetTotalDepositProxiedBalance(from)
+		pendingRefundBalance := state.GetTotalPendingRefundBalance(from)
+		netProxied = new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
+	} else {
+		netProxied = common.Big0
+	}
+	if args.Amount == nil || args.Amount.Sign() < 0 || args.Amount.Cmp(netProxied) == -1 {
+		return nil, core.ErrVoteAmountTooLow
+	}
+
+	// Non Candidate, Check Amount greater than minimumVoteAmount
+	if !state.IsCandidate(from) && args.Amount.Sign() == 1 && args.Amount.Cmp(minimumVoteAmount) == -1 {
+		return nil, core.ErrVoteAmountTooLow
+	}
+
+	// Check Amount (Amount <= net proxied + balance + deposit)
+	balance := state.GetBalance(from)
+	deposit := state.GetDepositBalance(from)
+	maximumAmount := new(big.Int).Add(new(big.Int).Add(balance, deposit), netProxied)
+	if args.Amount.Cmp(maximumAmount) == 1 {
+		return nil, core.ErrVoteAmountTooHight
+	}
+
+	// Check Signature of the PubKey matched against the Address
+	if err := goCrypto.CheckConsensusPubKey(from, args.PubKey, args.Signature); err != nil {
+		return nil, err
+	}
+
+	// Check Epoch Height
+	ep, err := checkEpochInRevealVoteStage(bc)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check Vote
+	voteSet := ep.GetNextEpoch().GetEpochValidatorVoteSet()
+	if voteSet == nil {
+		return nil, errors.New(fmt.Sprintf("Can not found the vote for Address %v", from.String()))
+	}
+
+	vote, exist := voteSet.GetVoteByAddress(from)
+	// Check Vote exist
+	if !exist {
+		return nil, errors.New(fmt.Sprintf("Can not found the vote for Address %v", from.String()))
+	}
+
+	if len(vote.VoteHash) == 0 {
+		return nil, errors.New(fmt.Sprintf("Address %v doesn't has vote hash", from.String()))
+	}
+
+	// Check Vote Hash
+	byte_data := [][]byte{
+		from.Bytes(),
+		args.PubKey,
+		common.LeftPadBytes(args.Amount.Bytes(), 1),
+		[]byte(args.Salt),
+	}
+	voteHash := crypto.Keccak256Hash(concatCopyPreAllocate(byte_data))
+	fmt.Printf("tdm api voteHash %v\n", voteHash.String())
+	if vote.VoteHash != voteHash {
+		return nil, errors.New("your vote doesn't match your vote hash, please check your vote")
+	}
+
+	// Check Logic - Amount can't be 0 for new Validator
+	if !ep.Validators.HasAddress(from.Bytes()) && args.Amount.Sign() == 0 {
+		return nil, errors.New("invalid vote!!! new validator's vote amount must be greater than 0")
+	}
+
+	// Check Logic - SuperNode with remaining epoch can not decrease the stack
+	if _, supernode := ep.Validators.GetByAddress(from.Bytes()); supernode != nil {
+		if supernode.RemainingEpoch > 0 && args.Amount.Cmp(state.GetDepositBalance(from)) == -1 {
+			return nil, core.ErrVoteAmountTooLow
+		}
+	}
+
+	return &args, nil
+}
+
+// Common
+
+func checkEpochInHashVoteStage(bc *core.BlockChain) error {
+	var ep *epoch.Epoch
+	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
+		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
+	}
+
+	if ep == nil {
+		return errors.New("epoch is nil, are you running on IPBFT Consensus Engine")
+	}
+
+	// Check Epoch in Hash Vote stage
+	if ep.GetNextEpoch() == nil {
+		return errors.New("next Epoch is nil, You can't vote the next epoch")
+	}
+
+	return nil
+}
+
+func checkEpochInRevealVoteStage(bc *core.BlockChain) (*epoch.Epoch, error) {
+	ep, err := getEpoch(bc)
+	if err != nil {
+		return nil, err
+	}
+	// Check Epoch in Reveal Vote stage
+	if ep.GetNextEpoch() == nil {
+		return nil, errors.New("next Epoch is nil, You can't vote the next epoch")
+	}
+
+	return ep, nil
+}
+
+func concatCopyPreAllocate(slices [][]byte) []byte {
+	var totalLen int
+	for _, s := range slices {
+		totalLen += len(s)
+	}
+	tmp := make([]byte, totalLen)
+	var i int
+	for _, s := range slices {
+		i += copy(tmp[i:], s)
+	}
+	return tmp
+}
+
+func unForbidValidation(from common.Address, state *state.StateDB, bc *core.BlockChain) error {
+	if !state.IsCandidate(from) {
+		return core.ErrNotCandidate
+	}
+
+	ep, err := getEpoch(bc)
+	if err != nil {
+		return err
+	}
+
+	fromObj := state.GetOrNewStateObject(from)
+	isForbidden := fromObj.IsForbidden()
+	if !isForbidden {
+		return fmt.Errorf("should not unforbid")
+	}
+
+	forbiddenDuration := ep.GetForbiddenDuration()
+	forbiddenTime := fromObj.BlockTime()
+
+	durationToNow := new(big.Int).Sub(big.NewInt(time.Now().Unix()), forbiddenTime)
+	if durationToNow.Cmp(big.NewInt(int64(forbiddenDuration.Seconds()))) < 0 {
+		return fmt.Errorf("time is too short to unforbid, forbidden duration %v, but duratrion to now %v", forbiddenDuration.Seconds(), durationToNow)
+	}
+	return nil
+}
+
+func getEpoch(bc *core.BlockChain) (*epoch.Epoch, error) {
+	var ep *epoch.Epoch
+	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
+		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
+	}
+
+	if ep == nil {
+		return nil, errors.New("epoch is nil, are you running on IPBFT Consensus Engine")
+	}
+
+	return ep, nil
 }

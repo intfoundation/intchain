@@ -277,60 +277,6 @@ func (epoch *Epoch) ProposeNextEpoch(lastBlockHeight uint64, lastBlockTime time.
 	return nil
 }
 
-//func (epoch *Epoch) GetVoteStartHeight() uint64 {
-//	percent := float64(epoch.EndBlock-epoch.StartBlock) * NextEpochProposeStartPercent
-//	return uint64(math.Ceil(percent)) + epoch.StartBlock
-//}
-
-//func (epoch *Epoch) GetVoteEndHeight() uint64 {
-//	percent := float64(epoch.EndBlock-epoch.StartBlock) * NextEpochHashVoteEndPercent
-//	if _, frac := math.Modf(percent); frac == 0 {
-//		return uint64(percent) - 1 + epoch.StartBlock
-//	} else {
-//		return uint64(math.Floor(percent)) + epoch.StartBlock
-//	}
-//}
-
-//func (epoch *Epoch) GetRevealVoteStartHeight() uint64 {
-//	percent := float64(epoch.EndBlock-epoch.StartBlock) * NextEpochHashVoteEndPercent
-//	return uint64(math.Ceil(percent)) + epoch.StartBlock
-//}
-
-//func (epoch *Epoch) GetRevealVoteEndHeight() uint64 {
-//	percent := float64(epoch.EndBlock-epoch.StartBlock) * NextEpochRevealVoteEndPercent
-//	return uint64(math.Floor(percent)) + epoch.StartBlock
-//}
-
-//func (epoch *Epoch) CheckInNormalStage(height uint64) bool {
-//	fCurBlockHeight := float64(height)
-//	fStartBlock := float64(epoch.StartBlock)
-//	fEndBlock := float64(epoch.EndBlock)
-//
-//	passRate := (fCurBlockHeight - fStartBlock) / (fEndBlock - fStartBlock)
-//
-//	return (0 <= passRate) && (passRate < NextEpochProposeStartPercent)
-//}
-
-//func (epoch *Epoch) CheckInHashVoteStage(height uint64) bool {
-//	fCurBlockHeight := float64(height)
-//	fStartBlock := float64(epoch.StartBlock)
-//	fEndBlock := float64(epoch.EndBlock)
-//
-//	passRate := (fCurBlockHeight - fStartBlock) / (fEndBlock - fStartBlock)
-//
-//	return (NextEpochProposeStartPercent <= passRate) && (passRate < NextEpochHashVoteEndPercent)
-//}
-
-//func (epoch *Epoch) CheckInRevealVoteStage(height uint64) bool {
-//	fCurBlockHeight := float64(height)
-//	fStartBlock := float64(epoch.StartBlock)
-//	fEndBlock := float64(epoch.EndBlock)
-//
-//	passRate := (fCurBlockHeight - fStartBlock) / (fEndBlock - fStartBlock)
-//
-//	return (NextEpochHashVoteEndPercent <= passRate) && (passRate < NextEpochRevealVoteEndPercent)
-//}
-
 func (epoch *Epoch) GetNextEpoch() *Epoch {
 	if epoch.nextEpoch == nil {
 		epoch.nextEpoch = loadOneEpoch(epoch.db, epoch.Number+1, epoch.logger)
