@@ -2238,7 +2238,7 @@ func registerValidation(from common.Address, tx *types.Transaction, state *state
 	}
 
 	// Check Epoch Height
-	if err := checkEpochInNormalStage(bc); err != nil {
+	if _, err := getEpoch(bc); err != nil {
 		return nil, err
 	}
 
