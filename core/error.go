@@ -44,7 +44,7 @@ var (
 	ErrCannotDelegate = errors.New("Annual/SemiAnnual Supernode candidate not accept new delegator")
 
 	// ErrCannotUnbond is returned if the request address belongs to Annual/SemiAnnual Supernode
-	ErrCannotUnBond = errors.New("Annual/SemiAnnual Supernode candidate can not cancel delegation")
+	ErrCannotUnBond = errors.New("Annual/SemiAnnual Supernode candidate can not unbond")
 
 	// ErrDelegateAmount is returned if the delegate amount less than 0
 	ErrDelegateAmount = errors.New("delegation amount must be greater or equal to 1000 INT")
@@ -59,8 +59,8 @@ var (
 	// ErrCannotCandidate is returned if the request address belongs to Annual/SemiAnnual Supernode
 	ErrCannotCandidate = errors.New("Annual/SemiAnnual Supernode can not become candidate")
 
-	// ErrCannotCancelCandidate is returned if the request address belongs to Annual/SemiAnnual Supernode
-	ErrCannotCancelCandidate = errors.New("Annual/SemiAnnual Supernode can not cancel candidate")
+	// ErrCannotUnRegister is returned if the request address belongs to Annual/SemiAnnual Supernode
+	ErrCannotUnRegister = errors.New("Annual/SemiAnnual Supernode can not unregister")
 
 	// ErrNotCandidate is returned if the request address is not a candidate
 	ErrNotCandidate = errors.New("address not candidate")

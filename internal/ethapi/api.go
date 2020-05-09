@@ -1984,145 +1984,6 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	return nil
 }
 
-func unBondValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-	from := derivedAddressFromTx(tx)
-	_, verror := UnBondValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-	return nil
-}
-
-func unBondApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-	// Validate first
-	from := derivedAddressFromTx(tx)
-	args, verror := UnBondValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-
-	// Apply Logic
-	// if request amount < proxied amount, refund it immediately
-	// otherwise, refund the proxied amount, and put the rest to pending refund balance
-	proxiedBalance := state.GetProxiedBalanceByUser(args.Candidate, from)
-	var immediatelyRefund *big.Int
-	if args.Amount.Cmp(proxiedBalance) <= 0 {
-		immediatelyRefund = args.Amount
-	} else {
-		immediatelyRefund = proxiedBalance
-		restRefund := new(big.Int).Sub(args.Amount, proxiedBalance)
-		state.AddPendingRefundBalanceByUser(args.Candidate, from, restRefund)
-		// TODO Add Pending Refund Set, Commit the Refund Set
-		state.MarkDelegateAddressRefund(args.Candidate)
-	}
-
-	state.SubProxiedBalanceByUser(args.Candidate, from, immediatelyRefund)
-	state.SubDelegateBalance(from, immediatelyRefund)
-	state.AddBalance(from, immediatelyRefund)
-
-	return nil
-}
-
-func registerValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-	from := derivedAddressFromTx(tx)
-	_, verror := registerValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-	return nil
-}
-
-func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-	// Validate first
-	from := derivedAddressFromTx(tx)
-	args, verror := registerValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-
-	amount := tx.Value()
-	// Add security deposit to self
-	state.SubBalance(from, amount)
-	state.AddDelegateBalance(from, amount)
-	state.AddProxiedBalanceByUser(from, from, amount)
-	// Become a Candidate
-	state.ApplyForCandidate(from, args.Commission)
-
-	// mark address candidate
-	state.MarkAddressCandidate(from)
-
-	return nil
-}
-
-func unRegisterValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-	from := derivedAddressFromTx(tx)
-	verror := cancelCandidateValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-	return nil
-}
-
-func unRegisterApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-	// Validate first
-	from := derivedAddressFromTx(tx)
-	verror := cancelCandidateValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-
-	// Do job
-	allRefund := true
-	// Refund all the amount back to users
-	state.ForEachProxied(from, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
-		// Refund Proxied Amount
-		state.SubProxiedBalanceByUser(from, key, proxiedBalance)
-		state.SubDelegateBalance(key, proxiedBalance)
-		state.AddBalance(key, proxiedBalance)
-
-		if depositProxiedBalance.Sign() > 0 {
-			allRefund = false
-			// Refund Deposit to PendingRefund if deposit > 0
-			state.AddPendingRefundBalanceByUser(from, key, depositProxiedBalance)
-			// TODO Add Pending Refund Set, Commit the Refund Set
-			state.MarkDelegateAddressRefund(from)
-		}
-		return true
-	})
-
-	state.CancelCandidate(from, allRefund)
-
-	// remove address form candidate set
-	state.ClearCandidateSetByAddress(from)
-
-	return nil
-}
-
-// set commission
-func setCommisstionValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-	from := derivedAddressFromTx(tx)
-	_, err := setCommissionValidation(from, tx, state, bc)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func setCommisstionApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-	from := derivedAddressFromTx(tx)
-	args, err := setCommissionValidation(from, tx, state, bc)
-	if err != nil {
-		return err
-	}
-
-	state.SetCommission(from, args.Commission)
-
-	return nil
-}
-
-// Validation
-
 func delegateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.DelegateArgs, error) {
 	// Check minimum delegate amount
 	if tx.Value().Cmp(minimumDelegationAmount) < 0 {
@@ -2162,13 +2023,52 @@ func delegateValidation(from common.Address, tx *types.Transaction, state *state
 	}
 
 	// Check Epoch Height
-	if err := checkEpochInNormalStage(bc); err != nil {
+	if _, err := getEpoch(bc); err != nil {
 		return nil, err
 	}
 	return &args, nil
 }
 
-func UnBondValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.UnBondArgs, error) {
+func unBondValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, verror := unBondValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+	return nil
+}
+
+func unBondApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	args, verror := unBondValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	// Apply Logic
+	// if request amount < proxied amount, refund it immediately
+	// otherwise, refund the proxied amount, and put the rest to pending refund balance
+	proxiedBalance := state.GetProxiedBalanceByUser(args.Candidate, from)
+	var immediatelyRefund *big.Int
+	if args.Amount.Cmp(proxiedBalance) <= 0 {
+		immediatelyRefund = args.Amount
+	} else {
+		immediatelyRefund = proxiedBalance
+		restRefund := new(big.Int).Sub(args.Amount, proxiedBalance)
+		state.AddPendingRefundBalanceByUser(args.Candidate, from, restRefund)
+		// TODO Add Pending Refund Set, Commit the Refund Set
+		state.MarkDelegateAddressRefund(args.Candidate)
+	}
+
+	state.SubProxiedBalanceByUser(args.Candidate, from, immediatelyRefund)
+	state.SubDelegateBalance(from, immediatelyRefund)
+	state.AddBalance(from, immediatelyRefund)
+
+	return nil
+}
+
+func unBondValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.UnBondArgs, error) {
 
 	var args intAbi.UnBondArgs
 	data := tx.Data()
@@ -2202,17 +2102,49 @@ func UnBondValidation(from common.Address, tx *types.Transaction, state *state.S
 		return nil, core.ErrInsufficientProxiedBalance
 	}
 
+	// if left, the left must be greater than the min delegate amount
 	remainingBalance := new(big.Int).Sub(availableRefundBalance, args.Amount)
 	if remainingBalance.Sign() == 1 && remainingBalance.Cmp(minimumDelegationAmount) == -1 {
 		return nil, core.ErrDelegateAmount
 	}
 
 	// Check Epoch Height
-	if err := checkEpochInNormalStage(bc); err != nil {
+	if _, err := getEpoch(bc); err != nil {
 		return nil, err
 	}
 
 	return &args, nil
+}
+
+func registerValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, verror := registerValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+	return nil
+}
+
+func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	args, verror := registerValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	amount := tx.Value()
+	// Add security deposit to self
+	state.SubBalance(from, amount)
+	state.AddDelegateBalance(from, amount)
+	state.AddProxiedBalanceByUser(from, from, amount)
+	// Become a Candidate
+	state.ApplyForCandidate(from, args.Commission)
+
+	// mark address candidate
+	state.MarkAddressCandidate(from)
+
+	return nil
 }
 
 func registerValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.RegisterArgs, error) {
@@ -2254,7 +2186,51 @@ func registerValidation(from common.Address, tx *types.Transaction, state *state
 	return &args, nil
 }
 
-func cancelCandidateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+func unRegisterValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	verror := unRegisterValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+	return nil
+}
+
+func unRegisterApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	verror := unRegisterValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	// Do job
+	allRefund := true
+	// Refund all the amount back to users
+	state.ForEachProxied(from, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+		// Refund Proxied Amount
+		state.SubProxiedBalanceByUser(from, key, proxiedBalance)
+		state.SubDelegateBalance(key, proxiedBalance)
+		state.AddBalance(key, proxiedBalance)
+
+		if depositProxiedBalance.Sign() > 0 {
+			allRefund = false
+			// Refund Deposit to PendingRefund if deposit > 0
+			state.AddPendingRefundBalanceByUser(from, key, depositProxiedBalance)
+			// TODO Add Pending Refund Set, Commit the Refund Set
+			state.MarkDelegateAddressRefund(from)
+		}
+		return true
+	})
+
+	state.CancelCandidate(from, allRefund)
+
+	// remove address form candidate set
+	state.ClearCandidateSetByAddress(from)
+
+	return nil
+}
+
+func unRegisterValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	// Check already Candidate
 	if !state.IsCandidate(from) {
 		return core.ErrNotCandidate
@@ -2266,13 +2242,36 @@ func cancelCandidateValidation(from common.Address, tx *types.Transaction, state
 		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
 	}
 	if _, supernode := ep.Validators.GetByAddress(from.Bytes()); supernode != nil && supernode.RemainingEpoch > 0 {
-		return core.ErrCannotCancelCandidate
+		return core.ErrCannotUnRegister
 	}
 
 	// Check Epoch Height
 	if _, err := getEpoch(bc); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// set commission
+func setCommisstionValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, err := setCommissionValidation(from, tx, state, bc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setCommisstionApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	from := derivedAddressFromTx(tx)
+	args, err := setCommissionValidation(from, tx, state, bc)
+	if err != nil {
+		return err
+	}
+
+	state.SetCommission(from, args.Commission)
 
 	return nil
 }
@@ -2331,6 +2330,21 @@ func voteNextEpochApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.
 	}
 
 	return nil
+}
+
+func voteNextEpochValidation(tx *types.Transaction, bc *core.BlockChain) (*intAbi.VoteNextEpochArgs, error) {
+	var args intAbi.VoteNextEpochArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.VoteNextEpoch.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	// Check Epoch Height
+	if _, err := getEpoch(bc); err != nil {
+		return nil, err
+	}
+
+	return &args, nil
 }
 
 func revealVoteValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
@@ -2392,72 +2406,6 @@ func revealVoteApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Blo
 	}
 
 	return nil
-}
-
-func editValidatorValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-	from := derivedAddressFromTx(tx)
-	if !state.IsCandidate(from) {
-		return errors.New("you are not a validator or candidate")
-	}
-
-	var args intAbi.EditValidatorArgs
-	data := tx.Data()
-	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.EditValidator.String(), data[4:]); err != nil {
-		return err
-	}
-
-	if len([]byte(args.Details)) > maxEditValidatorLength ||
-		len([]byte(args.Identity)) > maxEditValidatorLength ||
-		len([]byte(args.Moniker)) > maxEditValidatorLength ||
-		len([]byte(args.Website)) > maxEditValidatorLength {
-		//fmt.Printf("args details length %v, identity length %v, moniker lenth %v, website length %v\n", len([]byte(args.Details)),len([]byte(args.Identity)),len([]byte(args.Moniker)),len([]byte(args.Website)))
-		return fmt.Errorf("args length too long, more than %v", maxEditValidatorLength)
-	}
-
-	return nil
-}
-
-func unForbidValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-	from := derivedAddressFromTx(tx)
-
-	err := unForbidValidation(from, state, bc)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func unForbidApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-	from := derivedAddressFromTx(tx)
-	err := unForbidValidation(from, state, bc)
-	if err != nil {
-		return err
-	}
-
-	state.GetOrNewStateObject(from).SetForbidden(false)
-
-	// remove address from forbidden set
-	state.ClearForbiddenSetByAddress(from)
-
-	return nil
-}
-
-// Validation
-
-func voteNextEpochValidation(tx *types.Transaction, bc *core.BlockChain) (*intAbi.VoteNextEpochArgs, error) {
-	var args intAbi.VoteNextEpochArgs
-	data := tx.Data()
-	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.VoteNextEpoch.String(), data[4:]); err != nil {
-		return nil, err
-	}
-
-	// Check Epoch Height
-	if _, err := getEpoch(bc); err != nil {
-		return nil, err
-	}
-
-	return &args, nil
 }
 
 func revealVoteValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.RevealVoteArgs, error) {
@@ -2549,17 +2497,53 @@ func revealVoteValidation(from common.Address, tx *types.Transaction, state *sta
 	return &args, nil
 }
 
-func concatCopyPreAllocate(slices [][]byte) []byte {
-	var totalLen int
-	for _, s := range slices {
-		totalLen += len(s)
+func editValidatorValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	if !state.IsCandidate(from) {
+		return errors.New("you are not a validator or candidate")
 	}
-	tmp := make([]byte, totalLen)
-	var i int
-	for _, s := range slices {
-		i += copy(tmp[i:], s)
+
+	var args intAbi.EditValidatorArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.EditValidator.String(), data[4:]); err != nil {
+		return err
 	}
-	return tmp
+
+	if len([]byte(args.Details)) > maxEditValidatorLength ||
+		len([]byte(args.Identity)) > maxEditValidatorLength ||
+		len([]byte(args.Moniker)) > maxEditValidatorLength ||
+		len([]byte(args.Website)) > maxEditValidatorLength {
+		//fmt.Printf("args details length %v, identity length %v, moniker lenth %v, website length %v\n", len([]byte(args.Details)),len([]byte(args.Identity)),len([]byte(args.Moniker)),len([]byte(args.Website)))
+		return fmt.Errorf("args length too long, more than %v", maxEditValidatorLength)
+	}
+
+	return nil
+}
+
+func unForbidValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+
+	err := unForbidValidation(from, state, bc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func unForbidApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	err := unForbidValidation(from, state, bc)
+	if err != nil {
+		return err
+	}
+
+	state.GetOrNewStateObject(from).SetForbidden(false)
+
+	// remove address from forbidden set
+	state.ClearForbiddenSetByAddress(from)
+
+	return nil
 }
 
 func unForbidValidation(from common.Address, state *state.StateDB, bc *core.BlockChain) error {
@@ -2586,6 +2570,19 @@ func unForbidValidation(from common.Address, state *state.StateDB, bc *core.Bloc
 		return fmt.Errorf("time is too short to unforbid, forbidden duration %v, but duratrion to now %v", forbiddenDuration.Seconds(), durationToNow)
 	}
 	return nil
+}
+
+func concatCopyPreAllocate(slices [][]byte) []byte {
+	var totalLen int
+	for _, s := range slices {
+		totalLen += len(s)
+	}
+	tmp := make([]byte, totalLen)
+	var i int
+	for _, s := range slices {
+		i += copy(tmp[i:], s)
+	}
+	return tmp
 }
 
 func getEpoch(bc *core.BlockChain) (*epoch.Epoch, error) {
