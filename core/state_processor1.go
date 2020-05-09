@@ -26,11 +26,6 @@ func ApplyTransactionEx(config *params.ChainConfig, bc *BlockChain, author *comm
 		return nil, 0, err
 	}
 
-	// Not allow contract creation on IntChain Main Chain
-	//if config.IsMainChain() && tx.To() == nil {
-	//	return nil, 0, ErrNoContractOnMainChain
-	//}
-
 	if !intAbi.IsIntChainContractAddr(tx.To()) {
 
 		//log.Debugf("ApplyTransactionEx 1\n")

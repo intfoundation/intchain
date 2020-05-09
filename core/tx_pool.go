@@ -597,11 +597,6 @@ func (pool *TxPool) validateTx(tx *types.Transaction, local bool) error {
 		return ErrInsufficientFunds
 	}
 
-	// Not allow contract creation on IntChain Main Chain
-	//if pool.chainconfig.IsMainChain() && tx.To() == nil {
-	//	return ErrNoContractOnMainChain
-	//}
-
 	// check address
 	if tx.To() != nil && !crypto.ValidateINTAddr(string(tx.To()[:])) {
 		return ErrInvalidAddress
