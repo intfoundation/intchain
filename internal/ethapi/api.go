@@ -2170,9 +2170,9 @@ func registerValidation(from common.Address, tx *types.Transaction, state *state
 	}
 
 	// Check Epoch Height
-	if _, err := getEpoch(bc); err != nil {
-		return nil, err
-	}
+	//if _, err := getEpoch(bc); err != nil {
+	//	return nil, err
+	//}
 
 	// Annual/SemiAnnual supernode can not become candidate
 	var ep *epoch.Epoch
