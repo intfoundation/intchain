@@ -2270,7 +2270,7 @@ func cancelCandidateValidation(from common.Address, tx *types.Transaction, state
 	}
 
 	// Check Epoch Height
-	if err := checkEpochInNormalStage(bc); err != nil {
+	if _, err := getEpoch(bc); err != nil {
 		return err
 	}
 
@@ -2300,19 +2300,6 @@ func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
 	signer := types.NewEIP155Signer(tx.ChainId())
 	from, _ = types.Sender(signer, tx)
 	return
-}
-
-func checkEpochInNormalStage(bc *core.BlockChain) error {
-	var ep *epoch.Epoch
-	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
-		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
-	}
-
-	if ep == nil {
-		return errors.New("epoch is nil, are you running on IPBFT Consensus Engine")
-	}
-
-	return nil
 }
 
 func voteNextEpochValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
@@ -2466,7 +2453,7 @@ func voteNextEpochValidation(tx *types.Transaction, bc *core.BlockChain) (*intAb
 	}
 
 	// Check Epoch Height
-	if err := checkEpochInHashVoteStage(bc); err != nil {
+	if _, err := getEpoch(bc); err != nil {
 		return nil, err
 	}
 
@@ -2513,7 +2500,7 @@ func revealVoteValidation(from common.Address, tx *types.Transaction, state *sta
 	}
 
 	// Check Epoch Height
-	ep, err := checkEpochInRevealVoteStage(bc)
+	ep, err := getEpoch(bc)
 	if err != nil {
 		return nil, err
 	}
@@ -2560,39 +2547,6 @@ func revealVoteValidation(from common.Address, tx *types.Transaction, state *sta
 	}
 
 	return &args, nil
-}
-
-// Common
-
-func checkEpochInHashVoteStage(bc *core.BlockChain) error {
-	var ep *epoch.Epoch
-	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
-		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
-	}
-
-	if ep == nil {
-		return errors.New("epoch is nil, are you running on IPBFT Consensus Engine")
-	}
-
-	// Check Epoch in Hash Vote stage
-	if ep.GetNextEpoch() == nil {
-		return errors.New("next Epoch is nil, You can't vote the next epoch")
-	}
-
-	return nil
-}
-
-func checkEpochInRevealVoteStage(bc *core.BlockChain) (*epoch.Epoch, error) {
-	ep, err := getEpoch(bc)
-	if err != nil {
-		return nil, err
-	}
-	// Check Epoch in Reveal Vote stage
-	if ep.GetNextEpoch() == nil {
-		return nil, errors.New("next Epoch is nil, You can't vote the next epoch")
-	}
-
-	return ep, nil
 }
 
 func concatCopyPreAllocate(slices [][]byte) []byte {
