@@ -1611,12 +1611,12 @@ func (s *PublicNetAPI) Version() string {
 }
 
 var (
-	defaultSelfSecurityDeposit = math.MustParseBig256("10000000000000000000000") // 10,000 * e18
-	minimumDelegationAmount    = math.MustParseBig256("1000000000000000000000")  // 1000 * e18
+	minimumRegisterAmount   = math.MustParseBig256("10000000000000000000000") // 10,000 * e18
+	minimumDelegationAmount = math.MustParseBig256("1000000000000000000000")  // 1000 * e18
 
 	maxDelegationAddresses = 1000
 
-	minimumVoteAmount      = math.MustParseBig256("100000000000000000000000") // 100,000 * e18
+	//minimumVoteAmount      = math.MustParseBig256("100000000000000000000000") // 100,000 * e18
 	maxEditValidatorLength = 100
 )
 
@@ -1956,166 +1956,7 @@ func withDrawRewardValidation(from common.Address, tx *types.Transaction, state 
 	return &args, nil
 }
 
-func delegateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-	from := derivedAddressFromTx(tx)
-	_, verror := delegateValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-	return nil
-}
-
-func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-	// Validate first
-	from := derivedAddressFromTx(tx)
-	args, verror := delegateValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-
-	// Do job
-	amount := tx.Value()
-	// Move Balance to delegate balance
-	state.SubBalance(from, amount)
-	state.AddDelegateBalance(from, amount)
-	// Add Balance to Candidate's Proxied Balance
-	state.AddProxiedBalanceByUser(args.Candidate, from, amount)
-
-	return nil
-}
-
-func delegateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.DelegateArgs, error) {
-	// Check minimum delegate amount
-	if tx.Value().Cmp(minimumDelegationAmount) < 0 {
-		return nil, core.ErrDelegateAmount
-	}
-
-	var args intAbi.DelegateArgs
-	data := tx.Data()
-	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.Delegate.String(), data[4:]); err != nil {
-		return nil, err
-	}
-
-	// Check Candidate
-	if !state.IsCandidate(args.Candidate) {
-		return nil, core.ErrNotCandidate
-	}
-
-	depositBalance := state.GetDepositProxiedBalanceByUser(args.Candidate, from)
-	if depositBalance.Sign() == 0 {
-		// Check if exceed the limit of delegated addresses
-		// if exceed the limit of delegation address number, return error
-		delegatedAddressNumber := state.GetProxiedAddressNumber(args.Candidate)
-		if delegatedAddressNumber >= maxDelegationAddresses {
-			return nil, core.ErrExceedDelegationAddressLimit
-		}
-	}
-
-	// If Candidate is supernode, only allow to increase the stack(whitelist proxied list), not allow to create the new stack
-	var ep *epoch.Epoch
-	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
-		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
-	}
-	if _, supernode := ep.Validators.GetByAddress(args.Candidate.Bytes()); supernode != nil && supernode.RemainingEpoch > 0 {
-		if depositBalance.Sign() == 0 {
-			return nil, core.ErrCannotDelegate
-		}
-	}
-
-	// Check Epoch Height
-	if _, err := getEpoch(bc); err != nil {
-		return nil, err
-	}
-	return &args, nil
-}
-
-func unBondValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-	from := derivedAddressFromTx(tx)
-	_, verror := unBondValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-	return nil
-}
-
-func unBondApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-	// Validate first
-	from := derivedAddressFromTx(tx)
-	args, verror := unBondValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-
-	// Apply Logic
-	// if request amount < proxied amount, refund it immediately
-	// otherwise, refund the proxied amount, and put the rest to pending refund balance
-	proxiedBalance := state.GetProxiedBalanceByUser(args.Candidate, from)
-	var immediatelyRefund *big.Int
-	if args.Amount.Cmp(proxiedBalance) <= 0 {
-		immediatelyRefund = args.Amount
-	} else {
-		immediatelyRefund = proxiedBalance
-		restRefund := new(big.Int).Sub(args.Amount, proxiedBalance)
-		state.AddPendingRefundBalanceByUser(args.Candidate, from, restRefund)
-		// TODO Add Pending Refund Set, Commit the Refund Set
-		state.MarkDelegateAddressRefund(args.Candidate)
-	}
-
-	state.SubProxiedBalanceByUser(args.Candidate, from, immediatelyRefund)
-	state.SubDelegateBalance(from, immediatelyRefund)
-	state.AddBalance(from, immediatelyRefund)
-
-	return nil
-}
-
-func unBondValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.UnBondArgs, error) {
-
-	var args intAbi.UnBondArgs
-	data := tx.Data()
-	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.UnBond.String(), data[4:]); err != nil {
-		return nil, err
-	}
-
-	// Check Self Address
-	if from == args.Candidate {
-		return nil, core.ErrCancelSelfDelegate
-	}
-
-	// Super node Candidate can't decrease balance
-	var ep *epoch.Epoch
-	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
-		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
-	}
-	if _, supernode := ep.Validators.GetByAddress(args.Candidate.Bytes()); supernode != nil && supernode.RemainingEpoch > 0 {
-		return nil, core.ErrCannotUnBond
-	}
-
-	// Check Proxied Amount in Candidate Balance
-	proxiedBalance := state.GetProxiedBalanceByUser(args.Candidate, from)
-	depositProxiedBalance := state.GetDepositProxiedBalanceByUser(args.Candidate, from)
-	pendingRefundBalance := state.GetPendingRefundBalanceByUser(args.Candidate, from)
-	// net = deposit - pending refund
-	netDeposit := new(big.Int).Sub(depositProxiedBalance, pendingRefundBalance)
-	// available = proxied + net
-	availableRefundBalance := new(big.Int).Add(proxiedBalance, netDeposit)
-	if args.Amount.Cmp(availableRefundBalance) == 1 {
-		return nil, core.ErrInsufficientProxiedBalance
-	}
-
-	// if left, the left must be greater than the min delegate amount
-	remainingBalance := new(big.Int).Sub(availableRefundBalance, args.Amount)
-	if remainingBalance.Sign() == 1 && remainingBalance.Cmp(minimumDelegationAmount) == -1 {
-		return nil, core.ErrDelegateAmount
-	}
-
-	// Check Epoch Height
-	if _, err := getEpoch(bc); err != nil {
-		return nil, err
-	}
-
-	return &args, nil
-}
-
+// register and unregister
 func registerValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)
 	_, verror := registerValidation(from, tx, state, bc)
@@ -2134,7 +1975,7 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	}
 
 	amount := tx.Value()
-	// Add security deposit to self
+	// Add minimum register amount to self
 	state.SubBalance(from, amount)
 	state.AddDelegateBalance(from, amount)
 	state.AddProxiedBalanceByUser(from, from, amount)
@@ -2154,7 +1995,7 @@ func registerValidation(from common.Address, tx *types.Transaction, state *state
 	}
 
 	// Check minimum Security Deposit
-	if tx.Value().Cmp(defaultSelfSecurityDeposit) == -1 {
+	if tx.Value().Cmp(minimumRegisterAmount) == -1 {
 		return nil, core.ErrMinimumSecurityDeposit
 	}
 
@@ -2253,6 +2094,167 @@ func unRegisterValidation(from common.Address, tx *types.Transaction, state *sta
 	return nil
 }
 
+// delegate and unbond
+func delegateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, verror := delegateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+	return nil
+}
+
+func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	args, verror := delegateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	// Do job
+	amount := tx.Value()
+	// Move Balance to delegate balance
+	state.SubBalance(from, amount)
+	state.AddDelegateBalance(from, amount)
+	// Add Balance to Candidate's Proxied Balance
+	state.AddProxiedBalanceByUser(args.Candidate, from, amount)
+
+	return nil
+}
+
+func delegateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.DelegateArgs, error) {
+	// Check minimum delegate amount
+	if tx.Value().Cmp(minimumDelegationAmount) < 0 {
+		return nil, core.ErrDelegateAmount
+	}
+
+	var args intAbi.DelegateArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.Delegate.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	// Check Candidate
+	if !state.IsCandidate(args.Candidate) {
+		return nil, core.ErrNotCandidate
+	}
+
+	depositBalance := state.GetDepositProxiedBalanceByUser(args.Candidate, from)
+	if depositBalance.Sign() == 0 {
+		// Check if exceed the limit of delegated addresses
+		// if exceed the limit of delegation address number, return error
+		delegatedAddressNumber := state.GetProxiedAddressNumber(args.Candidate)
+		if delegatedAddressNumber >= maxDelegationAddresses {
+			return nil, core.ErrExceedDelegationAddressLimit
+		}
+	}
+
+	// If Candidate is supernode, only allow to increase the stack(whitelist proxied list), not allow to create the new stack
+	var ep *epoch.Epoch
+	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
+		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
+	}
+	if _, supernode := ep.Validators.GetByAddress(args.Candidate.Bytes()); supernode != nil && supernode.RemainingEpoch > 0 {
+		if depositBalance.Sign() == 0 {
+			return nil, core.ErrCannotDelegate
+		}
+	}
+
+	// Check Epoch Height
+	//if _, err := getEpoch(bc); err != nil {
+	//	return nil, err
+	//}
+	return &args, nil
+}
+
+func unBondValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, verror := unBondValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+	return nil
+}
+
+func unBondApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	// Validate first
+	from := derivedAddressFromTx(tx)
+	args, verror := unBondValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	// Apply Logic
+	// if request amount < proxied amount, refund it immediately
+	// otherwise, refund the proxied amount, and put the rest to pending refund balance
+	proxiedBalance := state.GetProxiedBalanceByUser(args.Candidate, from)
+	var immediatelyRefund *big.Int
+	if args.Amount.Cmp(proxiedBalance) <= 0 {
+		immediatelyRefund = args.Amount
+	} else {
+		immediatelyRefund = proxiedBalance
+		restRefund := new(big.Int).Sub(args.Amount, proxiedBalance)
+		state.AddPendingRefundBalanceByUser(args.Candidate, from, restRefund)
+		// TODO Add Pending Refund Set, Commit the Refund Set
+		state.MarkDelegateAddressRefund(args.Candidate)
+	}
+
+	state.SubProxiedBalanceByUser(args.Candidate, from, immediatelyRefund)
+	state.SubDelegateBalance(from, immediatelyRefund)
+	state.AddBalance(from, immediatelyRefund)
+
+	return nil
+}
+
+func unBondValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.UnBondArgs, error) {
+
+	var args intAbi.UnBondArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.UnBond.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	// Check Self Address
+	if from == args.Candidate {
+		return nil, core.ErrCancelSelfDelegate
+	}
+
+	// Super node Candidate can't decrease balance
+	var ep *epoch.Epoch
+	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
+		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
+	}
+	if _, supernode := ep.Validators.GetByAddress(args.Candidate.Bytes()); supernode != nil && supernode.RemainingEpoch > 0 {
+		return nil, core.ErrCannotUnBond
+	}
+
+	// Check Proxied Amount in Candidate Balance
+	proxiedBalance := state.GetProxiedBalanceByUser(args.Candidate, from)
+	depositProxiedBalance := state.GetDepositProxiedBalanceByUser(args.Candidate, from)
+	pendingRefundBalance := state.GetPendingRefundBalanceByUser(args.Candidate, from)
+	// net = deposit - pending refund
+	netDeposit := new(big.Int).Sub(depositProxiedBalance, pendingRefundBalance)
+	// available = proxied + net
+	availableRefundBalance := new(big.Int).Add(proxiedBalance, netDeposit)
+	if args.Amount.Cmp(availableRefundBalance) == 1 {
+		return nil, core.ErrInsufficientProxiedBalance
+	}
+
+	// if left, the left must be greater than the min delegate amount
+	remainingBalance := new(big.Int).Sub(availableRefundBalance, args.Amount)
+	if remainingBalance.Sign() == 1 && remainingBalance.Cmp(minimumDelegationAmount) == -1 {
+		return nil, core.ErrDelegateAmount
+	}
+
+	// Check Epoch Height
+	if _, err := getEpoch(bc); err != nil {
+		return nil, err
+	}
+
+	return &args, nil
+}
+
 // set commission
 func setCommisstionValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)
@@ -2292,13 +2294,6 @@ func setCommissionValidation(from common.Address, tx *types.Transaction, state *
 	}
 
 	return &args, nil
-}
-
-// Common
-func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
-	signer := types.NewEIP155Signer(tx.ChainId())
-	from, _ = types.Sender(signer, tx)
-	return
 }
 
 func voteNextEpochValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
@@ -2429,8 +2424,8 @@ func revealVoteValidation(from common.Address, tx *types.Transaction, state *sta
 		return nil, core.ErrVoteAmountTooLow
 	}
 
-	// Non Candidate, Check Amount greater than minimumVoteAmount
-	if !state.IsCandidate(from) && args.Amount.Sign() == 1 && args.Amount.Cmp(minimumVoteAmount) == -1 {
+	// Non Candidate, Check Amount greater than minimumRegisterAmount
+	if !state.IsCandidate(from) && args.Amount.Sign() == 1 && args.Amount.Cmp(minimumRegisterAmount) == -1 {
 		return nil, core.ErrVoteAmountTooLow
 	}
 
@@ -2596,4 +2591,10 @@ func getEpoch(bc *core.BlockChain) (*epoch.Epoch, error) {
 	}
 
 	return ep, nil
+}
+
+func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
+	signer := types.NewEIP155Signer(tx.ChainId())
+	from, _ = types.Sender(signer, tx)
+	return
 }
