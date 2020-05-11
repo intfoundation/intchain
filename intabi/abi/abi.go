@@ -228,6 +228,8 @@ type UnBondArgs struct {
 }
 
 type RegisterArgs struct {
+	Pubkey     []byte
+	Signature  []byte
 	Commission uint8
 }
 

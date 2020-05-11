@@ -191,10 +191,11 @@ func (epoch *Epoch) Save() {
 		epoch.db.SetSync(calcEpochKeyWithHeight(epoch.nextEpoch.Number), epoch.nextEpoch.Bytes())
 	}
 
-	//if epoch.nextEpoch != nil && epoch.nextEpoch.validatorVoteSet != nil {
-	//	// Save the next epoch vote set
-	//	SaveEpochVoteSet(epoch.db, epoch.nextEpoch.Number, epoch.nextEpoch.validatorVoteSet)
-	//}
+	// TODO whether save next epoch validator vote set
+	if epoch.nextEpoch != nil && epoch.nextEpoch.validatorVoteSet != nil {
+		// Save the next epoch vote set
+		SaveEpochVoteSet(epoch.db, epoch.nextEpoch.Number, epoch.nextEpoch.validatorVoteSet)
+	}
 }
 
 func FromBytes(buf []byte) *Epoch {
@@ -235,17 +236,6 @@ func (epoch *Epoch) ShouldProposeNextEpoch(curBlockHeight uint64) bool {
 		//fmt.Printf("should propose next epoch")
 		return false
 	}
-
-	////the epoch's end time is too rough to estimate,
-	////so use generated block number in this epoch to decide if should propose next epoch parameters
-	//fCurBlockHeight := float64(curBlockHeight)
-	//fStartBlock := float64(epoch.StartBlock)
-	//fEndBlock := float64(epoch.EndBlock)
-	//
-	//passRate := (fCurBlockHeight - fStartBlock) / (fEndBlock - fStartBlock)
-	//
-	//shouldPropose := (NextEpochProposeStartPercent <= passRate) && (passRate < 1.0)
-	//return shouldPropose
 
 	shouldPropose := curBlockHeight > epoch.StartBlock && curBlockHeight != 1
 	return shouldPropose
@@ -362,7 +352,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				vObj := state.GetOrNewStateObject(vAddr)
 				if !vObj.IsForbidden() {
 					totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
-					// Voting Power = Delegated amount + Deposit amount
+					// Voting Power = Proxied amount + Deposit amount
 					newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
 					if newVotingPower.Sign() == 0 {
 						newValidators.Remove(v.Address)

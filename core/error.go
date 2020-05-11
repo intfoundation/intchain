@@ -68,8 +68,8 @@ var (
 	//ErrExceedDelegationAddressLimit is returned if delegated address number exceed the limit
 	ErrExceedDelegationAddressLimit = errors.New("exceed the delegation address limit")
 
-	// ErrMinimumSecurityDeposit is returned if the request security deposit less than the minimum value
-	ErrMinimumSecurityDeposit = errors.New("security deposit not meet the minimum value")
+	// ErrMinimumRegisterAmount is returned if the request security deposit less than the minimum value
+	ErrMinimumRegisterAmount = errors.New("security deposit not meet the minimum value")
 
 	// ErrCommission is returned if the request Commission value not between 0 and 100
 	ErrCommission = errors.New("commission percentage (between 0 and 100) out of range")

@@ -1708,9 +1708,9 @@ func (api *PublicINTAPI) UnBond(ctx context.Context, from, candidate common.Addr
 	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
 }
 
-func (api *PublicINTAPI) Register(ctx context.Context, from common.Address, securityDeposit *hexutil.Big, commission uint8, gasPrice *hexutil.Big) (common.Hash, error) {
+func (api *PublicINTAPI) Register(ctx context.Context, from common.Address, registerAmount *hexutil.Big, pubkey goCrypto.BLSPubKey, signature hexutil.Bytes, commission uint8, gasPrice *hexutil.Big) (common.Hash, error) {
 
-	input, err := intAbi.ChainABI.Pack(intAbi.Register.String(), commission)
+	input, err := intAbi.ChainABI.Pack(intAbi.Register.String(), pubkey.Bytes(), signature, commission)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -1722,7 +1722,7 @@ func (api *PublicINTAPI) Register(ctx context.Context, from common.Address, secu
 		To:       &intAbi.ChainContractMagicAddr,
 		Gas:      (*hexutil.Uint64)(&defaultGas),
 		GasPrice: gasPrice,
-		Value:    securityDeposit,
+		Value:    registerAmount,
 		Input:    (*hexutil.Bytes)(&input),
 		Nonce:    nil,
 	}
@@ -1896,12 +1896,12 @@ func init() {
 	core.RegisterApplyCb(intAbi.SetCommission, setCommisstionApplyCb)
 
 	// Vote for Next Epoch
-	core.RegisterValidateCb(intAbi.VoteNextEpoch, voteNextEpochValidateCb)
-	core.RegisterApplyCb(intAbi.VoteNextEpoch, voteNextEpochApplyCb)
+	//core.RegisterValidateCb(intAbi.VoteNextEpoch, voteNextEpochValidateCb)
+	//core.RegisterApplyCb(intAbi.VoteNextEpoch, voteNextEpochApplyCb)
 
 	// Reveal Vote
-	core.RegisterValidateCb(intAbi.RevealVote, revealVoteValidateCb)
-	core.RegisterApplyCb(intAbi.RevealVote, revealVoteApplyCb)
+	//core.RegisterValidateCb(intAbi.RevealVote, revealVoteValidateCb)
+	//core.RegisterApplyCb(intAbi.RevealVote, revealVoteApplyCb)
 
 	// Edit Validator
 	core.RegisterValidateCb(intAbi.EditValidator, editValidatorValidateCb)
@@ -1980,7 +1980,7 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	state.AddDelegateBalance(from, amount)
 	state.AddProxiedBalanceByUser(from, from, amount)
 	// Become a Candidate
-	state.ApplyForCandidate(from, args.Commission)
+	state.ApplyForCandidate(from, args.Pubkey, args.Commission)
 
 	// mark address candidate
 	state.MarkAddressCandidate(from)
@@ -1994,9 +1994,9 @@ func registerValidation(from common.Address, tx *types.Transaction, state *state
 		return nil, core.ErrAlreadyCandidate
 	}
 
-	// Check minimum Security Deposit
+	// Check minimum register amount
 	if tx.Value().Cmp(minimumRegisterAmount) == -1 {
-		return nil, core.ErrMinimumSecurityDeposit
+		return nil, core.ErrMinimumRegisterAmount
 	}
 
 	var args intAbi.RegisterArgs
@@ -2005,15 +2005,14 @@ func registerValidation(from common.Address, tx *types.Transaction, state *state
 		return nil, err
 	}
 
+	if err := goCrypto.CheckConsensusPubKey(from, args.Pubkey, args.Signature); err != nil {
+		return nil, err
+	}
+
 	// Check Commission Range
 	if args.Commission > 100 {
 		return nil, core.ErrCommission
 	}
-
-	// Check Epoch Height
-	//if _, err := getEpoch(bc); err != nil {
-	//	return nil, err
-	//}
 
 	// Annual/SemiAnnual supernode can not become candidate
 	var ep *epoch.Epoch
@@ -2296,201 +2295,201 @@ func setCommissionValidation(from common.Address, tx *types.Transaction, state *
 	return &args, nil
 }
 
-func voteNextEpochValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-
-	_, verror := voteNextEpochValidation(tx, bc)
-	if verror != nil {
-		return verror
-	}
-
-	return nil
-}
-
-func voteNextEpochApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-	// Validate first
-	from := derivedAddressFromTx(tx)
-	args, verror := voteNextEpochValidation(tx, bc)
-	if verror != nil {
-		return verror
-	}
-
-	op := types.VoteNextEpochOp{
-		From:     from,
-		VoteHash: args.VoteHash,
-		TxHash:   tx.Hash(),
-	}
-
-	if ok := ops.Append(&op); !ok {
-		return fmt.Errorf("pending ops conflict: %v", op)
-	}
-
-	return nil
-}
-
-func voteNextEpochValidation(tx *types.Transaction, bc *core.BlockChain) (*intAbi.VoteNextEpochArgs, error) {
-	var args intAbi.VoteNextEpochArgs
-	data := tx.Data()
-	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.VoteNextEpoch.String(), data[4:]); err != nil {
-		return nil, err
-	}
-
-	// Check Epoch Height
-	if _, err := getEpoch(bc); err != nil {
-		return nil, err
-	}
-
-	return &args, nil
-}
-
-func revealVoteValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-	from := derivedAddressFromTx(tx)
-	_, verror := revealVoteValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-	return nil
-}
-
-func revealVoteApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-
-	// Validate first
-	from := derivedAddressFromTx(tx)
-	args, verror := revealVoteValidation(from, tx, state, bc)
-	if verror != nil {
-		return verror
-	}
-
-	// Apply Logic
-	if state.IsCandidate(from) {
-		// Move delegate amount first if Candidate
-		state.ForEachProxied(from, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
-			// Move Proxied Amount to Deposit Proxied Amount
-			state.SubProxiedBalanceByUser(from, key, proxiedBalance)
-			state.AddDepositProxiedBalanceByUser(from, key, proxiedBalance)
-			return true
-		})
-	}
-
-	// Rest Vote Amount
-	proxiedBalance := state.GetTotalProxiedBalance(from)
-	depositProxiedBalance := state.GetTotalDepositProxiedBalance(from)
-	pendingRefundBalance := state.GetTotalPendingRefundBalance(from)
-	netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
-	netSelfAmount := new(big.Int).Sub(args.Amount, netProxied)
-
-	// if lock balance less than net self amount, then add enough amount to locked balance
-	if state.GetDepositBalance(from).Cmp(netSelfAmount) == -1 {
-		difference := new(big.Int).Sub(netSelfAmount, state.GetDepositBalance(from))
-		state.SubBalance(from, difference)
-		state.AddDepositBalance(from, difference)
-	}
-
-	var pub goCrypto.BLSPubKey
-	copy(pub[:], args.PubKey)
-
-	op := types.RevealVoteOp{
-		From:   from,
-		Pubkey: pub,
-		Amount: args.Amount,
-		Salt:   args.Salt,
-		TxHash: tx.Hash(),
-	}
-
-	if ok := ops.Append(&op); !ok {
-		return fmt.Errorf("pending ops conflict: %v", op)
-	}
-
-	return nil
-}
-
-func revealVoteValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.RevealVoteArgs, error) {
-	var args intAbi.RevealVoteArgs
-	data := tx.Data()
-	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.RevealVote.String(), data[4:]); err != nil {
-		return nil, err
-	}
-
-	var netProxied *big.Int
-	if state.IsCandidate(from) {
-		// is Candidate? Check Proxied Balance (Amount >= (proxiedBalance + depositProxiedBalance - pendingRefundBalance))
-		proxiedBalance := state.GetTotalProxiedBalance(from)
-		depositProxiedBalance := state.GetTotalDepositProxiedBalance(from)
-		pendingRefundBalance := state.GetTotalPendingRefundBalance(from)
-		netProxied = new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
-	} else {
-		netProxied = common.Big0
-	}
-	if args.Amount == nil || args.Amount.Sign() < 0 || args.Amount.Cmp(netProxied) == -1 {
-		return nil, core.ErrVoteAmountTooLow
-	}
-
-	// Non Candidate, Check Amount greater than minimumRegisterAmount
-	if !state.IsCandidate(from) && args.Amount.Sign() == 1 && args.Amount.Cmp(minimumRegisterAmount) == -1 {
-		return nil, core.ErrVoteAmountTooLow
-	}
-
-	// Check Amount (Amount <= net proxied + balance + deposit)
-	balance := state.GetBalance(from)
-	deposit := state.GetDepositBalance(from)
-	maximumAmount := new(big.Int).Add(new(big.Int).Add(balance, deposit), netProxied)
-	if args.Amount.Cmp(maximumAmount) == 1 {
-		return nil, core.ErrVoteAmountTooHight
-	}
-
-	// Check Signature of the PubKey matched against the Address
-	if err := goCrypto.CheckConsensusPubKey(from, args.PubKey, args.Signature); err != nil {
-		return nil, err
-	}
-
-	// Check Epoch Height
-	ep, err := getEpoch(bc)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check Vote
-	voteSet := ep.GetNextEpoch().GetEpochValidatorVoteSet()
-	if voteSet == nil {
-		return nil, errors.New(fmt.Sprintf("Can not found the vote for Address %v", from.String()))
-	}
-
-	vote, exist := voteSet.GetVoteByAddress(from)
-	// Check Vote exist
-	if !exist {
-		return nil, errors.New(fmt.Sprintf("Can not found the vote for Address %v", from.String()))
-	}
-
-	if len(vote.VoteHash) == 0 {
-		return nil, errors.New(fmt.Sprintf("Address %v doesn't has vote hash", from.String()))
-	}
-
-	// Check Vote Hash
-	byte_data := [][]byte{
-		from.Bytes(),
-		args.PubKey,
-		common.LeftPadBytes(args.Amount.Bytes(), 1),
-		[]byte(args.Salt),
-	}
-	voteHash := crypto.Keccak256Hash(concatCopyPreAllocate(byte_data))
-	fmt.Printf("tdm api voteHash %v\n", voteHash.String())
-	if vote.VoteHash != voteHash {
-		return nil, errors.New("your vote doesn't match your vote hash, please check your vote")
-	}
-
-	// Check Logic - Amount can't be 0 for new Validator
-	if !ep.Validators.HasAddress(from.Bytes()) && args.Amount.Sign() == 0 {
-		return nil, errors.New("invalid vote!!! new validator's vote amount must be greater than 0")
-	}
-
-	// Check Logic - SuperNode with remaining epoch can not decrease the stack
-	if _, supernode := ep.Validators.GetByAddress(from.Bytes()); supernode != nil {
-		if supernode.RemainingEpoch > 0 && args.Amount.Cmp(state.GetDepositBalance(from)) == -1 {
-			return nil, core.ErrVoteAmountTooLow
-		}
-	}
-
-	return &args, nil
-}
+//func voteNextEpochValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+//
+//	_, verror := voteNextEpochValidation(tx, bc)
+//	if verror != nil {
+//		return verror
+//	}
+//
+//	return nil
+//}
+//
+//func voteNextEpochApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+//	// Validate first
+//	from := derivedAddressFromTx(tx)
+//	args, verror := voteNextEpochValidation(tx, bc)
+//	if verror != nil {
+//		return verror
+//	}
+//
+//	op := types.VoteNextEpochOp{
+//		From:     from,
+//		VoteHash: args.VoteHash,
+//		TxHash:   tx.Hash(),
+//	}
+//
+//	if ok := ops.Append(&op); !ok {
+//		return fmt.Errorf("pending ops conflict: %v", op)
+//	}
+//
+//	return nil
+//}
+//
+//func voteNextEpochValidation(tx *types.Transaction, bc *core.BlockChain) (*intAbi.VoteNextEpochArgs, error) {
+//	var args intAbi.VoteNextEpochArgs
+//	data := tx.Data()
+//	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.VoteNextEpoch.String(), data[4:]); err != nil {
+//		return nil, err
+//	}
+//
+//	// Check Epoch Height
+//	if _, err := getEpoch(bc); err != nil {
+//		return nil, err
+//	}
+//
+//	return &args, nil
+//}
+//
+//func revealVoteValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+//	from := derivedAddressFromTx(tx)
+//	_, verror := revealVoteValidation(from, tx, state, bc)
+//	if verror != nil {
+//		return verror
+//	}
+//	return nil
+//}
+//
+//func revealVoteApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+//
+//	// Validate first
+//	from := derivedAddressFromTx(tx)
+//	args, verror := revealVoteValidation(from, tx, state, bc)
+//	if verror != nil {
+//		return verror
+//	}
+//
+//	// Apply Logic
+//	if state.IsCandidate(from) {
+//		// Move delegate amount first if Candidate
+//		state.ForEachProxied(from, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+//			// Move Proxied Amount to Deposit Proxied Amount
+//			state.SubProxiedBalanceByUser(from, key, proxiedBalance)
+//			state.AddDepositProxiedBalanceByUser(from, key, proxiedBalance)
+//			return true
+//		})
+//	}
+//
+//	// Rest Vote Amount
+//	proxiedBalance := state.GetTotalProxiedBalance(from)
+//	depositProxiedBalance := state.GetTotalDepositProxiedBalance(from)
+//	pendingRefundBalance := state.GetTotalPendingRefundBalance(from)
+//	netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
+//	netSelfAmount := new(big.Int).Sub(args.Amount, netProxied)
+//
+//	// if lock balance less than net self amount, then add enough amount to locked balance
+//	if state.GetDepositBalance(from).Cmp(netSelfAmount) == -1 {
+//		difference := new(big.Int).Sub(netSelfAmount, state.GetDepositBalance(from))
+//		state.SubBalance(from, difference)
+//		state.AddDepositBalance(from, difference)
+//	}
+//
+//	var pub goCrypto.BLSPubKey
+//	copy(pub[:], args.PubKey)
+//
+//	op := types.RevealVoteOp{
+//		From:   from,
+//		Pubkey: pub,
+//		Amount: args.Amount,
+//		Salt:   args.Salt,
+//		TxHash: tx.Hash(),
+//	}
+//
+//	if ok := ops.Append(&op); !ok {
+//		return fmt.Errorf("pending ops conflict: %v", op)
+//	}
+//
+//	return nil
+//}
+//
+//func revealVoteValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.RevealVoteArgs, error) {
+//	var args intAbi.RevealVoteArgs
+//	data := tx.Data()
+//	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.RevealVote.String(), data[4:]); err != nil {
+//		return nil, err
+//	}
+//
+//	var netProxied *big.Int
+//	if state.IsCandidate(from) {
+//		// is Candidate? Check Proxied Balance (Amount >= (proxiedBalance + depositProxiedBalance - pendingRefundBalance))
+//		proxiedBalance := state.GetTotalProxiedBalance(from)
+//		depositProxiedBalance := state.GetTotalDepositProxiedBalance(from)
+//		pendingRefundBalance := state.GetTotalPendingRefundBalance(from)
+//		netProxied = new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
+//	} else {
+//		netProxied = common.Big0
+//	}
+//	if args.Amount == nil || args.Amount.Sign() < 0 || args.Amount.Cmp(netProxied) == -1 {
+//		return nil, core.ErrVoteAmountTooLow
+//	}
+//
+//	// Non Candidate, Check Amount greater than minimumRegisterAmount
+//	if !state.IsCandidate(from) && args.Amount.Sign() == 1 && args.Amount.Cmp(minimumRegisterAmount) == -1 {
+//		return nil, core.ErrVoteAmountTooLow
+//	}
+//
+//	// Check Amount (Amount <= net proxied + balance + deposit)
+//	balance := state.GetBalance(from)
+//	deposit := state.GetDepositBalance(from)
+//	maximumAmount := new(big.Int).Add(new(big.Int).Add(balance, deposit), netProxied)
+//	if args.Amount.Cmp(maximumAmount) == 1 {
+//		return nil, core.ErrVoteAmountTooHight
+//	}
+//
+//	// Check Signature of the PubKey matched against the Address
+//	if err := goCrypto.CheckConsensusPubKey(from, args.PubKey, args.Signature); err != nil {
+//		return nil, err
+//	}
+//
+//	// Check Epoch Height
+//	ep, err := getEpoch(bc)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	// Check Vote
+//	voteSet := ep.GetNextEpoch().GetEpochValidatorVoteSet()
+//	if voteSet == nil {
+//		return nil, errors.New(fmt.Sprintf("Can not found the vote for Address %v", from.String()))
+//	}
+//
+//	vote, exist := voteSet.GetVoteByAddress(from)
+//	// Check Vote exist
+//	if !exist {
+//		return nil, errors.New(fmt.Sprintf("Can not found the vote for Address %v", from.String()))
+//	}
+//
+//	if len(vote.VoteHash) == 0 {
+//		return nil, errors.New(fmt.Sprintf("Address %v doesn't has vote hash", from.String()))
+//	}
+//
+//	// Check Vote Hash
+//	byte_data := [][]byte{
+//		from.Bytes(),
+//		args.PubKey,
+//		common.LeftPadBytes(args.Amount.Bytes(), 1),
+//		[]byte(args.Salt),
+//	}
+//	voteHash := crypto.Keccak256Hash(concatCopyPreAllocate(byte_data))
+//	fmt.Printf("tdm api voteHash %v\n", voteHash.String())
+//	if vote.VoteHash != voteHash {
+//		return nil, errors.New("your vote doesn't match your vote hash, please check your vote")
+//	}
+//
+//	// Check Logic - Amount can't be 0 for new Validator
+//	if !ep.Validators.HasAddress(from.Bytes()) && args.Amount.Sign() == 0 {
+//		return nil, errors.New("invalid vote!!! new validator's vote amount must be greater than 0")
+//	}
+//
+//	// Check Logic - SuperNode with remaining epoch can not decrease the stack
+//	if _, supernode := ep.Validators.GetByAddress(from.Bytes()); supernode != nil {
+//		if supernode.RemainingEpoch > 0 && args.Amount.Cmp(state.GetDepositBalance(from)) == -1 {
+//			return nil, core.ErrVoteAmountTooLow
+//		}
+//	}
+//
+//	return &args, nil
+//}
 
 func editValidatorValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)
@@ -2597,4 +2596,56 @@ func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
 	signer := types.NewEIP155Signer(tx.ChainId())
 	from, _ = types.Sender(signer, tx)
 	return
+}
+
+func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, candidate common.Address) error {
+
+	var update bool
+	ep, err := getEpoch(bc)
+	if err != nil {
+		return err
+	}
+
+	currentEpochValidatorVotes := ep.GetEpochValidatorVoteSet().Votes
+
+	if state.IsCandidate(candidate) {
+		// Move delegate amount first if Candidate
+		state.ForEachProxied(candidate, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+			// Move Proxied Amount to Deposit Proxied Amount
+			state.SubProxiedBalanceByUser(candidate, key, proxiedBalance)
+			state.AddDepositProxiedBalanceByUser(candidate, key, proxiedBalance)
+			return true
+		})
+	}
+
+	proxiedBalance := state.GetTotalProxiedBalance(candidate)
+	depositProxiedBalance := state.GetTotalDepositProxiedBalance(candidate)
+	pendingRefundBalance := state.GetTotalPendingRefundBalance(candidate)
+	netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
+
+	for _, val := range currentEpochValidatorVotes {
+		if val.Amount.Cmp(netProxied) == -1 {
+			update = true
+			break
+		}
+	}
+
+	if update {
+		voteSet := ep.GetNextEpoch().GetEpochValidatorVoteSet()
+		if voteSet == nil {
+			voteSet = epoch.NewEpochValidatorVoteSet()
+		}
+
+		vote, exist := voteSet.GetVoteByAddress(candidate)
+		if exist {
+			vote.Amount = netProxied
+		} else {
+			blsPubkey := state.GetPubkey(candidate)
+			if blsPubkey != nil {
+
+			}
+		}
+	}
+
+	return nil
 }
