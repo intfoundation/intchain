@@ -612,7 +612,7 @@ web3._extend({
 		new web3._extend.Method({
 			name: 'register',
 			call: 'int_register',
-			params: 4
+			params: 6
 		}),
 		new web3._extend.Method({
 			name: 'unRegister',

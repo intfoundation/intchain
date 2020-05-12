@@ -91,15 +91,15 @@ It expects the genesis file as argument.`,
 	//It expects the genesis file as argument.`,
 	//	}
 
-	generatePrivateValidatorCmd = cli.Command{
+	createValidatorCmd = cli.Command{
 		//Action: GeneratePrivateValidatorCmd,
 		Action: utils.MigrateFlags(GeneratePrivateValidatorCmd),
-		Name:   "gen_priv_validator",
-		Usage:  "gen_priv_validator address", //generate priv_validator.json for address
+		Name:   "create_validator",
+		Usage:  "create_validator address", //create priv_validator.json for address
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
 		},
-		Description: "Generate priv_validator.json for address",
+		Description: "Create priv_validator.json for address",
 	}
 
 	importCommand = cli.Command{

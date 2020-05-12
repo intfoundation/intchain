@@ -1986,6 +1986,7 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	if verror != nil {
 		return verror
 	}
+	fmt.Printf("register pubkey %v\n", pubkey)
 	state.ApplyForCandidate(from, pubkey, args.Commission)
 
 	// mark address candidate

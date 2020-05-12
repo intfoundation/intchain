@@ -124,6 +124,7 @@ func init() {
 	app.Copyright = "Copyright 2018-2020 The INT Chain Authors"
 	app.Commands = []cli.Command{
 		// See chaincmd.go:
+		createValidatorCmd,
 		initINTGenesisCommand,
 		initCommand,
 		initChildChainCmd,
