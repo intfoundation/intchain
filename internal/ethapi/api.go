@@ -1980,10 +1980,21 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	state.AddDelegateBalance(from, amount)
 	state.AddProxiedBalanceByUser(from, from, amount)
 	// Become a Candidate
-	state.ApplyForCandidate(from, args.Pubkey, args.Commission)
+
+	var pubkey goCrypto.BLSPubKey
+	verror = pubkey.UnmarshalJSON(args.Pubkey)
+	if verror != nil {
+		return verror
+	}
+	state.ApplyForCandidate(from, pubkey, args.Commission)
 
 	// mark address candidate
 	state.MarkAddressCandidate(from)
+
+	verror = updateNextEpochValidatorVoteSet(state, bc, from)
+	if verror != nil {
+		return verror
+	}
 
 	return nil
 }
@@ -2119,6 +2130,11 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	// Add Balance to Candidate's Proxied Balance
 	state.AddProxiedBalanceByUser(args.Candidate, from, amount)
 
+	verror = updateNextEpochValidatorVoteSet(state, bc, from)
+	if verror != nil {
+		return verror
+	}
+
 	return nil
 }
 
@@ -2202,6 +2218,11 @@ func unBondApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockCh
 	state.SubProxiedBalanceByUser(args.Candidate, from, immediatelyRefund)
 	state.SubDelegateBalance(from, immediatelyRefund)
 	state.AddBalance(from, immediatelyRefund)
+
+	verror = updateNextEpochValidatorVoteSet(state, bc, from)
+	if verror != nil {
+		return verror
+	}
 
 	return nil
 }
@@ -2598,7 +2619,7 @@ func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
 	return
 }
 
-func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, candidate common.Address, isRegister bool) error {
+func updateNextEpochValidatorVoteSet(state *state.StateDB, bc *core.BlockChain, candidate common.Address) error {
 
 	var update bool
 	ep, err := getEpoch(bc)
@@ -2636,12 +2657,23 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 			voteSet = epoch.NewEpochValidatorVoteSet()
 		}
 
+		var pubkey goCrypto.BLSPubKey
 		vote, exist := voteSet.GetVoteByAddress(candidate)
 		if exist {
 			vote.Amount = netProxied
 		} else {
+			pubkey = state.GetPubkey(candidate)
+			fmt.Printf("updateNextEpochValidatorVoteSet pubkey %v\n", pubkey)
+			vote = &epoch.EpochValidatorVote{
+				Address: candidate,
+				Amount:  netProxied,
+				PubKey:  pubkey,
+			}
 
+			voteSet.StoreVote(vote)
 		}
+
+		epoch.SaveEpochVoteSet(ep.GetDB(), ep.GetNextEpoch().Number, voteSet)
 	}
 
 	return nil
