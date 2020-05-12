@@ -2629,15 +2629,6 @@ func updateNextEpochValidatorVoteSet(state *state.StateDB, bc *core.BlockChain, 
 		return err
 	}
 
-	if state.IsCandidate(candidate) {
-		// Move delegate amount first if Candidate
-		state.ForEachProxied(candidate, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
-			// Move Proxied Amount to Deposit Proxied Amount
-			state.SubProxiedBalanceByUser(candidate, key, proxiedBalance)
-			state.AddDepositProxiedBalanceByUser(candidate, key, proxiedBalance)
-			return true
-		})
-	}
 	fmt.Printf("update next epoch validator vote ste start 2\n")
 
 	proxiedBalance := state.GetTotalProxiedBalance(candidate)
@@ -2654,12 +2645,28 @@ func updateNextEpochValidatorVoteSet(state *state.StateDB, bc *core.BlockChain, 
 	fmt.Printf("update next epoch ep %v\n", ep)
 	fmt.Printf("update next epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
 	currentEpochVoteSet := ep.GetEpochValidatorVoteSet()
+	fmt.Printf("update next epoch current epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
 	if currentEpochVoteSet == nil {
 		update = true
+		fmt.Printf("update next epoch validator vote true 1")
 	} else {
+		fmt.Printf("update next epoch validator current epoch voteset votes %v\n", currentEpochVoteSet.Votes)
 		for _, val := range currentEpochVoteSet.Votes {
+			fmt.Printf("update next epoch validator current epoch voteset votes")
+			// TODO whether need compare
 			if val.Amount.Cmp(netProxied) == -1 {
 				update = true
+				fmt.Printf("update next epoch validator vote true 2")
+
+				if state.IsCandidate(candidate) {
+					// Move delegate amount first if Candidate
+					state.ForEachProxied(candidate, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+						// Move Proxied Amount to Deposit Proxied Amount
+						state.SubProxiedBalanceByUser(candidate, key, proxiedBalance)
+						state.AddDepositProxiedBalanceByUser(candidate, key, proxiedBalance)
+						return true
+					})
+				}
 				break
 			}
 		}
@@ -2670,6 +2677,7 @@ func updateNextEpochValidatorVoteSet(state *state.StateDB, bc *core.BlockChain, 
 		fmt.Printf("update next epoch validator vote ste start 5\n")
 		voteSet := ep.GetNextEpoch().GetEpochValidatorVoteSet()
 		if voteSet == nil {
+			fmt.Printf("update next epoch validator vote ste vote set is nil")
 			voteSet = epoch.NewEpochValidatorVoteSet()
 		}
 
@@ -2677,6 +2685,7 @@ func updateNextEpochValidatorVoteSet(state *state.StateDB, bc *core.BlockChain, 
 		vote, exist := voteSet.GetVoteByAddress(candidate)
 
 		if exist {
+			fmt.Printf("update next epoch validator vote ste vote set is exist")
 			vote.Amount = netProxied
 		} else {
 			pubkey = state.GetPubkey(candidate)

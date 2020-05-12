@@ -106,6 +106,10 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidatorForConsole, 
 
 	ep := api.tendermint.core.consensusState.Epoch
 	nextEp := ep.GetNextEpoch()
+	fmt.Printf("get next epoch validator current epoch %v\n", ep)
+	fmt.Printf("get next epoch validator current epoch vote set %v\n", ep.GetEpochValidatorVoteSet().Votes)
+	fmt.Printf("get next epoch validator next epoch %v\n", nextEp)
+	fmt.Printf("get next epoch validator next epoch vote set %v\n", nextEp.GetEpochValidatorVoteSet())
 	if nextEp == nil {
 		return nil, errors.New("voting for next epoch has not started yet")
 		//} else if height <= ep.GetVoteEndHeight() {
