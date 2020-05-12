@@ -2598,7 +2598,7 @@ func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
 	return
 }
 
-func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, candidate common.Address) error {
+func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, candidate common.Address, isRegister bool) error {
 
 	var update bool
 	ep, err := getEpoch(bc)
@@ -2640,10 +2640,7 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 		if exist {
 			vote.Amount = netProxied
 		} else {
-			blsPubkey := state.GetPubkey(candidate)
-			if blsPubkey != nil {
 
-			}
 		}
 	}
 
