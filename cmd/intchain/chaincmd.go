@@ -19,6 +19,8 @@ package main
 import (
 	"fmt"
 	"github.com/intfoundation/intchain/intdb"
+	"github.com/intfoundation/intchain/intprotocol"
+	"github.com/intfoundation/intchain/params"
 	"os"
 	"runtime"
 	"strconv"
@@ -222,6 +224,17 @@ Use "ethereum dump 0" to dump the genesis block.`,
 		Category: "BLOCKCHAIN COMMANDS",
 		Description: `
 	The count-blockstate command count the block state from a given height.`,
+	}
+
+	versionCommand = cli.Command{
+		Action:    utils.MigrateFlags(version),
+		Name:      "version",
+		Usage:     "Print version numbers",
+		ArgsUsage: " ",
+		Category:  "MISCELLANEOUS COMMANDS",
+		Description: `
+The output of this command is supposed to be machine-readable.
+`,
 	}
 )
 
@@ -682,4 +695,22 @@ func countTrie(db intdb.Database, t state.Trie, count *CountSize, processLeaf pr
 			}
 		}
 	}
+}
+
+func version(ctx *cli.Context) error {
+	fmt.Println("Chain:", clientIdentifier)
+	fmt.Println("Version:", params.VersionWithMeta)
+	if gitCommit != "" {
+		fmt.Println("Git Commit:", gitCommit)
+	}
+	if gitDate != "" {
+		fmt.Println("Git Commit Date:", gitDate)
+	}
+	fmt.Println("Architecture:", runtime.GOARCH)
+	fmt.Println("Protocol Versions:", intprotocol.ProtocolVersions)
+	fmt.Println("Go Version:", runtime.Version())
+	fmt.Println("Operating System:", runtime.GOOS)
+	fmt.Printf("GOPATH=%s\n", os.Getenv("GOPATH"))
+	fmt.Printf("GOROOT=%s\n", runtime.GOROOT())
+	return nil
 }

@@ -39,6 +39,7 @@ const (
 var (
 	// Git SHA1 commit hash of the release (set via linker flags)
 	gitCommit = ""
+	gitDate   = ""
 
 	// The app that holds all commands and flags.
 	app = utils.NewApp(gitCommit, "the intchain command line interface")
@@ -148,6 +149,7 @@ func init() {
 		bugCommand,
 		// See config.go
 		dumpConfigCommand,
+		versionCommand,
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
 

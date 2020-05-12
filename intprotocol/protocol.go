@@ -28,6 +28,22 @@ import (
 	"github.com/intfoundation/intchain/rlp"
 )
 
+// Constants to match up protocol versions and messages
+const (
+	intprotocol63 = 63
+	intprotocol64 = 64
+	intprotocol65 = 65
+)
+
+// protocolName is the official short name of the protocol used during capability negotiation.
+const protocolName = "intprotocol"
+
+// ProtocolVersions are the supported versions of the eth protocol (first is primary).
+var ProtocolVersions = []uint{intprotocol65, intprotocol64, intprotocol63}
+
+// protocolLengths are the number of implemented message corresponding to different protocol versions.
+var protocolLengths = map[uint]uint64{intprotocol65: 17, intprotocol64: 17, intprotocol63: 17}
+
 const ProtocolMaxMsgSize = 10 * 1024 * 1024 // Maximum cap on the size of a protocol message
 
 // intprotocol protocol message codes
