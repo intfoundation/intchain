@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/intfoundation/go-crypto"
 	"math/big"
 	"strings"
 
@@ -277,9 +276,9 @@ func (g *Genesis) ToBlock(db intdb.Database) *types.Block {
 		}
 
 		// Candidate, set empty pubkey for genesis candidate
-		fmt.Printf("toblock pubkey %v\n", crypto.BLSPubKey{})
+		fmt.Printf("toblock pubkey %v\n", "")
 		if account.Candidate {
-			statedb.ApplyForCandidate(addr, crypto.BLSPubKey{}, account.Commission)
+			statedb.ApplyForCandidate(addr, "", account.Commission)
 		}
 
 		statedb.SetCode(addr, account.Code)

@@ -2,7 +2,6 @@ package state
 
 import (
 	"fmt"
-	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/core/types"
 	"github.com/intfoundation/intchain/rlp"
@@ -365,11 +364,11 @@ func (self *stateObject) setCandidate(isCandidate bool) {
 	}
 }
 
-func (self *stateObject) Pubkey() crypto.BLSPubKey {
+func (self *stateObject) Pubkey() string {
 	return self.data.Pubkey
 }
 
-func (self *stateObject) SetPubkey(pubkey crypto.BLSPubKey) {
+func (self *stateObject) SetPubkey(pubkey string) {
 	self.db.journal = append(self.db.journal, pubkeyChange{
 		account: &self.address,
 		prev:    self.data.Pubkey,
@@ -378,7 +377,7 @@ func (self *stateObject) SetPubkey(pubkey crypto.BLSPubKey) {
 	self.setPubkey(pubkey)
 }
 
-func (self *stateObject) setPubkey(pubkey crypto.BLSPubKey) {
+func (self *stateObject) setPubkey(pubkey string) {
 	self.data.Pubkey = pubkey
 
 	if self.onDirty != nil {

@@ -3,7 +3,6 @@ package state
 import (
 	"bytes"
 	"fmt"
-	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/rlp"
 	"github.com/intfoundation/intchain/trie"
@@ -268,12 +267,12 @@ func (self *StateDB) IsCleanAddress(addr common.Address) bool {
 	return true
 }
 
-func (self *StateDB) GetPubkey(addr common.Address) crypto.BLSPubKey {
+func (self *StateDB) GetPubkey(addr common.Address) string {
 	stateObject := self.getStateObject(addr)
 	if stateObject != nil {
 		return stateObject.Pubkey()
 	}
-	return crypto.BLSPubKey{}
+	return ""
 }
 
 // GetCommission Retrieve the commission percentage of the given address or 0 if object not found
@@ -293,7 +292,7 @@ func (self *StateDB) SetCommission(addr common.Address, commission uint8) {
 }
 
 // ApplyForCandidate Set the Candidate Flag of the given address to true and commission to given value
-func (self *StateDB) ApplyForCandidate(addr common.Address, pubkey crypto.BLSPubKey, commission uint8) {
+func (self *StateDB) ApplyForCandidate(addr common.Address, pubkey string, commission uint8) {
 	stateObject := self.GetOrNewStateObject(addr)
 	if stateObject != nil {
 		stateObject.SetCandidate(true)
@@ -308,7 +307,7 @@ func (self *StateDB) CancelCandidate(addr common.Address, allRefund bool) {
 	if stateObject != nil {
 		stateObject.SetCandidate(false)
 		// remove pubkey
-		stateObject.SetPubkey(crypto.BLSPubKey{})
+		stateObject.SetPubkey("")
 
 		if allRefund {
 			stateObject.SetCommission(0)

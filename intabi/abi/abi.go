@@ -437,6 +437,14 @@ const jsonChainABI = `
 		"constant": false,
 		"inputs": [
 			{
+				"name": "pubkey",
+				"type": "bytes"
+			},
+            {
+				"name": "signature",
+				"type": "bytes"
+			},
+			{
 				"name": "commission",
 				"type": "uint8"
 			}

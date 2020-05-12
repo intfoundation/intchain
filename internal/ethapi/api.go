@@ -1981,13 +1981,14 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	state.AddProxiedBalanceByUser(from, from, amount)
 	// Become a Candidate
 
-	var pubkey goCrypto.BLSPubKey
-	verror = pubkey.UnmarshalJSON(args.Pubkey)
+	var blsPK goCrypto.BLSPubKey
+	copy(blsPK[:], args.Pubkey)
+	fmt.Printf("register pubkey unmarshal json start\n")
 	if verror != nil {
 		return verror
 	}
-	fmt.Printf("register pubkey %v\n", pubkey)
-	state.ApplyForCandidate(from, pubkey, args.Commission)
+	fmt.Printf("register pubkey %v\n", blsPK)
+	state.ApplyForCandidate(from, blsPK.KeyString(), args.Commission)
 
 	// mark address candidate
 	state.MarkAddressCandidate(from)
@@ -2621,14 +2622,12 @@ func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
 }
 
 func updateNextEpochValidatorVoteSet(state *state.StateDB, bc *core.BlockChain, candidate common.Address) error {
-
+	fmt.Printf("update next epoch validator vote ste start\n")
 	var update bool
 	ep, err := getEpoch(bc)
 	if err != nil {
 		return err
 	}
-
-	currentEpochValidatorVotes := ep.GetEpochValidatorVoteSet().Votes
 
 	if state.IsCandidate(candidate) {
 		// Move delegate amount first if Candidate
@@ -2639,41 +2638,65 @@ func updateNextEpochValidatorVoteSet(state *state.StateDB, bc *core.BlockChain, 
 			return true
 		})
 	}
+	fmt.Printf("update next epoch validator vote ste start 2\n")
 
 	proxiedBalance := state.GetTotalProxiedBalance(candidate)
 	depositProxiedBalance := state.GetTotalDepositProxiedBalance(candidate)
 	pendingRefundBalance := state.GetTotalPendingRefundBalance(candidate)
 	netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
 
-	for _, val := range currentEpochValidatorVotes {
-		if val.Amount.Cmp(netProxied) == -1 {
-			update = true
-			break
+	fmt.Printf("update next epoch validator vote ste start 3\n")
+	if netProxied.Cmp(big.NewInt(0)) == -1 {
+		return errors.New("validator can not be negative")
+	}
+
+	fmt.Printf("update next epoch validator vote ste start 1\n")
+	fmt.Printf("update next epoch ep %v\n", ep)
+	fmt.Printf("update next epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
+	currentEpochVoteSet := ep.GetEpochValidatorVoteSet()
+	if currentEpochVoteSet == nil {
+		update = true
+	} else {
+		for _, val := range currentEpochVoteSet.Votes {
+			if val.Amount.Cmp(netProxied) == -1 {
+				update = true
+				break
+			}
 		}
 	}
 
+	fmt.Printf("update next epoch validator vote ste start 4\n")
 	if update {
+		fmt.Printf("update next epoch validator vote ste start 5\n")
 		voteSet := ep.GetNextEpoch().GetEpochValidatorVoteSet()
 		if voteSet == nil {
 			voteSet = epoch.NewEpochValidatorVoteSet()
 		}
 
-		var pubkey goCrypto.BLSPubKey
+		var pubkey string
 		vote, exist := voteSet.GetVoteByAddress(candidate)
+
 		if exist {
 			vote.Amount = netProxied
 		} else {
 			pubkey = state.GetPubkey(candidate)
 			fmt.Printf("updateNextEpochValidatorVoteSet pubkey %v\n", pubkey)
+			pubkeyBytes := common.FromHex(pubkey)
+			if pubkey == "" || len(pubkeyBytes) != 128 {
+				return errors.New("wrong format of required field 'pub_key'")
+			}
+			var blsPK goCrypto.BLSPubKey
+			copy(blsPK[:], pubkeyBytes)
+
 			vote = &epoch.EpochValidatorVote{
 				Address: candidate,
 				Amount:  netProxied,
-				PubKey:  pubkey,
+				PubKey:  blsPK,
 			}
 
 			voteSet.StoreVote(vote)
 		}
-
+		fmt.Printf("update next epoch validator vote ste start 6\n")
 		epoch.SaveEpochVoteSet(ep.GetDB(), ep.GetNextEpoch().Number, voteSet)
 	}
 

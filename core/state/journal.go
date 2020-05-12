@@ -17,7 +17,6 @@
 package state
 
 import (
-	"github.com/intfoundation/go-crypto"
 	"math/big"
 
 	"github.com/intfoundation/intchain/common"
@@ -120,7 +119,7 @@ type (
 
 	pubkeyChange struct {
 		account *common.Address
-		prev    crypto.BLSPubKey
+		prev    string
 	}
 
 	commissionChange struct {

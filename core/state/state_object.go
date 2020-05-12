@@ -22,7 +22,6 @@ import (
 	"io"
 	"math/big"
 
-	goCrypto "github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/crypto"
 	"github.com/intfoundation/intchain/rlp"
@@ -136,7 +135,7 @@ type Account struct {
 	Commission  uint8    // commission percentage of Delegation Candidate (0-100)
 	BlockTime   *big.Int // timestamp for last consensus block
 	IsForbidden bool     // candidate is forbidden or not
-	Pubkey      goCrypto.BLSPubKey
+	Pubkey      string
 
 	// Reward
 	RewardBalance          *big.Int    // the accumulative reward balance for this account
