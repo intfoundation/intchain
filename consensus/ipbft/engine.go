@@ -82,7 +82,7 @@ var (
 // APIs returns the RPC APIs this consensus engine provides.
 func (sb *backend) APIs(chain consensus.ChainReader) []rpc.API {
 	return []rpc.API{{
-		Namespace: "tdm",
+		Namespace: "int",
 		Version:   "1.0",
 		Service:   &API{chain: chain, tendermint: sb},
 		Public:    true,
@@ -537,7 +537,7 @@ func (sb *backend) Seal(chain consensus.ChainReader, block *types.Block, stop <-
 	}
 	defer clear()
 
-	// post block into Istanbul engine
+	// post block into IPBFT engine
 	sb.logger.Infof("IPBFT Seal, before fire event with block height: %d", block.NumberU64())
 	go tdmTypes.FireEventRequest(sb.core.EventSwitch(), tdmTypes.EventDataRequest{Proposal: block})
 	//go sb.EventMux().Post(tdmTypes.RequestEvent{

@@ -83,7 +83,7 @@ func localConsole(ctx *cli.Context) error {
 
 	// Create and start the node based on the CLI flags
 	node := makeFullNode(ctx, GetCMInstance(ctx).cch, chainName)
-	utils.StartNodeEx(ctx, node)
+	utils.StartNode(ctx, node)
 	defer node.Close()
 
 	// Attach to the newly started node and start the JavaScript console
@@ -186,7 +186,7 @@ func ephemeralConsole(ctx *cli.Context) error {
 
 	// Create and start the node based on the CLI flags
 	node := makeFullNode(ctx, GetCMInstance(ctx).cch, chainName)
-	utils.StartNodeEx(ctx, node)
+	utils.StartNode(ctx, node)
 	defer node.Close()
 
 	// Attach to the newly started node and start the JavaScript console

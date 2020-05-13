@@ -20,6 +20,9 @@ package utils
 import (
 	"compress/gzip"
 	"fmt"
+	"github.com/intfoundation/intchain/consensus"
+	"github.com/intfoundation/intchain/intprotocol"
+	"gopkg.in/urfave/cli.v1"
 	"io"
 	"os"
 	"os/signal"
@@ -33,7 +36,6 @@ import (
 	"github.com/intfoundation/intchain/core/types"
 	"github.com/intfoundation/intchain/crypto"
 	"github.com/intfoundation/intchain/intdb"
-	"github.com/intfoundation/intchain/internal/debug"
 	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/node"
 	"github.com/intfoundation/intchain/rlp"
@@ -63,26 +65,64 @@ func Fatalf(format string, args ...interface{}) {
 	os.Exit(1)
 }
 
-func StartNode(stack *node.Node) {
-	if err := stack.Start(); err != nil {
+func StartNode(ctx *cli.Context, stack *node.Node) error {
+	if err := stack.Start1(); err != nil {
 		Fatalf("Error starting protocol stack: %v", err)
 	}
-	go func() {
-		sigc := make(chan os.Signal, 1)
-		signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
-		defer signal.Stop(sigc)
-		<-sigc
-		log.Info("Got interrupt, shutting down...")
-		go stack.Stop()
-		for i := 10; i > 0; i-- {
-			<-sigc
-			if i > 1 {
-				log.Warn("Already shutting down, interrupt more to panic.", "times", i-1)
+	//go func() {
+	//	sigc := make(chan os.Signal, 1)
+	//	signal.Notify(sigc, syscall.SIGINT, syscall.SIGTERM)
+	//	defer signal.Stop(sigc)
+	//	<-sigc
+	//	log.Info("Got interrupt, shutting down...")
+	//	go stack.Stop()
+	//	for i := 10; i > 0; i-- {
+	//		<-sigc
+	//		if i > 1 {
+	//			log.Warn("Already shutting down, interrupt more to panic.", "times", i-1)
+	//		}
+	//	}
+	//	debug.Exit() // ensure trace and CPU profile data is flushed.
+	//	debug.LoudPanic("boom")
+	//}()
+
+	mining := false
+	var intchain *intprotocol.IntChain
+	if err := stack.Service(&intchain); err == nil {
+		if ipbft, ok := intchain.Engine().(consensus.IPBFT); ok {
+			mining = ipbft.ShouldStart()
+			if mining {
+				stack.GetLogger().Info("IPBFT Consensus Engine will be start shortly")
 			}
 		}
-		debug.Exit() // ensure trace and CPU profile data is flushed.
-		debug.LoudPanic("boom")
-	}()
+	}
+
+	// Start auxiliary services if enabled
+	if mining || ctx.GlobalBool(DeveloperFlag.Name) {
+		stack.GetLogger().Info("Mine will be start shortly")
+		// Mining only makes sense if a full intchain node is running
+		var intchain *intprotocol.IntChain
+		if err := stack.Service(&intchain); err != nil {
+			Fatalf("INT Chain service not running: %v", err)
+		}
+
+		// Use a reduced number of threads if requested
+		if threads := ctx.GlobalInt(MinerThreadsFlag.Name); threads > 0 {
+			type threaded interface {
+				SetThreads(threads int)
+			}
+			if th, ok := intchain.Engine().(threaded); ok {
+				th.SetThreads(threads)
+			}
+		}
+		// Set the gas price to the limits from the CLI and start mining
+		intchain.TxPool().SetGasPrice(GlobalBig(ctx, MinerGasPriceFlag.Name))
+		if err := intchain.StartMining(true); err != nil {
+			Fatalf("Failed to start mining: %v", err)
+		}
+	}
+
+	return nil
 }
 
 func ImportChain(chain *core.BlockChain, fn string) error {

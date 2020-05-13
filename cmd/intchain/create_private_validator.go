@@ -23,7 +23,7 @@ type PrivValidatorForConsole struct {
 	PrivKey crypto.PrivKey `json:"consensus_priv_key"`
 }
 
-func GeneratePrivateValidatorCmd(ctx *cli.Context) error {
+func CreatePrivateValidatorCmd(ctx *cli.Context) error {
 	var consolePrivVal *PrivValidatorForConsole
 	address := ctx.Args().First()
 
@@ -37,7 +37,13 @@ func GeneratePrivateValidatorCmd(ctx *cli.Context) error {
 		return err
 	}
 
-	privValFile := filepath.Join(ctx.GlobalString(utils.DataDirFlag.Name), "priv_validator.json")
+	chainId := "intchain"
+
+	if ctx.GlobalIsSet(utils.TestnetFlag.Name) {
+		chainId = "testnet"
+	}
+
+	privValFile := filepath.Join(ctx.GlobalString(utils.DataDirFlag.Name), chainId, "priv_validator.json")
 
 	validator := types.GenPrivValidatorKey(common.StringToAddress(address))
 

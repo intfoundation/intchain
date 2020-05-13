@@ -21,16 +21,15 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/url"
 	"os/exec"
 	"runtime"
 	"strings"
 
-	"github.com/intfoundation/intchain/cmd/internal/browser"
+	//"github.com/intfoundation/intchain/cmd/internal/browser"
 	"github.com/intfoundation/intchain/params"
 
 	"github.com/intfoundation/intchain/cmd/utils"
-	cli "gopkg.in/urfave/cli.v1"
+	"gopkg.in/urfave/cli.v1"
 )
 
 var bugCommand = cli.Command{
@@ -56,9 +55,9 @@ func reportBug(ctx *cli.Context) error {
 	printOSDetails(&buff)
 
 	// open a new GH issue
-	if !browser.Open(issueUrl + "?body=" + url.QueryEscape(buff.String())) {
-		fmt.Printf("Please file a new issue at %s using this template:\n%s", issueUrl, buff.String())
-	}
+	//if !browser.Open(issueUrl + "?body=" + url.QueryEscape(buff.String())) {
+	//	fmt.Printf("Please file a new issue at %s using this template:\n%s", issueUrl, buff.String())
+	//}
 	return nil
 }
 

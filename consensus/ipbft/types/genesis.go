@@ -8,9 +8,9 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/intfoundation/intchain/common"
 	. "github.com/intfoundation/go-common"
 	"github.com/intfoundation/go-crypto"
+	"github.com/intfoundation/intchain/common"
 )
 
 //------------------------------------------------------------
@@ -175,7 +175,7 @@ func GenesisDocFromJSON(jsonBlob []byte) (genDoc *GenesisDoc, err error) {
 var MainnetGenesisJSON string = `{
 	"chain_id": "intchain",
 	"consensus": "ipbft",
-	"genesis_time": "2020-03-29T14:20:32.271647+08:00",
+	"genesis_time": "2020-05-12T11:46:26.899977+08:00",
 	"reward_scheme": {
 		"total_reward": "0xa56fa5b99019a5c8000000",
 		"reward_first_year": "0x108b2a2c28029094000000",
@@ -189,8 +189,8 @@ var MainnetGenesisJSON string = `{
 		"end_block": "0x1c20",
 		"validators": [
 			{
-				"address": "INT3HGH5oAByC1ni3yccBKrrLcNTZry7",
-				"pub_key": "0x1E98EEE7E9C3A7E81476499D5A4E863DA08C81AE167A9AC77070EF5C1646849C4AAA82F3CA38FA345C0A253A28124DA0F336CDE8EE68A33A4E856A2C31518F92289CC1E753678BE683605A48B7C23EFA207BF588CC32A3FB553877F3F4B13D250ED273C3681CE76835F79CE3642F7D4BB40FBCCBED9310C8CA50908BBDCD1E8F",
+				"address": "INT3DvvQnnBNcUUeMJfiRi6GKFRjhwaw",
+				"pub_key": "0x0604F4712EF4A29EB44CA3F8254BDCD7E9EF8F4A9EE8EABE218D280F3BEC98B6691B8C82A1EE29ED4CB18CC89F77A6CF503A04E3D246FCFEE14696DD1D85FB9B628A846037FAD2074F23F0D0B1F20A8027E0DB8436100BA4C0BCF9FBEB4A96D846945A10F20D0007E42BCC18B745965332FBEBD9FCB5F9F9FA405C5353BAE674",
 				"amount": "0x54b40b1f852bda000000",
 				"name": "",
 				"epoch": "0x0"

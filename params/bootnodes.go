@@ -20,7 +20,7 @@ package params
 // the INTChain main network.
 var MainnetBootnodes = []string{
 
-	"enode://aaa40f05d4cc2dedc2536a76ba620d74e533f29991b90490c149bcfb9550c1e0c9bfe63c60cb1f251c06c04d020072c679ef699254b331c59c30c1460bdddabd@127.0.0.1:8551", // test6
+	"enode://b8a2baa13828d3a577a3f263374dfecd72a1c12ee07e7828165f33da40e29f29649cd79c10cf63df58c737ee7e2e48231245baa150281481be9c78897029b04c@127.0.0.1:8550", // test6
 
 }
 

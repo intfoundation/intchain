@@ -135,6 +135,7 @@ type Account struct {
 	Commission  uint8    // commission percentage of Delegation Candidate (0-100)
 	BlockTime   *big.Int // timestamp for last consensus block
 	IsForbidden bool     // candidate is forbidden or not
+	Pubkey      string
 
 	// Reward
 	RewardBalance          *big.Int    // the accumulative reward balance for this account

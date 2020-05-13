@@ -32,10 +32,10 @@ var Modules = map[string]string{
 	"swarmfs":    SWARMFS_JS,
 	"txpool":     TxPool_JS,
 	"istanbul":   Istanbul_JS,
-	// IntChain JS
-	"chain": Chain_JS,
-	"tdm":   Tdm_JS,
-	"del":   Del_JS,
+	//// IntChain JS
+	//"chain": Chain_JS,
+	//"tdm":   Tdm_JS,
+	//"del":   Del_JS,
 }
 
 const Chequebook_JS = `
@@ -471,47 +471,166 @@ web3._extend({
 	methods: [
 		new web3._extend.Method({
 			name: 'sign',
-			call: 'eth_sign',
+			call: 'int_sign',
 			params: 2,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null]
 		}),
 		new web3._extend.Method({
 			name: 'resend',
-			call: 'eth_resend',
+			call: 'int_resend',
 			params: 3,
 			inputFormatter: [web3._extend.formatters.inputTransactionFormatter, web3._extend.utils.fromDecimal, web3._extend.utils.fromDecimal]
 		}),
 		new web3._extend.Method({
 			name: 'signTransaction',
-			call: 'eth_signTransaction',
+			call: 'int_signTransaction',
 			params: 1,
 			inputFormatter: [web3._extend.formatters.inputTransactionFormatter]
 		}),
 		new web3._extend.Method({
 			name: 'submitTransaction',
-			call: 'eth_submitTransaction',
+			call: 'int_submitTransaction',
 			params: 1,
 			inputFormatter: [web3._extend.formatters.inputTransactionFormatter]
 		}),
 		new web3._extend.Method({
 			name: 'getRawTransaction',
-			call: 'eth_getRawTransactionByHash',
+			call: 'int_getRawTransactionByHash',
 			params: 1
 		}),
 		new web3._extend.Method({
 			name: 'getRawTransactionFromBlock',
 			call: function(args) {
-				return (web3._extend.utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? 'eth_getRawTransactionByBlockHashAndIndex' : 'eth_getRawTransactionByBlockNumberAndIndex';
+				return (web3._extend.utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? 'int_getRawTransactionByBlockHashAndIndex' : 'int_getRawTransactionByBlockNumberAndIndex';
 			},
 			params: 2,
 			inputFormatter: [web3._extend.formatters.inputBlockNumberFormatter, web3._extend.utils.toHex]
 		}),
 		new web3._extend.Method({
 			name: 'getFullBalance',
-			call: 'eth_getFullBalance',
+			call: 'int_getFullBalance',
 			params: 3,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputDefaultBlockNumberFormatter, null]
 		}),
+		new web3._extend.Method({
+			name: 'signAddress',
+			call: 'int_signAddress',
+			params: 2
+		}),
+		new web3._extend.Method({
+			name: 'getBlockReward',
+			call: 'int_getBlockReward',
+			params: 1
+		}),
+		new web3._extend.Method({
+			name: 'withdrawReward',
+			call: 'int_withdrawReward',
+			params: 3,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null]
+		}),
+		new web3._extend.Method({
+			name: 'voteNextEpoch',
+			call: 'int_voteNextEpoch',
+			params: 3
+		}),
+		new web3._extend.Method({
+			name: 'revealVote',
+			call: 'int_revealVote',
+			params: 6
+		}),
+		new web3._extend.Method({
+			name: 'getCurrentEpochNumber',
+			call: 'int_getCurrentEpochNumber'
+		}),
+		new web3._extend.Method({
+			name: 'getEpoch',
+			call: 'int_getEpoch',
+			params: 1
+		}),
+		new web3._extend.Method({
+			name: 'getNextEpochVote',
+			call: 'int_getNextEpochVote'
+		}),
+		new web3._extend.Method({
+			name: 'getNextEpochValidators',
+			call: 'int_getNextEpochValidators'
+		}),
+		new web3._extend.Method({
+			name: 'getValidatorStatus',
+			call: 'int_getValidatorStatus',
+			params: 1,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
+		}),
+		new web3._extend.Method({
+			name: 'unForbid',
+			call: 'int_unForbid',
+			params: 2,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null]
+		}),
+		new web3._extend.Method({
+			name: 'editValidator',
+			call: 'int_editValidator',
+			params: 6,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null, null, null]
+		}),
+		new web3._extend.Method({
+			name: 'getVoteHash',
+			call: 'int_getVoteHash',
+			params: 4,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null]
+		}),
+		new web3._extend.Method({
+			name: 'getConsensusPublicKey',
+			call: 'int_getConsensusPublicKey',
+			params: 1
+		}),
+		new web3._extend.Method({
+			name: 'decodeExtraData',
+			call: 'int_decodeExtraData',
+			params: 1
+		}),
+		new web3._extend.Method({
+			name: 'getCandidateList',
+			call: 'int_getCandidateList',
+			params: 0
+		}),
+		new web3._extend.Method({
+			name: 'getForbiddenList',
+			call: 'int_getForbiddenList',
+			params: 0
+		}),
+		new web3._extend.Method({
+			name: 'delegate',
+			call: 'int_delegate',
+			params: 4
+		}),
+		new web3._extend.Method({
+			name: 'unDelegate',
+			call: 'int_unDelegate',
+			params: 4
+		}),
+		new web3._extend.Method({
+			name: 'register',
+			call: 'int_register',
+			params: 6
+		}),
+		new web3._extend.Method({
+			name: 'unRegister',
+			call: 'int_unRegister',
+			params: 2
+		}),
+		new web3._extend.Method({
+			name: 'checkCandidate',
+			call: 'int_checkCandidate',
+			params: 2,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputDefaultBlockNumberFormatter]
+		}),
+		new web3._extend.Method({
+			name: 'setCommission',
+			call: 'int_setCommission',
+			params: 3,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null]
+		})
 	],
 	properties: [
 		new web3._extend.Property({
@@ -758,196 +877,5 @@ web3._extend({
 			getter: 'istanbul_candidates'
 		}),
 	]
-});
-`
-
-const Chain_JS = `
-web3._extend({
-	property: 'chain',
-	methods:
-	[
-		new web3._extend.Method({
-			name: 'createChildChain',
-			call: 'chain_createChildChain',
-			params: 7
-		}),
-		new web3._extend.Method({
-			name: 'joinChildChain',
-			call: 'chain_joinChildChain',
-			params: 6
-		}),
-		new web3._extend.Method({
-			name: 'depositInMainChain',
-			call: 'chain_depositInMainChain',
-			params: 4
-		}),
-		new web3._extend.Method({
-			name: 'depositInChildChain',
-			call: 'chain_depositInChildChain',
-			params: 2
-		}),
-		new web3._extend.Method({
-			name: 'withdrawFromChildChain',
-			call: 'chain_withdrawFromChildChain',
-			params: 3
-		}),
-		new web3._extend.Method({
-			name: 'withdrawFromMainChain',
-			call: 'chain_withdrawFromMainChain',
-			params: 4
-		}),
-		new web3._extend.Method({
-			name: 'getAllChains',
-			call: 'chain_getAllChains'
-		}),
-		new web3._extend.Method({
-			name: 'signAddress',
-			call: 'chain_signAddress',
-			params: 2
-		}),
-		new web3._extend.Method({
-			name: 'setBlockReward',
-			call: 'chain_setBlockReward',
-			params: 3
-		}),
-		new web3._extend.Method({
-			name: 'getBlockReward',
-			call: 'chain_getBlockReward',
-			params: 1
-		}),
-		new web3._extend.Method({
-			name: 'withdrawReward',
-			call: 'chain_withdrawReward',
-			params: 3,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null]
-		})
-	],
-	properties:
-	[]
-});
-`
-
-const Tdm_JS = `
-web3._extend({
-	property: 'tdm',
-	methods:
-	[
-		new web3._extend.Method({
-			name: 'voteNextEpoch',
-			call: 'tdm_voteNextEpoch',
-			params: 3
-		}),
-		new web3._extend.Method({
-			name: 'revealVote',
-			call: 'tdm_revealVote',
-			params: 6
-		}),
-		new web3._extend.Method({
-			name: 'getCurrentEpochNumber',
-			call: 'tdm_getCurrentEpochNumber'
-		}),
-		new web3._extend.Method({
-			name: 'getEpoch',
-			call: 'tdm_getEpoch',
-			params: 1
-		}),
-		new web3._extend.Method({
-			name: 'getNextEpochVote',
-			call: 'tdm_getNextEpochVote'
-		}),
-		new web3._extend.Method({
-			name: 'getNextEpochValidators',
-			call: 'tdm_getNextEpochValidators'
-		}),
-		new web3._extend.Method({
-			name: 'getValidatorStatus',
-			call: 'tdm_getValidatorStatus',
-			params: 1,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
-		}),
-		new web3._extend.Method({
-			name: 'unForbid',
-			call: 'tdm_unForbid',
-			params: 2,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null]
-		}),
-		new web3._extend.Method({
-			name: 'editValidator',
-			call: 'tdm_editValidator',
-			params: 6,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null, null, null]
-		}),
-		new web3._extend.Method({
-			name: 'getVoteHash',
-			call: 'tdm_getVoteHash',
-			params: 4,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null]
-		}),
-		new web3._extend.Method({
-			name: 'getConsensusPublicKey',
-			call: 'tdm_getConsensusPublicKey',
-			params: 1
-		}),
-		new web3._extend.Method({
-			name: 'decodeExtraData',
-			call: 'tdm_decodeExtraData',
-			params: 1
-		}),
-		new web3._extend.Method({
-			name: 'getCandidateList',
-			call: 'tdm_getCandidateList',
-			params: 0
-		}),
-		new web3._extend.Method({
-			name: 'getForbiddenList',
-			call: 'tdm_getForbiddenList',
-			params: 0
-		})
-	],
-	properties:
-	[]
-});
-`
-
-const Del_JS = `
-web3._extend({
-	property: 'del',
-	methods:
-	[
-		new web3._extend.Method({
-			name: 'delegate',
-			call: 'del_delegate',
-			params: 4
-		}),
-		new web3._extend.Method({
-			name: 'cancelDelegate',
-			call: 'del_cancelDelegate',
-			params: 4
-		}),
-		new web3._extend.Method({
-			name: 'applyCandidate',
-			call: 'del_applyCandidate',
-			params: 4
-		}),
-		new web3._extend.Method({
-			name: 'cancelCandidate',
-			call: 'del_cancelCandidate',
-			params: 2
-		}),
-		new web3._extend.Method({
-			name: 'checkCandidate',
-			call: 'del_checkCandidate',
-			params: 2,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputDefaultBlockNumberFormatter]
-		}),
-		new web3._extend.Method({
-			name: 'setCommission',
-			call: 'del_setCommission',
-			params: 3,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null]
-		})
-	],
-	properties:
-	[]
 });
 `

@@ -19,6 +19,8 @@ package main
 import (
 	"fmt"
 	"github.com/intfoundation/intchain/intdb"
+	"github.com/intfoundation/intchain/intprotocol"
+	"github.com/intfoundation/intchain/params"
 	"os"
 	"runtime"
 	"strconv"
@@ -40,16 +42,16 @@ import (
 )
 
 var (
-	initINTGenesisCommand = cli.Command{
+	initINTGenesisCmd = cli.Command{
 		Action:    utils.MigrateFlags(initIntGenesis),
-		Name:      "init_int_genesis",
-		Usage:     "Initialize INT genesis.json file. init_int_genesis {\"1000000000000000000000000000\",\"100000000000000000000000\"}",
+		Name:      "init-intchain",
+		Usage:     "Initialize INT genesis.json file. init-intchain {\"1000000000000000000000000000\",\"100000000000000000000000\"}",
 		ArgsUsage: "<genesisPath>",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
 		},
 		Category:    "BLOCKCHAIN COMMANDS",
-		Description: "The initINTGenesis initializes a new INT genesis.json file for the network.",
+		Description: "The init-intchain initializes a new INT genesis.json file for the network.",
 	}
 
 	initCommand = cli.Command{
@@ -70,8 +72,8 @@ It expects the genesis file as argument.`,
 	}
 	initChildChainCmd = cli.Command{
 		Action:      utils.MigrateFlags(InitChildChainCmd),
-		Name:        "init_child_chain",
-		Usage:       "intchain --childChain=child_0,child_1,child_2 init_child_chain",
+		Name:        "init-child-chain",
+		Usage:       "intchain --childChain=child_0,child_1,child_2 init-child-chain",
 		Description: "Initialize child chain genesis from chain info db",
 	}
 	//	initCommand = cli.Command{
@@ -91,15 +93,15 @@ It expects the genesis file as argument.`,
 	//It expects the genesis file as argument.`,
 	//	}
 
-	generatePrivateValidatorCmd = cli.Command{
+	createValidatorCmd = cli.Command{
 		//Action: GeneratePrivateValidatorCmd,
-		Action: utils.MigrateFlags(GeneratePrivateValidatorCmd),
-		Name:   "gen_priv_validator",
-		Usage:  "gen_priv_validator address", //generate priv_validator.json for address
+		Action: utils.MigrateFlags(CreatePrivateValidatorCmd),
+		Name:   "create-validator",
+		Usage:  "create-validator address", //create priv_validator.json for address
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
 		},
-		Description: "Generate priv_validator.json for address",
+		Description: "Create priv_validator.json for address",
 	}
 
 	importCommand = cli.Command{
@@ -222,6 +224,17 @@ Use "ethereum dump 0" to dump the genesis block.`,
 		Category: "BLOCKCHAIN COMMANDS",
 		Description: `
 	The count-blockstate command count the block state from a given height.`,
+	}
+
+	versionCommand = cli.Command{
+		Action:    utils.MigrateFlags(version),
+		Name:      "version",
+		Usage:     "Print version numbers",
+		ArgsUsage: " ",
+		Category:  "MISCELLANEOUS COMMANDS",
+		Description: `
+The output of this command is supposed to be machine-readable.
+`,
 	}
 )
 
@@ -682,4 +695,22 @@ func countTrie(db intdb.Database, t state.Trie, count *CountSize, processLeaf pr
 			}
 		}
 	}
+}
+
+func version(ctx *cli.Context) error {
+	fmt.Println("Chain:", clientIdentifier)
+	fmt.Println("Version:", params.VersionWithMeta)
+	if gitCommit != "" {
+		fmt.Println("Git Commit:", gitCommit)
+	}
+	if gitDate != "" {
+		fmt.Println("Git Commit Date:", gitDate)
+	}
+	fmt.Println("Architecture:", runtime.GOARCH)
+	fmt.Println("Protocol Versions:", intprotocol.ProtocolVersions)
+	fmt.Println("Go Version:", runtime.Version())
+	fmt.Println("Operating System:", runtime.GOOS)
+	fmt.Printf("GOPATH=%s\n", os.Getenv("GOPATH"))
+	fmt.Printf("GOROOT=%s\n", runtime.GOROOT())
+	return nil
 }

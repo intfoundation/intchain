@@ -191,10 +191,11 @@ func (epoch *Epoch) Save() {
 		epoch.db.SetSync(calcEpochKeyWithHeight(epoch.nextEpoch.Number), epoch.nextEpoch.Bytes())
 	}
 
-	//if epoch.nextEpoch != nil && epoch.nextEpoch.validatorVoteSet != nil {
-	//	// Save the next epoch vote set
-	//	SaveEpochVoteSet(epoch.db, epoch.nextEpoch.Number, epoch.nextEpoch.validatorVoteSet)
-	//}
+	// TODO whether save next epoch validator vote set
+	if epoch.nextEpoch != nil && epoch.nextEpoch.validatorVoteSet != nil {
+		// Save the next epoch vote set
+		SaveEpochVoteSet(epoch.db, epoch.nextEpoch.Number, epoch.nextEpoch.validatorVoteSet)
+	}
 }
 
 func FromBytes(buf []byte) *Epoch {
@@ -236,17 +237,6 @@ func (epoch *Epoch) ShouldProposeNextEpoch(curBlockHeight uint64) bool {
 		return false
 	}
 
-	////the epoch's end time is too rough to estimate,
-	////so use generated block number in this epoch to decide if should propose next epoch parameters
-	//fCurBlockHeight := float64(curBlockHeight)
-	//fStartBlock := float64(epoch.StartBlock)
-	//fEndBlock := float64(epoch.EndBlock)
-	//
-	//passRate := (fCurBlockHeight - fStartBlock) / (fEndBlock - fStartBlock)
-	//
-	//shouldPropose := (NextEpochProposeStartPercent <= passRate) && (passRate < 1.0)
-	//return shouldPropose
-
 	shouldPropose := curBlockHeight > epoch.StartBlock && curBlockHeight != 1
 	return shouldPropose
 }
@@ -276,60 +266,6 @@ func (epoch *Epoch) ProposeNextEpoch(lastBlockHeight uint64, lastBlockTime time.
 	}
 	return nil
 }
-
-//func (epoch *Epoch) GetVoteStartHeight() uint64 {
-//	percent := float64(epoch.EndBlock-epoch.StartBlock) * NextEpochProposeStartPercent
-//	return uint64(math.Ceil(percent)) + epoch.StartBlock
-//}
-
-//func (epoch *Epoch) GetVoteEndHeight() uint64 {
-//	percent := float64(epoch.EndBlock-epoch.StartBlock) * NextEpochHashVoteEndPercent
-//	if _, frac := math.Modf(percent); frac == 0 {
-//		return uint64(percent) - 1 + epoch.StartBlock
-//	} else {
-//		return uint64(math.Floor(percent)) + epoch.StartBlock
-//	}
-//}
-
-//func (epoch *Epoch) GetRevealVoteStartHeight() uint64 {
-//	percent := float64(epoch.EndBlock-epoch.StartBlock) * NextEpochHashVoteEndPercent
-//	return uint64(math.Ceil(percent)) + epoch.StartBlock
-//}
-
-//func (epoch *Epoch) GetRevealVoteEndHeight() uint64 {
-//	percent := float64(epoch.EndBlock-epoch.StartBlock) * NextEpochRevealVoteEndPercent
-//	return uint64(math.Floor(percent)) + epoch.StartBlock
-//}
-
-//func (epoch *Epoch) CheckInNormalStage(height uint64) bool {
-//	fCurBlockHeight := float64(height)
-//	fStartBlock := float64(epoch.StartBlock)
-//	fEndBlock := float64(epoch.EndBlock)
-//
-//	passRate := (fCurBlockHeight - fStartBlock) / (fEndBlock - fStartBlock)
-//
-//	return (0 <= passRate) && (passRate < NextEpochProposeStartPercent)
-//}
-
-//func (epoch *Epoch) CheckInHashVoteStage(height uint64) bool {
-//	fCurBlockHeight := float64(height)
-//	fStartBlock := float64(epoch.StartBlock)
-//	fEndBlock := float64(epoch.EndBlock)
-//
-//	passRate := (fCurBlockHeight - fStartBlock) / (fEndBlock - fStartBlock)
-//
-//	return (NextEpochProposeStartPercent <= passRate) && (passRate < NextEpochHashVoteEndPercent)
-//}
-
-//func (epoch *Epoch) CheckInRevealVoteStage(height uint64) bool {
-//	fCurBlockHeight := float64(height)
-//	fStartBlock := float64(epoch.StartBlock)
-//	fEndBlock := float64(epoch.EndBlock)
-//
-//	passRate := (fCurBlockHeight - fStartBlock) / (fEndBlock - fStartBlock)
-//
-//	return (NextEpochHashVoteEndPercent <= passRate) && (passRate < NextEpochRevealVoteEndPercent)
-//}
 
 func (epoch *Epoch) GetNextEpoch() *Epoch {
 	if epoch.nextEpoch == nil {
@@ -416,7 +352,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				vObj := state.GetOrNewStateObject(vAddr)
 				if !vObj.IsForbidden() {
 					totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
-					// Voting Power = Delegated amount + Deposit amount
+					// Voting Power = Proxied amount + Deposit amount
 					newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
 					if newVotingPower.Sign() == 0 {
 						newValidators.Remove(v.Address)
@@ -553,7 +489,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 		// Process the Votes and merge into the Validator Set
 		for _, v := range voteSet.Votes {
 			// If vote not reveal, bypass this vote
-			if v.Amount == nil || v.Salt == "" || v.PubKey == nil {
+			if v.Amount == nil || v.PubKey == nil {
 				continue
 			}
 

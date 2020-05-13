@@ -254,14 +254,14 @@ var DefaultMainnetGenesisJSON = `{
 		}
 	},
 	"nonce": "0xdeadbeefdeadbeef",
-	"timestamp": "0x5e803e30",
+	"timestamp": "0x5eba1c12",
 	"extraData": "0x",
 	"gasLimit": "0x4c4b400",
 	"difficulty": "0x1",
 	"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
 	"coinbase": "INT3AAAAAAAAAAAAAAAAAAAAAAAAAAAA",
 	"alloc": {
-		"INT3HGH5oAByC1ni3yccBKrrLcNTZry7": {
+		"INT3DvvQnnBNcUUeMJfiRi6GKFRjhwaw": {
 			"balance": "0x29569e2db20e16b46000000",
 			"amount": "0x54b40b1f852bda000000"
 		}

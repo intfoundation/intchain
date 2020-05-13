@@ -364,6 +364,28 @@ func (self *stateObject) setCandidate(isCandidate bool) {
 	}
 }
 
+func (self *stateObject) Pubkey() string {
+	return self.data.Pubkey
+}
+
+func (self *stateObject) SetPubkey(pubkey string) {
+	self.db.journal = append(self.db.journal, pubkeyChange{
+		account: &self.address,
+		prev:    self.data.Pubkey,
+	})
+
+	self.setPubkey(pubkey)
+}
+
+func (self *stateObject) setPubkey(pubkey string) {
+	self.data.Pubkey = pubkey
+
+	if self.onDirty != nil {
+		self.onDirty(self.Address())
+		self.onDirty = nil
+	}
+}
+
 func (self *stateObject) Commission() uint8 {
 	return self.data.Commission
 }

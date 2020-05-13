@@ -12,9 +12,7 @@ import (
 	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/core/rawdb"
 	"github.com/intfoundation/intchain/intclient"
-	"github.com/intfoundation/intchain/intp2p"
 	"github.com/intfoundation/intchain/intprotocol"
-	"github.com/intfoundation/intchain/intrpc"
 	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/node"
 	"github.com/pkg/errors"
@@ -40,7 +38,7 @@ type ChainManager struct {
 
 	stop chan struct{} // Channel wait for INTCHAIN stop
 
-	server *intp2p.IntChainP2PServer
+	server *utils.IntChainP2PServer
 	cch    *CrossChainHelper
 }
 
@@ -64,7 +62,7 @@ func (cm *ChainManager) GetNodeID() string {
 }
 
 func (cm *ChainManager) InitP2P() {
-	cm.server = intp2p.NewP2PServer(cm.ctx)
+	cm.server = utils.NewP2PServer(cm.ctx)
 }
 
 func (cm *ChainManager) LoadMainChain() error {
@@ -221,34 +219,34 @@ func (cm *ChainManager) StartChains() error {
 func (cm *ChainManager) StartRPC() error {
 
 	// Start IntChain RPC
-	err := intrpc.StartRPC(cm.ctx)
+	err := utils.StartRPC(cm.ctx)
 	if err != nil {
 		return err
 	} else {
-		if intrpc.IsHTTPRunning() {
+		if utils.IsHTTPRunning() {
 			if h, err := cm.mainChain.IntNode.GetHTTPHandler(); err == nil {
-				intrpc.HookupHTTP(cm.mainChain.Id, h)
+				utils.HookupHTTP(cm.mainChain.Id, h)
 			} else {
 				log.Errorf("Load Main Chain RPC HTTP handler failed: %v", err)
 			}
 			for _, chain := range cm.childChains {
 				if h, err := chain.IntNode.GetHTTPHandler(); err == nil {
-					intrpc.HookupHTTP(chain.Id, h)
+					utils.HookupHTTP(chain.Id, h)
 				} else {
 					log.Errorf("Load Child Chain RPC HTTP handler failed: %v", err)
 				}
 			}
 		}
 
-		if intrpc.IsWSRunning() {
+		if utils.IsWSRunning() {
 			if h, err := cm.mainChain.IntNode.GetWSHandler(); err == nil {
-				intrpc.HookupWS(cm.mainChain.Id, h)
+				utils.HookupWS(cm.mainChain.Id, h)
 			} else {
 				log.Errorf("Load Main Chain RPC WS handler failed: %v", err)
 			}
 			for _, chain := range cm.childChains {
 				if h, err := chain.IntNode.GetWSHandler(); err == nil {
-					intrpc.HookupWS(chain.Id, h)
+					utils.HookupWS(chain.Id, h)
 				} else {
 					log.Errorf("Load Child Chain RPC WS handler failed: %v", err)
 				}
@@ -404,17 +402,17 @@ func (cm *ChainManager) LoadChildChainInRT(chainId string) {
 	//TODO Broadcast Child ID to all Main Chain peers
 	go cm.server.BroadcastNewChildChainMsg(chainId)
 
-	//hookup intrpc
-	if intrpc.IsHTTPRunning() {
+	//hookup utils
+	if utils.IsHTTPRunning() {
 		if h, err := chain.IntNode.GetHTTPHandler(); err == nil {
-			intrpc.HookupHTTP(chain.Id, h)
+			utils.HookupHTTP(chain.Id, h)
 		} else {
 			log.Errorf("Unable Hook up Child Chain (%v) RPC HTTP Handler: %v", chainId, err)
 		}
 	}
-	if intrpc.IsWSRunning() {
+	if utils.IsWSRunning() {
 		if h, err := chain.IntNode.GetWSHandler(); err == nil {
-			intrpc.HookupWS(chain.Id, h)
+			utils.HookupWS(chain.Id, h)
 		} else {
 			log.Errorf("Unable Hook up Child Chain (%v) RPC WS Handler: %v", chainId, err)
 		}
@@ -468,7 +466,7 @@ func (cm *ChainManager) WaitChainsStop() {
 }
 
 func (cm *ChainManager) Stop() {
-	intrpc.StopRPC()
+	utils.StopRPC()
 	cm.server.Stop()
 	cm.cch.localTX3CacheDB.Close()
 	cm.cch.chainInfoDB.Close()

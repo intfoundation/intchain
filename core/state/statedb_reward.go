@@ -98,7 +98,7 @@ func (self *StateDB) GetDelegateRewardAddress(addr common.Address) map[common.Ad
 	return deleAddr
 }
 
-// GetRewardBalanceByEpochNumber
+// GetRewardBalanceByDelegateAddress
 func (self *StateDB) GetRewardBalanceByDelegateAddress(addr common.Address, deleAddress common.Address) *big.Int {
 	stateObject := self.getStateObject(addr)
 	if stateObject != nil {

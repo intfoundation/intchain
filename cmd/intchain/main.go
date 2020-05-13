@@ -39,6 +39,7 @@ const (
 var (
 	// Git SHA1 commit hash of the release (set via linker flags)
 	gitCommit = ""
+	gitDate   = ""
 
 	// The app that holds all commands and flags.
 	app = utils.NewApp(gitCommit, "the intchain command line interface")
@@ -124,10 +125,10 @@ func init() {
 	app.Copyright = "Copyright 2018-2020 The INT Chain Authors"
 	app.Commands = []cli.Command{
 		// See chaincmd.go:
-		initINTGenesisCommand,
+		createValidatorCmd,
+		initINTGenesisCmd,
 		initCommand,
-		initChildChainCmd,
-		initCommand,
+		//initChildChainCmd,
 		importCommand,
 		exportCommand,
 		copydbCommand,
@@ -147,6 +148,7 @@ func init() {
 		bugCommand,
 		// See config.go
 		dumpConfigCommand,
+		versionCommand,
 	}
 	sort.Sort(cli.CommandsByName(app.Commands))
 

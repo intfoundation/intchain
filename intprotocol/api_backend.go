@@ -31,7 +31,6 @@ import (
 	"github.com/intfoundation/intchain/core/vm"
 	"github.com/intfoundation/intchain/event"
 	"github.com/intfoundation/intchain/intdb"
-	"github.com/intfoundation/intchain/internal/ethapi"
 	"github.com/intfoundation/intchain/intprotocol/downloader"
 	"github.com/intfoundation/intchain/intprotocol/gasprice"
 	"github.com/intfoundation/intchain/params"
@@ -40,9 +39,9 @@ import (
 
 // EthApiBackend implements ethapi.Backend for full nodes
 type EthApiBackend struct {
-	eth              *IntChain
-	gpo              *gasprice.Oracle
-	apiBridge        ethapi.InnerAPIBridge
+	eth *IntChain
+	gpo *gasprice.Oracle
+	//apiBridge        ethapi.InnerAPIBridge
 	crossChainHelper core.CrossChainHelper
 }
 
@@ -223,13 +222,13 @@ func (b *EthApiBackend) ServiceFilter(ctx context.Context, session *bloombits.Ma
 	}
 }
 
-func (b *EthApiBackend) SetInnerAPIBridge(inBridge ethapi.InnerAPIBridge) {
-	b.apiBridge = inBridge
-}
-
-func (b *EthApiBackend) GetInnerAPIBridge() ethapi.InnerAPIBridge {
-	return b.apiBridge
-}
+//func (b *EthApiBackend) SetInnerAPIBridge(inBridge ethapi.InnerAPIBridge) {
+//	b.apiBridge = inBridge
+//}
+//
+//func (b *EthApiBackend) GetInnerAPIBridge() ethapi.InnerAPIBridge {
+//	return b.apiBridge
+//}
 
 func (b *EthApiBackend) GetCrossChainHelper() core.CrossChainHelper {
 	return b.crossChainHelper

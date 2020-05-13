@@ -116,6 +116,12 @@ type (
 		account *common.Address
 		prev    bool
 	}
+
+	pubkeyChange struct {
+		account *common.Address
+		prev    string
+	}
+
 	commissionChange struct {
 		account *common.Address
 		prev    uint8
@@ -268,6 +274,10 @@ func (ch delegateRewardBalanceChange) undo(s *StateDB) {
 
 func (ch candidateChange) undo(s *StateDB) {
 	s.getStateObject(*ch.account).setCandidate(ch.prev)
+}
+
+func (ch pubkeyChange) undo(s *StateDB) {
+	s.getStateObject(*ch.account).setPubkey(ch.prev)
 }
 
 func (ch commissionChange) undo(s *StateDB) {

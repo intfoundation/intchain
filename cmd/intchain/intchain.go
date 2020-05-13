@@ -84,7 +84,7 @@ func intchainCmd(ctx *cli.Context) error {
 		chainMgr.WaitChainsStop()
 		chainMgr.Stop()
 
-		for i := 3; i > 0; i-- {
+		for i := 10; i > 0; i-- {
 			<-sigc
 			if i > 1 {
 				log.Info(fmt.Sprintf("Already shutting down, interrupt %d more times for panic.", i-1))

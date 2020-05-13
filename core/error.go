@@ -33,9 +33,6 @@ var (
 	// next one expected based on the local chain.
 	ErrNonceTooHigh = errors.New("nonce too high")
 
-	// ErrNoContractOnMainChain is returned if the contract creation tx has been submit to IntChain main chain
-	ErrNoContractOnMainChain = errors.New("no contract creation on main chain")
-
 	// ErrInvalidTx4 is returned if the tx4 has been checked during execution
 	ErrInvalidTx4 = errors.New("invalid Tx4")
 
@@ -46,8 +43,8 @@ var (
 	// ErrCannotDelegate is returned if the request address does not have deposit balance in Annual/SemiAnnual Supernode
 	ErrCannotDelegate = errors.New("Annual/SemiAnnual Supernode candidate not accept new delegator")
 
-	// ErrCannotCancelDelegate is returned if the request address belongs to Annual/SemiAnnual Supernode
-	ErrCannotCancelDelegate = errors.New("Annual/SemiAnnual Supernode candidate can not cancel delegation")
+	// ErrCannotUnbond is returned if the request address belongs to Annual/SemiAnnual Supernode
+	ErrCannotUnBond = errors.New("Annual/SemiAnnual Supernode candidate can not unbond")
 
 	// ErrDelegateAmount is returned if the delegate amount less than 0
 	ErrDelegateAmount = errors.New("delegation amount must be greater or equal to 1000 INT")
@@ -62,8 +59,8 @@ var (
 	// ErrCannotCandidate is returned if the request address belongs to Annual/SemiAnnual Supernode
 	ErrCannotCandidate = errors.New("Annual/SemiAnnual Supernode can not become candidate")
 
-	// ErrCannotCancelCandidate is returned if the request address belongs to Annual/SemiAnnual Supernode
-	ErrCannotCancelCandidate = errors.New("Annual/SemiAnnual Supernode can not cancel candidate")
+	// ErrCannotUnRegister is returned if the request address belongs to Annual/SemiAnnual Supernode
+	ErrCannotUnRegister = errors.New("Annual/SemiAnnual Supernode can not unregister")
 
 	// ErrNotCandidate is returned if the request address is not a candidate
 	ErrNotCandidate = errors.New("address not candidate")
@@ -71,8 +68,8 @@ var (
 	//ErrExceedDelegationAddressLimit is returned if delegated address number exceed the limit
 	ErrExceedDelegationAddressLimit = errors.New("exceed the delegation address limit")
 
-	// ErrMinimumSecurityDeposit is returned if the request security deposit less than the minimum value
-	ErrMinimumSecurityDeposit = errors.New("security deposit not meet the minimum value")
+	// ErrMinimumRegisterAmount is returned if the request security deposit less than the minimum value
+	ErrMinimumRegisterAmount = errors.New("security deposit not meet the minimum value")
 
 	// ErrCommission is returned if the request Commission value not between 0 and 100
 	ErrCommission = errors.New("commission percentage (between 0 and 100) out of range")

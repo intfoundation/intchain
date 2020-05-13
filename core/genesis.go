@@ -275,9 +275,10 @@ func (g *Genesis) ToBlock(db intdb.Database) *types.Block {
 			}
 		}
 
-		// Candidate
+		// Candidate, set empty pubkey for genesis candidate
+		fmt.Printf("toblock pubkey %v\n", "")
 		if account.Candidate {
-			statedb.ApplyForCandidate(addr, account.Commission)
+			statedb.ApplyForCandidate(addr, "", account.Commission)
 		}
 
 		statedb.SetCode(addr, account.Code)
