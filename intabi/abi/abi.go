@@ -28,7 +28,7 @@ var (
 	VoteNextEpoch  = FunctionType{10, false, true, true}
 	RevealVote     = FunctionType{11, false, true, true}
 	Delegate       = FunctionType{12, false, true, true}
-	UnBond         = FunctionType{13, false, true, true}
+	UnDelegate     = FunctionType{13, false, true, true}
 	Register       = FunctionType{14, false, true, true}
 	UnRegister     = FunctionType{15, false, true, true}
 	EditValidator  = FunctionType{16, false, true, true}
@@ -71,7 +71,7 @@ func (t FunctionType) RequiredGas() uint64 {
 		return 21000
 	case RevealVote:
 		return 21000
-	case Delegate, UnBond, Register, UnRegister:
+	case Delegate, UnDelegate, Register, UnRegister:
 		return 21000
 	case SetBlockReward:
 		return 21000
@@ -110,8 +110,8 @@ func (t FunctionType) String() string {
 		return "RevealVote"
 	case Delegate:
 		return "Delegate"
-	case UnBond:
-		return "UnBond"
+	case UnDelegate:
+		return "UnDelegate"
 	case Register:
 		return "Register"
 	case UnRegister:
@@ -153,8 +153,8 @@ func StringToFunctionType(s string) FunctionType {
 		return RevealVote
 	case "Delegate":
 		return Delegate
-	case "UnBond":
-		return UnBond
+	case "UnDelegate":
+		return UnDelegate
 	case "Register":
 		return Register
 	case "UnRegister":
@@ -222,7 +222,7 @@ type DelegateArgs struct {
 	Candidate common.Address
 }
 
-type UnBondArgs struct {
+type UnDelegateArgs struct {
 	Candidate common.Address
 	Amount    *big.Int
 }
@@ -418,7 +418,7 @@ const jsonChainABI = `
 	},
 	{
 		"type": "function",
-		"name": "UnBond",
+		"name": "UnDelegate",
 		"constant": false,
 		"inputs": [
 			{

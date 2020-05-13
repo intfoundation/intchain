@@ -44,7 +44,7 @@ import (
 var (
 	initINTGenesisCommand = cli.Command{
 		Action:    utils.MigrateFlags(initIntGenesis),
-		Name:      "init_int_genesis",
+		Name:      "init-intchain",
 		Usage:     "Initialize INT genesis.json file. init_int_genesis {\"1000000000000000000000000000\",\"100000000000000000000000\"}",
 		ArgsUsage: "<genesisPath>",
 		Flags: []cli.Flag{
@@ -72,8 +72,8 @@ It expects the genesis file as argument.`,
 	}
 	initChildChainCmd = cli.Command{
 		Action:      utils.MigrateFlags(InitChildChainCmd),
-		Name:        "init_child_chain",
-		Usage:       "intchain --childChain=child_0,child_1,child_2 init_child_chain",
+		Name:        "init-child-chain",
+		Usage:       "intchain --childChain=child_0,child_1,child_2 init-child-chain",
 		Description: "Initialize child chain genesis from chain info db",
 	}
 	//	initCommand = cli.Command{
@@ -95,9 +95,9 @@ It expects the genesis file as argument.`,
 
 	createValidatorCmd = cli.Command{
 		//Action: GeneratePrivateValidatorCmd,
-		Action: utils.MigrateFlags(GeneratePrivateValidatorCmd),
-		Name:   "create_validator",
-		Usage:  "create_validator address", //create priv_validator.json for address
+		Action: utils.MigrateFlags(CreatePrivateValidatorCmd),
+		Name:   "create-validator",
+		Usage:  "create-validator address", //create priv_validator.json for address
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
 		},

@@ -522,13 +522,13 @@ func (s *PublicBlockChainAPI) GetFullBalance(ctx context.Context, address common
 	}
 
 	fields := map[string]interface{}{
-		"balance":                     (*hexutil.Big)(state.GetBalance(address)),
-		"total_depositBalance":        (*hexutil.Big)(state.GetDepositBalance(address)),
-		"total_delegateBalance":       (*hexutil.Big)(state.GetDelegateBalance(address)),
-		"total_proxiedBalance":        (*hexutil.Big)(state.GetTotalProxiedBalance(address)),
-		"total_depositProxiedBalance": (*hexutil.Big)(state.GetTotalDepositProxiedBalance(address)),
-		"total_pendingRefundBalance":  (*hexutil.Big)(state.GetTotalPendingRefundBalance(address)),
-		"total_rewardBalance":         (*hexutil.Big)(state.GetTotalRewardBalance(address)),
+		"balance":               (*hexutil.Big)(state.GetBalance(address)),
+		"depositBalance":        (*hexutil.Big)(state.GetDepositBalance(address)),
+		"delegateBalance":       (*hexutil.Big)(state.GetDelegateBalance(address)),
+		"proxiedBalance":        (*hexutil.Big)(state.GetTotalProxiedBalance(address)),
+		"depositProxiedBalance": (*hexutil.Big)(state.GetTotalDepositProxiedBalance(address)),
+		"pendingRefundBalance":  (*hexutil.Big)(state.GetTotalPendingRefundBalance(address)),
+		"rewardBalance":         (*hexutil.Big)(state.GetTotalRewardBalance(address)),
 	}
 
 	if fullDetail {
@@ -550,7 +550,7 @@ func (s *PublicBlockChainAPI) GetFullBalance(ctx context.Context, address common
 			return true
 		})
 
-		fields["proxied_detail"] = proxied_detail
+		fields["proxiedDetail"] = proxied_detail
 
 		reward_detail := make(map[string]*hexutil.Big)
 		state.ForEachReward(address, func(key common.Address, rewardBalance *big.Int) bool {
@@ -558,7 +558,7 @@ func (s *PublicBlockChainAPI) GetFullBalance(ctx context.Context, address common
 			return true
 		})
 
-		fields["reward_detail"] = reward_detail
+		fields["rewardDetail"] = reward_detail
 	}
 	return fields, state.Error()
 }
@@ -1617,7 +1617,6 @@ var (
 
 	maxDelegationAddresses = 1000
 
-	//minimumVoteAmount      = math.MustParseBig256("100000000000000000000000") // 100,000 * e18
 	maxEditValidatorLength = 100
 )
 
@@ -1687,14 +1686,14 @@ func (api *PublicINTAPI) Delegate(ctx context.Context, from, candidate common.Ad
 	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
 }
 
-func (api *PublicINTAPI) UnBond(ctx context.Context, from, candidate common.Address, amount *hexutil.Big, gasPrice *hexutil.Big) (common.Hash, error) {
+func (api *PublicINTAPI) UnDelegate(ctx context.Context, from, candidate common.Address, amount *hexutil.Big, gasPrice *hexutil.Big) (common.Hash, error) {
 
-	input, err := intAbi.ChainABI.Pack(intAbi.UnBond.String(), candidate, (*big.Int)(amount))
+	input, err := intAbi.ChainABI.Pack(intAbi.UnDelegate.String(), candidate, (*big.Int)(amount))
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	defaultGas := intAbi.UnBond.RequiredGas()
+	defaultGas := intAbi.UnDelegate.RequiredGas()
 
 	args := SendTxArgs{
 		From:     from,
@@ -1785,50 +1784,6 @@ func (api *PublicINTAPI) SetCommission(ctx context.Context, from common.Address,
 	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
 }
 
-func (api *PublicINTAPI) VoteNextEpoch(ctx context.Context, from common.Address, voteHash common.Hash, gasPrice *hexutil.Big) (common.Hash, error) {
-
-	input, err := intAbi.ChainABI.Pack(intAbi.VoteNextEpoch.String(), voteHash)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	defaultGas := intAbi.VoteNextEpoch.RequiredGas()
-
-	args := SendTxArgs{
-		From:     from,
-		To:       &intAbi.ChainContractMagicAddr,
-		Gas:      (*hexutil.Uint64)(&defaultGas),
-		GasPrice: gasPrice,
-		Value:    nil,
-		Input:    (*hexutil.Bytes)(&input),
-		Nonce:    nil,
-	}
-
-	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
-}
-
-func (api *PublicINTAPI) RevealVote(ctx context.Context, from common.Address, pubkey goCrypto.BLSPubKey, amount *hexutil.Big, salt string, signature hexutil.Bytes, gasPrice *hexutil.Big) (common.Hash, error) {
-
-	input, err := intAbi.ChainABI.Pack(intAbi.RevealVote.String(), pubkey.Bytes(), (*big.Int)(amount), salt, signature)
-	if err != nil {
-		return common.Hash{}, err
-	}
-
-	defaultGas := intAbi.RevealVote.RequiredGas()
-
-	args := SendTxArgs{
-		From:     from,
-		To:       &intAbi.ChainContractMagicAddr,
-		Gas:      (*hexutil.Uint64)(&defaultGas),
-		GasPrice: gasPrice,
-		Value:    nil,
-		Input:    (*hexutil.Bytes)(&input),
-		Nonce:    nil,
-	}
-
-	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
-}
-
 func (api *PublicINTAPI) EditValidator(ctx context.Context, from common.Address, moniker, website string, identity string, details string, gasPrice *hexutil.Big) (common.Hash, error) {
 	input, err := intAbi.ChainABI.Pack(intAbi.EditValidator.String(), moniker, website, identity, details)
 	if err != nil {
@@ -1881,28 +1836,20 @@ func init() {
 	core.RegisterApplyCb(intAbi.Delegate, delegateApplyCb)
 
 	// Cancel Delegate
-	core.RegisterValidateCb(intAbi.UnBond, unBondValidateCb)
-	core.RegisterApplyCb(intAbi.UnBond, unBondApplyCb)
+	core.RegisterValidateCb(intAbi.UnDelegate, unDelegateValidateCb)
+	core.RegisterApplyCb(intAbi.UnDelegate, unDelegateApplyCb)
 
-	// Candidate
+	// Register
 	core.RegisterValidateCb(intAbi.Register, registerValidateCb)
 	core.RegisterApplyCb(intAbi.Register, registerApplyCb)
 
-	// Cancel Candidate
+	// Cancel Register
 	core.RegisterValidateCb(intAbi.UnRegister, unRegisterValidateCb)
 	core.RegisterApplyCb(intAbi.UnRegister, unRegisterApplyCb)
 
 	// Set Commission
 	core.RegisterValidateCb(intAbi.SetCommission, setCommisstionValidateCb)
 	core.RegisterApplyCb(intAbi.SetCommission, setCommisstionApplyCb)
-
-	// Vote for Next Epoch
-	//core.RegisterValidateCb(intAbi.VoteNextEpoch, voteNextEpochValidateCb)
-	//core.RegisterApplyCb(intAbi.VoteNextEpoch, voteNextEpochApplyCb)
-
-	// Reveal Vote
-	//core.RegisterValidateCb(intAbi.RevealVote, revealVoteValidateCb)
-	//core.RegisterApplyCb(intAbi.RevealVote, revealVoteApplyCb)
 
 	// Edit Validator
 	core.RegisterValidateCb(intAbi.EditValidator, editValidatorValidateCb)
@@ -2107,7 +2054,7 @@ func unRegisterValidation(from common.Address, tx *types.Transaction, state *sta
 	return nil
 }
 
-// delegate and unbond
+// delegate and unDelegate
 func delegateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)
 	_, verror := delegateValidation(from, tx, state, bc)
@@ -2186,19 +2133,19 @@ func delegateValidation(from common.Address, tx *types.Transaction, state *state
 	return &args, nil
 }
 
-func unBondValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+func unDelegateValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)
-	_, verror := unBondValidation(from, tx, state, bc)
+	_, verror := unDelegateValidation(from, tx, state, bc)
 	if verror != nil {
 		return verror
 	}
 	return nil
 }
 
-func unBondApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+func unDelegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
 	// Validate first
 	from := derivedAddressFromTx(tx)
-	args, verror := unBondValidation(from, tx, state, bc)
+	args, verror := unDelegateValidation(from, tx, state, bc)
 	if verror != nil {
 		return verror
 	}
@@ -2230,11 +2177,11 @@ func unBondApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockCh
 	return nil
 }
 
-func unBondValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.UnBondArgs, error) {
+func unDelegateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.UnDelegateArgs, error) {
 
-	var args intAbi.UnBondArgs
+	var args intAbi.UnDelegateArgs
 	data := tx.Data()
-	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.UnBond.String(), data[4:]); err != nil {
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.UnDelegate.String(), data[4:]); err != nil {
 		return nil, err
 	}
 
@@ -2318,202 +2265,6 @@ func setCommissionValidation(from common.Address, tx *types.Transaction, state *
 
 	return &args, nil
 }
-
-//func voteNextEpochValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-//
-//	_, verror := voteNextEpochValidation(tx, bc)
-//	if verror != nil {
-//		return verror
-//	}
-//
-//	return nil
-//}
-//
-//func voteNextEpochApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-//	// Validate first
-//	from := derivedAddressFromTx(tx)
-//	args, verror := voteNextEpochValidation(tx, bc)
-//	if verror != nil {
-//		return verror
-//	}
-//
-//	op := types.VoteNextEpochOp{
-//		From:     from,
-//		VoteHash: args.VoteHash,
-//		TxHash:   tx.Hash(),
-//	}
-//
-//	if ok := ops.Append(&op); !ok {
-//		return fmt.Errorf("pending ops conflict: %v", op)
-//	}
-//
-//	return nil
-//}
-//
-//func voteNextEpochValidation(tx *types.Transaction, bc *core.BlockChain) (*intAbi.VoteNextEpochArgs, error) {
-//	var args intAbi.VoteNextEpochArgs
-//	data := tx.Data()
-//	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.VoteNextEpoch.String(), data[4:]); err != nil {
-//		return nil, err
-//	}
-//
-//	// Check Epoch Height
-//	if _, err := getEpoch(bc); err != nil {
-//		return nil, err
-//	}
-//
-//	return &args, nil
-//}
-//
-//func revealVoteValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-//	from := derivedAddressFromTx(tx)
-//	_, verror := revealVoteValidation(from, tx, state, bc)
-//	if verror != nil {
-//		return verror
-//	}
-//	return nil
-//}
-//
-//func revealVoteApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-//
-//	// Validate first
-//	from := derivedAddressFromTx(tx)
-//	args, verror := revealVoteValidation(from, tx, state, bc)
-//	if verror != nil {
-//		return verror
-//	}
-//
-//	// Apply Logic
-//	if state.IsCandidate(from) {
-//		// Move delegate amount first if Candidate
-//		state.ForEachProxied(from, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
-//			// Move Proxied Amount to Deposit Proxied Amount
-//			state.SubProxiedBalanceByUser(from, key, proxiedBalance)
-//			state.AddDepositProxiedBalanceByUser(from, key, proxiedBalance)
-//			return true
-//		})
-//	}
-//
-//	// Rest Vote Amount
-//	proxiedBalance := state.GetTotalProxiedBalance(from)
-//	depositProxiedBalance := state.GetTotalDepositProxiedBalance(from)
-//	pendingRefundBalance := state.GetTotalPendingRefundBalance(from)
-//	netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
-//	netSelfAmount := new(big.Int).Sub(args.Amount, netProxied)
-//
-//	// if lock balance less than net self amount, then add enough amount to locked balance
-//	if state.GetDepositBalance(from).Cmp(netSelfAmount) == -1 {
-//		difference := new(big.Int).Sub(netSelfAmount, state.GetDepositBalance(from))
-//		state.SubBalance(from, difference)
-//		state.AddDepositBalance(from, difference)
-//	}
-//
-//	var pub goCrypto.BLSPubKey
-//	copy(pub[:], args.PubKey)
-//
-//	op := types.RevealVoteOp{
-//		From:   from,
-//		Pubkey: pub,
-//		Amount: args.Amount,
-//		Salt:   args.Salt,
-//		TxHash: tx.Hash(),
-//	}
-//
-//	if ok := ops.Append(&op); !ok {
-//		return fmt.Errorf("pending ops conflict: %v", op)
-//	}
-//
-//	return nil
-//}
-//
-//func revealVoteValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.RevealVoteArgs, error) {
-//	var args intAbi.RevealVoteArgs
-//	data := tx.Data()
-//	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.RevealVote.String(), data[4:]); err != nil {
-//		return nil, err
-//	}
-//
-//	var netProxied *big.Int
-//	if state.IsCandidate(from) {
-//		// is Candidate? Check Proxied Balance (Amount >= (proxiedBalance + depositProxiedBalance - pendingRefundBalance))
-//		proxiedBalance := state.GetTotalProxiedBalance(from)
-//		depositProxiedBalance := state.GetTotalDepositProxiedBalance(from)
-//		pendingRefundBalance := state.GetTotalPendingRefundBalance(from)
-//		netProxied = new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
-//	} else {
-//		netProxied = common.Big0
-//	}
-//	if args.Amount == nil || args.Amount.Sign() < 0 || args.Amount.Cmp(netProxied) == -1 {
-//		return nil, core.ErrVoteAmountTooLow
-//	}
-//
-//	// Non Candidate, Check Amount greater than minimumRegisterAmount
-//	if !state.IsCandidate(from) && args.Amount.Sign() == 1 && args.Amount.Cmp(minimumRegisterAmount) == -1 {
-//		return nil, core.ErrVoteAmountTooLow
-//	}
-//
-//	// Check Amount (Amount <= net proxied + balance + deposit)
-//	balance := state.GetBalance(from)
-//	deposit := state.GetDepositBalance(from)
-//	maximumAmount := new(big.Int).Add(new(big.Int).Add(balance, deposit), netProxied)
-//	if args.Amount.Cmp(maximumAmount) == 1 {
-//		return nil, core.ErrVoteAmountTooHight
-//	}
-//
-//	// Check Signature of the PubKey matched against the Address
-//	if err := goCrypto.CheckConsensusPubKey(from, args.PubKey, args.Signature); err != nil {
-//		return nil, err
-//	}
-//
-//	// Check Epoch Height
-//	ep, err := getEpoch(bc)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	// Check Vote
-//	voteSet := ep.GetNextEpoch().GetEpochValidatorVoteSet()
-//	if voteSet == nil {
-//		return nil, errors.New(fmt.Sprintf("Can not found the vote for Address %v", from.String()))
-//	}
-//
-//	vote, exist := voteSet.GetVoteByAddress(from)
-//	// Check Vote exist
-//	if !exist {
-//		return nil, errors.New(fmt.Sprintf("Can not found the vote for Address %v", from.String()))
-//	}
-//
-//	if len(vote.VoteHash) == 0 {
-//		return nil, errors.New(fmt.Sprintf("Address %v doesn't has vote hash", from.String()))
-//	}
-//
-//	// Check Vote Hash
-//	byte_data := [][]byte{
-//		from.Bytes(),
-//		args.PubKey,
-//		common.LeftPadBytes(args.Amount.Bytes(), 1),
-//		[]byte(args.Salt),
-//	}
-//	voteHash := crypto.Keccak256Hash(concatCopyPreAllocate(byte_data))
-//	fmt.Printf("tdm api voteHash %v\n", voteHash.String())
-//	if vote.VoteHash != voteHash {
-//		return nil, errors.New("your vote doesn't match your vote hash, please check your vote")
-//	}
-//
-//	// Check Logic - Amount can't be 0 for new Validator
-//	if !ep.Validators.HasAddress(from.Bytes()) && args.Amount.Sign() == 0 {
-//		return nil, errors.New("invalid vote!!! new validator's vote amount must be greater than 0")
-//	}
-//
-//	// Check Logic - SuperNode with remaining epoch can not decrease the stack
-//	if _, supernode := ep.Validators.GetByAddress(from.Bytes()); supernode != nil {
-//		if supernode.RemainingEpoch > 0 && args.Amount.Cmp(state.GetDepositBalance(from)) == -1 {
-//			return nil, core.ErrVoteAmountTooLow
-//		}
-//	}
-//
-//	return &args, nil
-//}
 
 func editValidatorValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)

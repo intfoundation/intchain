@@ -605,8 +605,8 @@ web3._extend({
 			params: 4
 		}),
 		new web3._extend.Method({
-			name: 'unBond',
-			call: 'int_unBond',
+			name: 'unDelegate',
+			call: 'int_unDelegate',
 			params: 4
 		}),
 		new web3._extend.Method({
