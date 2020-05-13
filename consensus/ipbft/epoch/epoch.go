@@ -489,7 +489,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 		// Process the Votes and merge into the Validator Set
 		for _, v := range voteSet.Votes {
 			// If vote not reveal, bypass this vote
-			if v.Amount == nil || v.Salt == "" || v.PubKey == nil {
+			if v.Amount == nil || v.PubKey == nil {
 				continue
 			}
 

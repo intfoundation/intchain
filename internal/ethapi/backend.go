@@ -87,7 +87,7 @@ func GetAPIs(apiBackend Backend, solcPath string) []rpc.API {
 		{
 			Namespace: "eth",
 			Version:   "1.0",
-			Service:   NewPublicEthereumAPI(apiBackend),
+			Service:   NewPublicINTChainAPI(apiBackend),
 			Public:    true,
 		}, {
 			Namespace: "eth",
@@ -102,7 +102,7 @@ func GetAPIs(apiBackend Backend, solcPath string) []rpc.API {
 		}, {
 			Namespace: "int",
 			Version:   "1.0",
-			Service:   NewPublicEthereumAPI(apiBackend),
+			Service:   NewPublicINTChainAPI(apiBackend),
 			Public:    true,
 		}, {
 			Namespace: "int",
