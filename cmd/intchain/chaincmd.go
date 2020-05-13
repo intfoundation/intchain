@@ -51,7 +51,7 @@ var (
 			utils.DataDirFlag,
 		},
 		Category:    "BLOCKCHAIN COMMANDS",
-		Description: "The initINTGenesis initializes a new INT genesis.json file for the network.",
+		Description: "The init-intchain initializes a new INT genesis.json file for the network.",
 	}
 
 	initCommand = cli.Command{
