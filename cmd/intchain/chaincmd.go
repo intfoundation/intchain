@@ -42,10 +42,10 @@ import (
 )
 
 var (
-	initINTGenesisCommand = cli.Command{
+	initINTGenesisCmd = cli.Command{
 		Action:    utils.MigrateFlags(initIntGenesis),
 		Name:      "init-intchain",
-		Usage:     "Initialize INT genesis.json file. init_int_genesis {\"1000000000000000000000000000\",\"100000000000000000000000\"}",
+		Usage:     "Initialize INT genesis.json file. init-intchain {\"1000000000000000000000000000\",\"100000000000000000000000\"}",
 		ArgsUsage: "<genesisPath>",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,

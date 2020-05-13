@@ -126,10 +126,9 @@ func init() {
 	app.Commands = []cli.Command{
 		// See chaincmd.go:
 		createValidatorCmd,
-		initINTGenesisCommand,
+		initINTGenesisCmd,
 		initCommand,
-		initChildChainCmd,
-		initCommand,
+		//initChildChainCmd,
 		importCommand,
 		exportCommand,
 		copydbCommand,
