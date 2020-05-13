@@ -138,8 +138,8 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidatorForConsole, 
 	}
 }
 
-// GeneratePrivateValidator
-func (api *API) GeneratePrivateValidator(from common.Address) (*tdmTypes.PrivV, error) {
+// CreateValidator
+func (api *API) CreateValidator(from common.Address) (*tdmTypes.PrivV, error) {
 	validator := tdmTypes.GenPrivValidatorKey(from)
 	privV := &tdmTypes.PrivV{
 		Address: validator.Address.String(),
