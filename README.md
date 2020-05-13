@@ -101,6 +101,7 @@ Specifying the `--testnet` flag, will reconfigure `intchain` instance a bit:
     
    * Explorer: <http://titansexplorer.intchain.io/#/>
    * Wallet: <http://titanswallet.intchain.io/#/>
+   * Document: <https://titansdocs.intchain.io/>
 
 
 ## Contribution
