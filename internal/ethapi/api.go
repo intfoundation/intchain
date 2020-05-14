@@ -1612,8 +1612,7 @@ func (s *PublicNetAPI) Version() string {
 }
 
 var (
-	minimumRegisterAmount   = math.MustParseBig256("10000000000000000000000") // 10,000 * e18
-	minimumDelegationAmount = math.MustParseBig256("1000000000000000000000")  // 1000 * e18
+	minimumRegisterAmount = math.MustParseBig256("10000000000000000000000") // 10,000 * e18
 
 	maxDelegationAddresses = 1000
 
@@ -2090,7 +2089,7 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 
 func delegateValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.DelegateArgs, error) {
 	// Check minimum delegate amount
-	if tx.Value().Cmp(minimumDelegationAmount) < 0 {
+	if tx.Value().Sign() == -1 {
 		return nil, core.ErrDelegateAmount
 	}
 
@@ -2212,10 +2211,10 @@ func unDelegateValidation(from common.Address, tx *types.Transaction, state *sta
 	}
 
 	// if left, the left must be greater than the min delegate amount
-	remainingBalance := new(big.Int).Sub(availableRefundBalance, args.Amount)
-	if remainingBalance.Sign() == 1 && remainingBalance.Cmp(minimumDelegationAmount) == -1 {
-		return nil, core.ErrDelegateAmount
-	}
+	//remainingBalance := new(big.Int).Sub(availableRefundBalance, args.Amount)
+	//if remainingBalance.Sign() == 1 && remainingBalance.Cmp(minimumDelegationAmount) == -1 {
+	//	return nil, core.ErrDelegateAmount
+	//}
 
 	// Check Epoch Height
 	if _, err := getEpoch(bc); err != nil {
