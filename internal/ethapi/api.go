@@ -2404,7 +2404,7 @@ func updateNextEpochValidatorVoteSet(state *state.StateDB, bc *core.BlockChain, 
 	} else {
 		fmt.Printf("update next epoch validator current epoch voteset votes %v\n", currentEpochVoteSet.Votes)
 		// if current validator size less than updateValidatorThreshold and the netProxied is bigger then one of the current validator voting power
-		if len(currentEpochVoteSet.Votes) > updateValidatorThreshold {
+		if len(currentEpochVoteSet.Votes) >= updateValidatorThreshold {
 			for _, val := range currentEpochVoteSet.Votes {
 				fmt.Printf("update next epoch validator current epoch voteset votes\n")
 				// TODO whether need compare
