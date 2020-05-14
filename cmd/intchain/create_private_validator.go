@@ -8,6 +8,7 @@ import (
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/consensus/ipbft/types"
 	"github.com/intfoundation/intchain/log"
+	"github.com/intfoundation/intchain/params"
 	"gopkg.in/urfave/cli.v1"
 	"os"
 	"path/filepath"
@@ -37,10 +38,10 @@ func CreatePrivateValidatorCmd(ctx *cli.Context) error {
 		return err
 	}
 
-	chainId := "intchain"
+	chainId := params.MainnetChainConfig.IntChainId
 
 	if ctx.GlobalIsSet(utils.TestnetFlag.Name) {
-		chainId = "testnet"
+		chainId = params.TestnetChainConfig.IntChainId
 	}
 
 	privValFile := filepath.Join(ctx.GlobalString(utils.DataDirFlag.Name), chainId, "priv_validator.json")

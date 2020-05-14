@@ -54,7 +54,7 @@ func (invalid InvalidArgs) Error() string {
 }
 
 func initIntGenesis(ctx *cli.Context) error {
-	log.Info("this is init_int_genesis")
+	log.Info("this is init-intchain")
 	args := ctx.Args()
 	if len(args) != 1 {
 		utils.Fatalf("len of args is %d", len(args))
@@ -68,8 +68,8 @@ func initIntGenesis(ctx *cli.Context) error {
 		chainId = TestnetChain
 		isMainnet = false
 	}
-	log.Infof("this is init_int_genesis chainId %v", chainId)
-	log.Info("this is init_int_genesis" + ctx.GlobalString(utils.DataDirFlag.Name) + "--" + ctx.Args()[0])
+	log.Infof("this is init-intchain chainId %v", chainId)
+	log.Info("this is init-intchain" + ctx.GlobalString(utils.DataDirFlag.Name) + "--" + ctx.Args()[0])
 	return init_int_genesis(utils.GetTendermintConfig(chainId, ctx), balance_str, isMainnet)
 }
 
@@ -77,7 +77,7 @@ func init_int_genesis(config cfg.Config, balanceStr string, isMainnet bool) erro
 
 	balanceAmounts, err := parseBalaceAmount(balanceStr)
 	if err != nil {
-		utils.Fatalf("init int_genesis_file failed")
+		utils.Fatalf("init int-intchain failed")
 		return err
 	}
 
