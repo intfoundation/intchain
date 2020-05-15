@@ -192,10 +192,10 @@ func (epoch *Epoch) Save() {
 	}
 
 	// TODO whether save next epoch validator vote set
-	if epoch.nextEpoch != nil && epoch.nextEpoch.validatorVoteSet != nil {
-		// Save the next epoch vote set
-		SaveEpochVoteSet(epoch.db, epoch.nextEpoch.Number, epoch.nextEpoch.validatorVoteSet)
-	}
+	//if epoch.nextEpoch != nil && epoch.nextEpoch.validatorVoteSet != nil {
+	//	// Save the next epoch vote set
+	//	SaveEpochVoteSet(epoch.db, epoch.nextEpoch.Number, epoch.nextEpoch.validatorVoteSet)
+	//}
 }
 
 func FromBytes(buf []byte) *Epoch {
@@ -489,7 +489,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 		// Process the Votes and merge into the Validator Set
 		for _, v := range voteSet.Votes {
 			// If vote not reveal, bypass this vote
-			if v.Amount == nil || v.PubKey == nil {
+			if v.Amount == nil || v.Salt == "" || v.PubKey == nil {
 				continue
 			}
 

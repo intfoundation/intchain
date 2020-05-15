@@ -1940,7 +1940,7 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	// mark address candidate
 	state.MarkAddressCandidate(from)
 
-	verror = updateNextEpochValidatorVoteSet(state, bc, from)
+	verror = updateNextEpochValidatorVoteSet(tx, state, bc, from)
 	if verror != nil {
 		return verror
 	}
@@ -2079,7 +2079,7 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	// Add Balance to Candidate's Proxied Balance
 	state.AddProxiedBalanceByUser(args.Candidate, from, amount)
 
-	verror = updateNextEpochValidatorVoteSet(state, bc, args.Candidate)
+	verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate)
 	if verror != nil {
 		return verror
 	}
@@ -2168,7 +2168,7 @@ func unDelegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Blo
 	state.SubDelegateBalance(from, immediatelyRefund)
 	state.AddBalance(from, immediatelyRefund)
 
-	verror = updateNextEpochValidatorVoteSet(state, bc, args.Candidate)
+	verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate)
 	if verror != nil {
 		return verror
 	}
@@ -2372,7 +2372,7 @@ func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
 	return
 }
 
-func updateNextEpochValidatorVoteSet(state *state.StateDB, bc *core.BlockChain, candidate common.Address) error {
+func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, candidate common.Address) error {
 	fmt.Printf("update next epoch validator vote ste start\n")
 	var update bool
 	ep, err := getEpoch(bc)
@@ -2457,6 +2457,8 @@ func updateNextEpochValidatorVoteSet(state *state.StateDB, bc *core.BlockChain, 
 				Address: candidate,
 				Amount:  netProxied,
 				PubKey:  blsPK,
+				Salt:    "intchain",
+				TxHash:  tx.Hash(),
 			}
 
 			voteSet.StoreVote(vote)

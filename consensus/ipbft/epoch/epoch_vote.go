@@ -2,11 +2,11 @@ package epoch
 
 import (
 	"fmt"
-	"github.com/intfoundation/intchain/common"
-	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/go-db"
 	"github.com/intfoundation/go-wire"
+	"github.com/intfoundation/intchain/common"
+	"github.com/intfoundation/intchain/log"
 	"math/big"
 	"sync"
 )
@@ -34,7 +34,7 @@ type EpochValidatorVote struct {
 	PubKey   crypto.PubKey
 	Amount   *big.Int
 	Salt     string
-	VoteHash common.Hash // VoteHash = Sha3(Epoch Number + PubKey + Amount + Salt)
+	VoteHash common.Hash // VoteHash = Sha3(Address + PubKey + Amount + Salt)
 	TxHash   common.Hash
 }
 
