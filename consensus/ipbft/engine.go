@@ -372,9 +372,9 @@ func (sb *backend) verifyCommittedSeals(chain consensus.ChainReader, header *typ
 	}
 
 	valSet := epoch.Validators
-	//fmt.Printf("verifyCommittedSeals verifyCommittedSeals valSet %v\n", valSet)
 	if !bytes.Equal(valSet.Hash(), tdmExtra.ValidatorsHash) {
 		sb.logger.Errorf("verifyCommittedSeals error. Our Validator Set %x, tdmExtra Valdiator %x", valSet.Hash(), tdmExtra.ValidatorsHash)
+		sb.logger.Errorf("verifyCommittedSeals error. epoch validator set %v, extra data %v", valSet.String(), tdmExtra.String())
 		return errInconsistentValidatorSet
 	}
 
