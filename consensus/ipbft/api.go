@@ -211,7 +211,17 @@ func (api *API) GetConsensusPublicKey(extra string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return aggr.PublicKeys, nil
+
+	var pubkeys []string
+	if len(aggr.PublicKeys) > 0 {
+		for _, v := range aggr.PublicKeys {
+			if v != "" {
+				pubkeys = append(pubkeys, v)
+			}
+		}
+	}
+
+	return pubkeys, nil
 }
 
 func (api *API) GetVoteHash(from common.Address, pubkey crypto.BLSPubKey, amount *hexutil.Big, salt string) common.Hash {
