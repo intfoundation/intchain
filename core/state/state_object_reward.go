@@ -18,8 +18,11 @@ func (p Reward) String() (str string) {
 }
 
 func (p Reward) Copy() Reward {
+	fmt.Printf("state objetct reward reward:%v\n", p)
+	fmt.Printf("state objetct reward reward:%v\n", p.String())
 	cpy := make(Reward)
 	for key, value := range p {
+		fmt.Printf("state objetct reward k:%v, v:%v\n", key, value)
 		cpy[key] = new(big.Int).Set(value)
 	}
 	return cpy
@@ -140,7 +143,7 @@ func (c *stateObject) getRewardTrie(db Database) Trie {
 //	return deleAddr
 //}
 
-// GetEpochRewardBalance returns a value in Reward trie
+// GetDelegateRewardBalance returns a value in Reward trie
 func (self *stateObject) GetDelegateRewardBalance(db Database, key common.Address) *big.Int {
 	// If we have a dirty value for this state entry, return it
 	value, dirty := self.dirtyReward[key]
@@ -170,7 +173,7 @@ func (self *stateObject) GetDelegateRewardBalance(db Database, key common.Addres
 	return value
 }
 
-// SetEpochRewardBalance updates a value in Epoch Reward.
+// SetDelegateRewardBalance updates a value in Epoch Reward.
 func (self *stateObject) SetDelegateRewardBalance(db Database, key common.Address, rewardAmount *big.Int) {
 	self.db.journal = append(self.db.journal, delegateRewardBalanceChange{
 		account:  &self.address,
