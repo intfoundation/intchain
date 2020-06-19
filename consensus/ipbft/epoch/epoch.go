@@ -238,6 +238,7 @@ func (epoch *Epoch) ShouldProposeNextEpoch(curBlockHeight uint64) bool {
 		return false
 	}
 
+	// current block height bigger than epoch start block and not equal to 1
 	shouldPropose := curBlockHeight > epoch.StartBlock && curBlockHeight != 1
 	return shouldPropose
 }

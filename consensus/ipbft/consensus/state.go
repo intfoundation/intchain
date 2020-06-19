@@ -15,6 +15,9 @@ import (
 
 	"crypto/ecdsa"
 	"crypto/sha256"
+	. "github.com/intfoundation/go-common"
+	cfg "github.com/intfoundation/go-config"
+	tmdcrypto "github.com/intfoundation/go-crypto"
 	consss "github.com/intfoundation/intchain/consensus"
 	ep "github.com/intfoundation/intchain/consensus/ipbft/epoch"
 	sm "github.com/intfoundation/intchain/consensus/ipbft/state"
@@ -25,9 +28,6 @@ import (
 	intAbi "github.com/intfoundation/intchain/intabi/abi"
 	"github.com/intfoundation/intchain/params"
 	"github.com/intfoundation/intchain/rlp"
-	. "github.com/intfoundation/go-common"
-	cfg "github.com/intfoundation/go-config"
-	tmdcrypto "github.com/intfoundation/go-crypto"
 	"math/big"
 )
 
@@ -414,7 +414,7 @@ func BytesToBig(data []byte) *big.Int {
 	return n
 }
 
-//PDBFT VRF proposer selection
+//IPBFT VRF proposer selection
 func (cs *ConsensusState) updateProposer() {
 
 	//if need to re-initialize proposer, we use VRF
@@ -437,7 +437,7 @@ func (cs *ConsensusState) updateProposer() {
 	log.Debug("update proposer", "height", cs.Height, "round", cs.Round, "idx", cs.proposer.valIndex)
 }
 
-//PDBFT VRF proposer selection
+//IPBFT VRF proposer selection
 func (cs *ConsensusState) proposerByRound(round int) *VRFProposer {
 
 	byVRF := false

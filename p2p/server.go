@@ -106,7 +106,7 @@ type Config struct {
 	LocalValidators []P2PValidator
 
 	// Validators set in all chains
-	// Should find nodes for all of them to support bls transport in PDBFT module
+	// Should find nodes for all of them to support bls transport in IPBFT module
 	Validators map[P2PValidator]*P2PValidatorNodeInfo
 
 	// Connectivity can be restricted to certain IP networks.
