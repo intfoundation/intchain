@@ -222,6 +222,7 @@ func (epoch *Epoch) ValidateNextEpoch(next *Epoch, lastHeight uint64, lastBlockT
 	myNextEpoch := epoch.ProposeNextEpoch(lastHeight, lastBlockTime)
 
 	if !myNextEpoch.Equals(next, false) {
+		log.Warnf("next epoch parameters are not expected, epoch propose next epoch: %v, next %v", myNextEpoch.String(), next.String())
 		return NextEpochNotEXPECTED
 	}
 
