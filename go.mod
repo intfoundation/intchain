@@ -3,7 +3,6 @@ module github.com/intfoundation/intchain
 go 1.14
 
 require (
-	github.com/SickleZhang/bls v1.0.3 // indirect
 	github.com/allegro/bigcache v1.2.1
 	github.com/aristanetworks/goarista v0.0.0-20200306225906-e0480e715858
 	github.com/btcsuite/btcd v0.20.1-beta
