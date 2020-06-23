@@ -649,12 +649,12 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 		"current epoch", epoch,
 		"last block height", lastBlockHeight,
 		"epoch start block", epoch.StartBlock)
-	if epoch.previousEpoch != nil {
-		prevEpoch := epoch.previousEpoch
-		timePerBlockOfEpoch = prevEpoch.EndTime.Sub(prevEpoch.StartTime).Nanoseconds() / int64(prevEpoch.EndBlock-prevEpoch.StartBlock)
-	} else {
-		timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
-	}
+	//if epoch.previousEpoch != nil {
+	//	prevEpoch := epoch.previousEpoch
+	//	timePerBlockOfEpoch = prevEpoch.EndTime.Sub(prevEpoch.StartTime).Nanoseconds() / int64(prevEpoch.EndBlock-prevEpoch.StartBlock)
+	//} else {
+	timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
+	//}
 
 	epochLeftThisYear := epochNumberPerYear - epoch.Number%epochNumberPerYear - 1
 
