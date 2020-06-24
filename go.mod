@@ -11,7 +11,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v1.7.1
 	github.com/docker/docker v1.13.1
-	github.com/elastic/gosigar v0.10.5
+	github.com/elastic/gosigar v0.10.5 // indirect
 	github.com/fatih/color v1.7.0
 	github.com/gizak/termui v2.3.0+incompatible
 	github.com/go-kit/kit v0.10.0 // indirect
@@ -21,7 +21,7 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/huin/goupnp v1.0.0
 	github.com/influxdata/influxdb v1.2.3
-	github.com/intfoundation/bls v1.0.4
+	github.com/intfoundation/bls v1.0.6
 	github.com/intfoundation/go-common v1.0.1
 	github.com/intfoundation/go-config v1.0.1
 	github.com/intfoundation/go-crypto v1.0.3
@@ -41,7 +41,7 @@ require (
 	github.com/maruel/panicparse v1.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.6
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
-	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
+	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/naoina/go-stringutil v0.1.0 // indirect
 	github.com/naoina/toml v0.1.1
 	github.com/nsf/termbox-go v0.0.0-20200204031403-4d2b513ad8be // indirect

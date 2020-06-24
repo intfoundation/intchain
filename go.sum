@@ -168,8 +168,8 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/influxdata/influxdb v1.2.3 h1:zNeNIe0flpet8uJ9gF6k4cXSUTcpPtsSuKWggpu9EJI=
 github.com/influxdata/influxdb v1.2.3/go.mod h1:qZna6X/4elxqT3yI9iZYdZrWWdeFOOprn86kgg4+IzY=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
-github.com/intfoundation/bls v1.0.4 h1:pV4BGok0xkUn7rl5HR4HHs1A7SExYCw0aZ4ZecQhNx4=
-github.com/intfoundation/bls v1.0.4/go.mod h1:pJTjESuL1PF0MOOzgU6cePXdkuHW+ZqXJhaKrElxWdg=
+github.com/intfoundation/bls v1.0.6 h1:ix42BrDgPI4M5+XNSPfvi6Delu/n/T5B8Dgo2O+uHVo=
+github.com/intfoundation/bls v1.0.6/go.mod h1:pJTjESuL1PF0MOOzgU6cePXdkuHW+ZqXJhaKrElxWdg=
 github.com/intfoundation/go-common v1.0.0/go.mod h1:eet7FlvfDgNTxU8rp6DEUK3C3uIURtSi/bYuHGJINKU=
 github.com/intfoundation/go-common v1.0.1 h1:whupiKWOK+yiBOmYqY4hc+JpQKrl5HLioVZm/2/YZqM=
 github.com/intfoundation/go-common v1.0.1/go.mod h1:eet7FlvfDgNTxU8rp6DEUK3C3uIURtSi/bYuHGJINKU=

@@ -644,17 +644,19 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 	thisYear := epoch.Number / epochNumberPerYear
 	nextYear := thisYear + 1
 
-	log.Debugf("estimateForNextEpoch",
+	log.Debug("estimateForNextEpoch",
 		"previous epoch", epoch.previousEpoch,
 		"current epoch", epoch,
 		"last block height", lastBlockHeight,
 		"epoch start block", epoch.StartBlock)
-	//if epoch.previousEpoch != nil {
-	//	prevEpoch := epoch.previousEpoch
-	//	timePerBlockOfEpoch = prevEpoch.EndTime.Sub(prevEpoch.StartTime).Nanoseconds() / int64(prevEpoch.EndBlock-prevEpoch.StartBlock)
-	//} else {
-	timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
-	//}
+
+	log.Infof("estimateForNextEpoch previous epoch, start time %v, end time %v", epoch.previousEpoch.StartTime.Nanosecond(), epoch.previousEpoch.EndTime.Nanosecond())
+	if epoch.previousEpoch != nil {
+		prevEpoch := epoch.previousEpoch
+		timePerBlockOfEpoch = prevEpoch.EndTime.Sub(prevEpoch.StartTime).Nanoseconds() / int64(prevEpoch.EndBlock-prevEpoch.StartBlock)
+	} else {
+		timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
+	}
 
 	epochLeftThisYear := epochNumberPerYear - epoch.Number%epochNumberPerYear - 1
 
