@@ -18,4 +18,8 @@ func TestEstimateEpoch(t *testing.T) {
 	} else {
 		t.Errorf("parse error: %v", e)
 	}
+
+	timeC := time.Now().UnixNano()
+	t.Logf("time c %v", timeC)
+	t.Logf("time c %v", timeC)
 }
