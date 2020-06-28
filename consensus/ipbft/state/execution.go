@@ -104,6 +104,7 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 
 			// Update the previous epoch End Time
 			if currentEpoch.Number > 0 {
+				currentEpoch.GetPreviousEpoch().EndTime = epochInBlock.StartTime // update previous epoch end time to state
 				ep.UpdateEpochEndTime(currentEpoch.GetDB(), currentEpoch.Number-1, epochInBlock.StartTime)
 			}
 		}

@@ -44,7 +44,13 @@ func CreatePrivateValidatorCmd(ctx *cli.Context) error {
 		chainId = params.TestnetChainConfig.IntChainId
 	}
 
+	privValFilePath := filepath.Join(ctx.GlobalString(utils.DataDirFlag.Name), chainId)
 	privValFile := filepath.Join(ctx.GlobalString(utils.DataDirFlag.Name), chainId, "priv_validator.json")
+
+	err := os.MkdirAll(privValFilePath, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
 
 	validator := types.GenPrivValidatorKey(common.StringToAddress(address))
 
