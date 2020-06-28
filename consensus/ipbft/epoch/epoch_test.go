@@ -7,7 +7,7 @@ import (
 
 func TestEstimateEpoch(t *testing.T) {
 	timeA := time.Now()
-	timeB := timeA
+	timeB := timeA.Unix()
 	timeStr := timeA.String()
 	t.Logf("now: %v, %v", timeB, timeStr)
 

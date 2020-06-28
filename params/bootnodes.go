@@ -20,7 +20,7 @@ package params
 // the INT Chain main network.
 var MainnetBootnodes = []string{
 
-	"enode://f1bfd96a57a083a3a1bb00e8494de89297ce961d1f555b5b3b6066ddd3f5af8e259fdc9ab812b30c58118a981835c0192f104105fe7b0180c1552fe162d2e92a@127.0.0.1:8550", // test6
+	"enode://3d568d8125471693dc88fe3c72ee26be081df6444c12b7e022396bda7b9fa6459037d5265aaa9e65e9289b210dbf17ebd544c781ffad66e79e1b25650a761e04@127.0.0.1:8550", // test6
 
 }
 
