@@ -644,18 +644,14 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 	thisYear := epoch.Number / epochNumberPerYear
 	nextYear := thisYear + 1
 
-	log.Info("estimateForNextEpoch",
-		"previous epoch", epoch.previousEpoch,
-		"current epoch", epoch,
-		"last block height", lastBlockHeight,
-		"epoch start block", epoch.StartBlock)
+	log.Infof("estimateForNextEpoch, previous epoch %v, current epoch %v, last block height %v, epoch start block %v", epoch.previousEpoch, epoch, lastBlockHeight, epoch.StartBlock)
 
 	log.Infof("estimateForNextEpoch previous epoch, start time %v, end time %v", epoch.previousEpoch.StartTime.UnixNano(), epoch.previousEpoch.EndTime.UnixNano())
 	if epoch.previousEpoch != nil {
 		prevEpoch := epoch.previousEpoch
-		timePerBlockOfEpoch = prevEpoch.EndTime.Sub(prevEpoch.StartTime).Microseconds() / int64(prevEpoch.EndBlock-prevEpoch.StartBlock)
+		timePerBlockOfEpoch = prevEpoch.EndTime.Sub(prevEpoch.StartTime).Nanoseconds() / int64(prevEpoch.EndBlock-prevEpoch.StartBlock)
 	} else {
-		timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Microseconds() / int64(lastBlockHeight-epoch.StartBlock)
+		timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
 	}
 
 	epochLeftThisYear := epochNumberPerYear - epoch.Number%epochNumberPerYear - 1
@@ -676,7 +672,7 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 
 		epochLeftNextYear := epochNumberPerYear
 
-		epochTimePerEpochLeftNextYear := timeLeftNextYear.Microseconds() / int64(epochLeftNextYear)
+		epochTimePerEpochLeftNextYear := timeLeftNextYear.Nanoseconds() / int64(epochLeftNextYear)
 
 		blocksOfNextEpoch = uint64(epochTimePerEpochLeftNextYear / timePerBlockOfEpoch)
 
@@ -705,7 +701,7 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 
 		if timeLeftThisYear > 0 {
 
-			epochTimePerEpochLeftThisYear := timeLeftThisYear.Microseconds() / int64(epochLeftThisYear)
+			epochTimePerEpochLeftThisYear := timeLeftThisYear.Nanoseconds() / int64(epochLeftThisYear)
 
 			blocksOfNextEpoch = uint64(epochTimePerEpochLeftThisYear / timePerBlockOfEpoch)
 
