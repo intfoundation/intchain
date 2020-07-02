@@ -654,6 +654,10 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 		timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
 	}
 
+	if timePerBlockOfEpoch == 0 {
+		timePerBlockOfEpoch = 1000000000
+	}
+
 	epochLeftThisYear := epochNumberPerYear - epoch.Number%epochNumberPerYear - 1
 
 	blocksOfNextEpoch = 0
