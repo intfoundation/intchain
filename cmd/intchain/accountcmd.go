@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/intfoundation/intchain/params"
 	"io/ioutil"
 
 	"github.com/intfoundation/intchain/accounts"
@@ -297,7 +298,12 @@ func accountCreate(ctx *cli.Context) error {
 		}
 	}
 
-	cfg.Node.ChainId = clientIdentifier
+	cfg.Node.ChainId = params.MainnetChainConfig.IntChainId
+
+	if ctx.GlobalIsSet(utils.TestnetFlag.Name) {
+		fmt.Printf("testnet: %v\n", params.TestnetChainConfig.IntChainId)
+		cfg.Node.ChainId = params.TestnetChainConfig.IntChainId
+	}
 
 	utils.SetNodeConfig(ctx, &cfg.Node)
 	scryptN, scryptP, keydir, err := cfg.Node.AccountConfig()
