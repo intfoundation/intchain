@@ -1,5 +1,7 @@
 # INT Chain
 
+![intchain license](https://img.shields.io/github/license/intfoundation/intchain)
+
 ![intchain](https://raw.githubusercontent.com/intfoundation/intchain/master/docs/intchain.jpg)
 
 INT Chain is the world's first bottom up new-generation blockchain of things (BoT) communication standard and base application platform. The ecosystem is specifically designed for easy integration with any IoT protocol.
