@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package chequebook package wraps the 'chequebook' Ethereum smart contract.
+// Package chequebook package wraps the 'chequebook' INT Chain smart contract.
 //
 // The functions in this package allow using chequebook for
 // issuing, receiving, verifying cheques in ether; (auto)cashing cheques in ether
@@ -412,7 +412,6 @@ func NewOutbox(chbook *Chequebook, beneficiary common.Address) *Outbox {
 	return &Outbox{chbook, beneficiary}
 }
 
-
 // AutoDeposit enables auto-deposits on the underlying chequebook.
 func (self *Outbox) AutoDeposit(interval time.Duration, threshold, buffer *big.Int) {
 	self.chequeBook.AutoDeposit(interval, threshold, buffer)
@@ -544,7 +543,6 @@ func (self *Inbox) autoCash(cashInterval time.Duration) {
 		}
 	}()
 }
-
 
 // Verify verifies cheque for signer, contract, beneficiary, amount, valid signature.
 func (self *Cheque) Verify(signerKey *ecdsa.PublicKey, contract, beneficiary common.Address, sum *big.Int) (*big.Int, error) {
