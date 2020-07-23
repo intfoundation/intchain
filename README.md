@@ -1,7 +1,14 @@
 # INT Chain
 
-![intchain license](https://img.shields.io/github/license/intfoundation/intchain)
+[![Go Report Card](https://goreportcard.com/badge/github.com/intfoundation/intchain)](https://goreportcard.com/report/github.com/intfoundation/intchain)
+![INTChain License](https://img.shields.io/github/license/intfoundation/intchain)
 ![Go](https://github.com/intfoundation/intchain/workflows/Go/badge.svg)
+![Top Languages](https://img.shields.io/github/languages/top/intfoundation/intchain?color=blueviolet)
+![Languages Count](https://img.shields.io/github/languages/count/intfoundation/intchain?color=green)
+![INTChain Counter](https://img.shields.io/github/search/intfoundation/intchain/intchain)
+![INTChain Size](https://img.shields.io/github/repo-size/intfoundation/intchain?color=ff69b4)
+![Go Version](https://img.shields.io/github/go-mod/go-version/intfoundation/intchain?color=yellow)
+![Last Commit](https://img.shields.io/github/last-commit/intfoundation/intchain)
 
 ![intchain](https://raw.githubusercontent.com/intfoundation/intchain/master/docs/intchain.jpg)
 
