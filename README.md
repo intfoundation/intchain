@@ -1,6 +1,7 @@
 # INT Chain
 
 ![intchain license](https://img.shields.io/github/license/intfoundation/intchain)
+![Go](https://github.com/intfoundation/intchain/workflows/Go/badge.svg)
 
 ![intchain](https://raw.githubusercontent.com/intfoundation/intchain/master/docs/intchain.jpg)
 
