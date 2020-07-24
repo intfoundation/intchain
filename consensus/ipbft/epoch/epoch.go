@@ -299,29 +299,6 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 	if height == epoch.EndBlock {
 		epoch.nextEpoch = epoch.GetNextEpoch()
 		if epoch.nextEpoch != nil {
-			// Step 0: Give the Epoch Reward
-			//currentEpochNumber := epoch.Number
-			//delegateAddress := common.Address{}
-			//for rewardAddress := range state.GetRewardSet() {
-			//	deleAddr := state.GetDelegateRewardAddress(rewardAddress)
-			//	for addr := range deleAddr {
-			//		fmt.Printf("ShouldEnterNewEpoch GetDelegateRewardAddress address %v\n", addr)
-			//		currentAddrReward := state.GetRewardBalanceByDelegateAddress(rewardAddress, addr)
-			//		if currentAddrReward.Sign() == 1 {
-			//			state.SubRewardBalanceByDelegateAddress(rewardAddress, addr, currentAddrReward)
-			//			//state.AddBalance(rewardAddress, currentEpochReward)
-			//
-			//			// add current epoch reward to the available balance of the state available
-			//			state.AddAvailableRewardBalance(rewardAddress, currentAddrReward)
-			//		}
-			//	}
-			//
-			//	// Check Remaining Reward Balance
-			//	if state.GetTotalRewardBalance(rewardAddress).Sign() == 0 {
-			//		state.ClearRewardSetByAddress(rewardAddress)
-			//	}
-			//}
-
 			// Step 1: Refund the Delegate (subtract the pending refund / deposit proxied amount)
 			for refundAddress := range state.GetDelegateAddressRefundSet() {
 				state.ForEachProxied(refundAddress, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
