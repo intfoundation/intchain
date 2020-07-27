@@ -18,10 +18,10 @@ package state
 
 import (
 	"bytes"
+	"github.com/intfoundation/intchain/intdb/memorydb"
 	"testing"
 
 	"github.com/intfoundation/intchain/common"
-	"github.com/intfoundation/intchain/intdb"
 )
 
 // Tests that the node iterator indeed walks over the entire database contents.
@@ -51,7 +51,18 @@ func TestNodeIteratorCoverage(t *testing.T) {
 			t.Errorf("state entry not reported %x", hash)
 		}
 	}
-	for _, key := range db.TrieDB().DiskDB().(*intdb.MemDatabase).Keys() {
+	//for _, key := range db.TrieDB().DiskDB().(*memorydb.Database).Keys() {
+	//	if bytes.HasPrefix(key, []byte("secure-key-")) {
+	//		continue
+	//	}
+	//	if _, ok := hashes[common.BytesToHash(key)]; !ok {
+	//		t.Errorf("state entry not reported %x", key)
+	//	}
+	//}
+
+	it := db.TrieDB().DiskDB().(*memorydb.Database).NewIterator()
+	for it.Next() {
+		key := it.Key()
 		if bytes.HasPrefix(key, []byte("secure-key-")) {
 			continue
 		}
@@ -59,4 +70,7 @@ func TestNodeIteratorCoverage(t *testing.T) {
 			t.Errorf("state entry not reported %x", key)
 		}
 	}
+
+	it.Release()
+
 }
