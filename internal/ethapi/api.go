@@ -512,6 +512,21 @@ func (s *PublicBlockChainAPI) GetBalance(ctx context.Context, address common.Add
 	return (*hexutil.Big)(state.GetBalance(address)), state.Error()
 }
 
+func (s *PublicBlockChainAPI) GetCandidateSetByBlockNumber(ctx context.Context, blockNr rpc.BlockNumber) ([]string, error) {
+	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
+	if state == nil || err != nil {
+		return nil, err
+	}
+
+	var candidateList = make([]string, 0)
+
+	for addr := range state.GetCandidateSet() {
+		candidateList = append(candidateList, addr.String())
+	}
+
+	return candidateList, nil
+}
+
 // GetBalanceDetail returns the amount of wei for the given address in the state of the
 // given block number. The rpc.LatestBlockNumber and rpc.PendingBlockNumber meta
 // block numbers are also allowed.
@@ -2024,8 +2039,12 @@ func unRegisterApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Blo
 
 	state.CancelCandidate(from, allRefund)
 
+	fmt.Printf("candidate set bug, unregiser clear candidate before\n")
+	fmt.Printf("candidate set bug, unregiser clear candidate before %v\n", state.GetCandidateSet())
 	// remove address form candidate set
 	state.ClearCandidateSetByAddress(from)
+	fmt.Printf("candidate set bug, unregiser clear candidate after\n")
+	fmt.Printf("candidate set bug, unregiser clear candidate after %v\n", state.GetCandidateSet())
 
 	return nil
 }
@@ -2373,56 +2392,47 @@ func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
 }
 
 func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, candidate common.Address) error {
-	fmt.Printf("update next epoch validator vote ste start\n")
 	var update bool
 	ep, err := getEpoch(bc)
-	fmt.Printf("update next epoch validator vote ste start 1\n")
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("update next epoch validator vote ste start 2\n")
-
+	// calculate the net proxied balance of this candidate
 	proxiedBalance := state.GetTotalProxiedBalance(candidate)
 	depositProxiedBalance := state.GetTotalDepositProxiedBalance(candidate)
 	pendingRefundBalance := state.GetTotalPendingRefundBalance(candidate)
 	netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
 
-	fmt.Printf("update next epoch validator vote ste start 3\n")
 	if netProxied.Sign() == -1 {
 		return errors.New("validator voting power can not be negative")
 	}
 
-	fmt.Printf("update next epoch ep %v\n", ep)
 	fmt.Printf("update next epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
 	currentEpochVoteSet := ep.GetEpochValidatorVoteSet()
 	fmt.Printf("update next epoch current epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
+
+	// whether update next epoch vote set
 	if currentEpochVoteSet == nil {
 		update = true
-		fmt.Printf("update next epoch validator vote true 1\n")
 	} else {
-		fmt.Printf("update next epoch validator current epoch voteset votes %v\n", currentEpochVoteSet.Votes)
 		// if current validator size less than updateValidatorThreshold and the netProxied is bigger then one of the current validator voting power
 		if len(currentEpochVoteSet.Votes) >= updateValidatorThreshold {
 			for _, val := range currentEpochVoteSet.Votes {
-				fmt.Printf("update next epoch validator current epoch voteset votes\n")
 				// TODO whether need compare
 				if val.Amount.Cmp(netProxied) == -1 {
 					update = true
-					fmt.Printf("update next epoch validator vote true 2\n")
 					break
 				}
 			}
 		} else {
 			update = true
-			fmt.Printf("update next epoch validator vote true 3\n")
 		}
 	}
 
-	fmt.Printf("update next epoch validator vote ste start 4\n")
+	// update is true and the address is candidate, then update next epoch validator vote set
 	if update && state.IsCandidate(candidate) {
 		// Move delegate amount first if Candidate
-		fmt.Printf("update next epoch validator vote move delegate amount\n")
 		state.ForEachProxied(candidate, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
 			// Move Proxied Amount to Deposit Proxied Amount
 			state.SubProxiedBalanceByUser(candidate, key, proxiedBalance)
@@ -2430,10 +2440,8 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 			return true
 		})
 
-		fmt.Printf("update next epoch validator vote ste start 5\n")
 		voteSet := ep.GetNextEpoch().GetEpochValidatorVoteSet()
 		if voteSet == nil {
-			fmt.Printf("update next epoch validator vote ste vote set is nil\n")
 			voteSet = epoch.NewEpochValidatorVoteSet()
 		}
 
@@ -2441,11 +2449,9 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 		vote, exist := voteSet.GetVoteByAddress(candidate)
 
 		if exist {
-			fmt.Printf("update next epoch validator vote ste vote set is exist\n")
 			vote.Amount = netProxied
 		} else {
 			pubkey = state.GetPubkey(candidate)
-			fmt.Printf("updateNextEpochValidatorVoteSet pubkey %v\n", pubkey)
 			pubkeyBytes := common.FromHex(pubkey)
 			if pubkey == "" || len(pubkeyBytes) != 128 {
 				return errors.New("wrong format of required field 'pub_key'")
@@ -2463,7 +2469,7 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 
 			voteSet.StoreVote(vote)
 		}
-		fmt.Printf("update next epoch validator vote ste start 6\n")
+
 		epoch.SaveEpochVoteSet(ep.GetDB(), ep.GetNextEpoch().Number, voteSet)
 	}
 
