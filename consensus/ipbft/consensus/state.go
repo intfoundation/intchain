@@ -1802,16 +1802,37 @@ func (cs *ConsensusState) blsVerifySignAggr(signAggr *types.SignAggr) (bool, err
 			return false, fmt.Errorf(Fmt("validators are not matched, consensus validators:%v, signAggr validators:%v"), validators.Validators, signAggr.BitArray)
 		}
 	*/
-	powerSum, err := validators.TalliedVotingPower(bitMap)
-	if err != nil {
-		cs.logger.Info("tallied voting power")
-		return false, err
+
+	aggr, e := validators.GetAggrPubKeyAndAddress(bitMap)
+	if e != nil {
+		return false, e
 	}
 
-	quorum := types.Loose23MajorThreshold(validators.TotalVotingPower(), signAggr.Round)
+	var (
+		totalVotes = big.NewInt(0)
+		aggrVotes  = big.NewInt(0)
+	)
+	for _, v := range validators.Validators {
+		totalVotes.Add(totalVotes, v.VotingPower)
+
+		for _, addr := range aggr.Addresses {
+			if bytes.Compare(addr[:], v.Address) == 0 {
+				aggrVotes.Add(aggrVotes, v.VotingPower)
+			}
+		}
+	}
+
+	//powerSum, err := validators.TalliedVotingPower(bitMap)
+	//if err != nil {
+	//	cs.logger.Info("tallied voting power")
+	//	return false, err
+	//}
+
+	//quorum := types.Loose23MajorThreshold(validators.TotalVotingPower(), signAggr.Round)
+	quorum := types.Loose23MajorThreshold(totalVotes, signAggr.Round)
 
 	var maj23 bool
-	if powerSum.Cmp(quorum) >= 0 {
+	if aggrVotes.Cmp(quorum) >= 0 {
 		maj23 = true
 	} else {
 		maj23 = false
@@ -1830,7 +1851,7 @@ func (cs *ConsensusState) blsVerifySignAggr(signAggr *types.SignAggr) (bool, err
 		Type:    signAggr.Type,
 	}
 
-	if !aggrPubKey.VerifyBytes(types.SignBytes(signAggr.ChainID, vote), (signAggr.SignAggr())) {
+	if !aggrPubKey.VerifyBytes(types.SignBytes(signAggr.ChainID, vote), signAggr.SignAggr()) {
 		cs.logger.Info("Invalid aggregate signature")
 		return false, errors.New("Invalid aggregate signature")
 	}
