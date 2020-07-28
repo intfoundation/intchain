@@ -330,23 +330,23 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			newValidators := epoch.Validators.Copy()
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
-				vObj := state.GetOrNewStateObject(vAddr)
-				// remove forbidden or not candidate address
-				if !vObj.IsForbidden() && state.IsCandidate(vAddr) {
-					totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
-					// Voting Power = Proxied amount + Deposit amount
-					newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
-					if newVotingPower.Sign() == 0 {
-						newValidators.Remove(v.Address)
-					} else {
-						v.VotingPower = newVotingPower
-					}
-				} else {
-					// if forbidden or not candidate, then remove form the validator set
+				//vObj := state.GetOrNewStateObject(vAddr)
+				// remove forbidden
+				//if !vObj.IsForbidden() {
+				totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
+				// Voting Power = Proxied amount + Deposit amount
+				newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
+				if newVotingPower.Sign() == 0 {
 					newValidators.Remove(v.Address)
-
-					refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: v.VotingPower, Voteout: false})
+				} else {
+					v.VotingPower = newVotingPower
 				}
+				//} else {
+				// if forbidden or not candidate, then remove form the validator set
+				//	newValidators.Remove(v.Address)
+				//
+				//	refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: v.VotingPower, Voteout: false})
+				//}
 			}
 
 			nextEpochVoteSet := epoch.nextEpoch.validatorVoteSet
@@ -368,6 +368,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 						depositProxiedBalance := state.GetTotalDepositProxiedBalance(addr)
 						pendingRefundBalance := state.GetTotalPendingRefundBalance(addr)
 						netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
+
 						if netProxied.Sign() == -1 {
 							continue
 						}
