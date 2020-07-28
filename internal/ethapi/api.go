@@ -1936,6 +1936,12 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 		return verror
 	}
 
+	// block height validation
+	verror = updateValidation(bc)
+	if verror != nil {
+		return verror
+	}
+
 	amount := tx.Value()
 	// Add minimum register amount to self
 	state.SubBalance(from, amount)
@@ -2090,6 +2096,12 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 		return verror
 	}
 
+	// block height validation
+	verror = updateValidation(bc)
+	if verror != nil {
+		return verror
+	}
+
 	// Do job
 	amount := tx.Value()
 	// Move Balance to delegate balance
@@ -2164,6 +2176,12 @@ func unDelegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Blo
 	// Validate first
 	from := derivedAddressFromTx(tx)
 	args, verror := unDelegateValidation(from, tx, state, bc)
+	if verror != nil {
+		return verror
+	}
+
+	// block height validation
+	verror = updateValidation(bc)
 	if verror != nil {
 		return verror
 	}
@@ -2389,6 +2407,21 @@ func derivedAddressFromTx(tx *types.Transaction) (from common.Address) {
 	signer := types.NewEIP155Signer(tx.ChainId())
 	from, _ = types.Sender(signer, tx)
 	return
+}
+
+func updateValidation(bc *core.BlockChain) error {
+	ep, err := getEpoch(bc)
+	if err != nil {
+		return err
+	}
+
+	currHeight := bc.CurrentBlock().NumberU64()
+
+	if currHeight == 1 || currHeight == ep.StartBlock || currHeight == ep.StartBlock+1 || currHeight == ep.EndBlock {
+		return errors.New("incorrect block height, please retry later")
+	}
+
+	return nil
 }
 
 func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, candidate common.Address) error {
