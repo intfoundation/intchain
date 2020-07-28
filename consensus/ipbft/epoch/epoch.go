@@ -3,6 +3,7 @@ package epoch
 import (
 	"errors"
 	"fmt"
+	goCrypto "github.com/intfoundation/go-crypto"
 	dbm "github.com/intfoundation/go-db"
 	"github.com/intfoundation/go-wire"
 	"github.com/intfoundation/intchain/common"
@@ -320,7 +321,8 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			// Step 2: Sort the Validators and potential Validators (with success vote) base on deposit amount + deposit proxied amount
 			// Step 2.1: Update deposit amount base on the vote (Add/Substract deposit amount base on vote)
-			// Step 2.2: Sort the address with deposit + deposit proxied amount
+			// Step 2.2: Add candidate to next epoch validator vote set
+			// Step 2.3: Sort the address with deposit + deposit proxied amount
 			var (
 				refunds []*tmTypes.RefundValidatorAmount
 			)
@@ -329,7 +331,8 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
 				vObj := state.GetOrNewStateObject(vAddr)
-				if !vObj.IsForbidden() {
+				// remove forbidden or not candidate address
+				if !vObj.IsForbidden() && state.IsCandidate(vAddr) {
 					totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
 					// Voting Power = Proxied amount + Deposit amount
 					newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
@@ -339,15 +342,67 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 						v.VotingPower = newVotingPower
 					}
 				} else {
-					// if forbidden then remove form the validatorset
+					// if forbidden or not candidate, then remove form the validator set
 					newValidators.Remove(v.Address)
 
 					refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: v.VotingPower, Voteout: false})
 				}
 			}
 
+			nextEpochVoteSet := epoch.nextEpoch.validatorVoteSet
+			candidateList := state.GetCandidateSet()
+
+			// if has candidate, add them to next epoch vote set
+			if len(candidateList) > 0 {
+				epoch.logger.Debugf("Add candidate to next epoch vote set, candidate: %v", candidateList)
+				for _, v := range newValidators.Validators {
+					vAddr := common.BytesToAddress(v.Address)
+					delete(candidateList, vAddr)
+				}
+
+				for addr := range candidateList {
+					_, exist := nextEpochVoteSet.GetVoteByAddress(addr)
+					if !exist && state.IsCandidate(addr) {
+						// calculate the net proxied balance of this candidate
+						proxiedBalance := state.GetTotalProxiedBalance(addr)
+						depositProxiedBalance := state.GetTotalDepositProxiedBalance(addr)
+						pendingRefundBalance := state.GetTotalPendingRefundBalance(addr)
+						netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
+						if netProxied.Sign() == -1 {
+							continue
+						}
+
+						// Move delegate amount first if Candidate
+						state.ForEachProxied(addr, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+							// Move Proxied Amount to Deposit Proxied Amount
+							state.SubProxiedBalanceByUser(addr, key, proxiedBalance)
+							state.AddDepositProxiedBalanceByUser(addr, key, proxiedBalance)
+							return true
+						})
+
+						pubkey := state.GetPubkey(addr)
+						pubkeyBytes := common.FromHex(pubkey)
+						if pubkey == "" || len(pubkeyBytes) != 128 {
+							continue
+						}
+						var blsPK goCrypto.BLSPubKey
+						copy(blsPK[:], pubkeyBytes)
+
+						vote := &EpochValidatorVote{
+							Address: addr,
+							Amount:  netProxied,
+							PubKey:  blsPK,
+							Salt:    "intchain",
+							TxHash:  common.Hash{},
+						}
+
+						nextEpochVoteSet.StoreVote(vote)
+					}
+				}
+			}
+
 			// Update Validators with vote
-			refundsUpdate, err := updateEpochValidatorSet(newValidators, epoch.nextEpoch.validatorVoteSet)
+			refundsUpdate, err := updateEpochValidatorSet(newValidators, nextEpochVoteSet)
 			if err != nil {
 				epoch.logger.Warn("Error changing validator set", "error", err)
 				return false, nil, err
@@ -356,7 +411,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			// Now newValidators become a real new Validators
 			// Step 3: Special Case: For the existing Validator + Candidate + no vote, Move proxied amount to deposit proxied amount  (proxied amount -> deposit proxied amount)
-			// (if has vote, proxied amount has already move to deposit proxied amount during apply reveal vote)
+			// (if has vote, proxied amount has already move to deposit proxied amount)
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
 				if state.IsCandidate(vAddr) && state.GetTotalProxiedBalance(vAddr).Sign() > 0 {
