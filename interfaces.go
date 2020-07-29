@@ -1,5 +1,5 @@
 // Package intchain defines interfaces for interacting with INT Chain.
-package ethereum
+package intchain
 
 import (
 	"context"
