@@ -335,7 +335,8 @@ func (valSet *ValidatorSet) VerifyCommit(chainID string, height uint64, commit *
 	)
 	for _, v := range valSet.Validators {
 		totalVotes.Add(totalVotes, v.VotingPower)
-
+		fmt.Printf("validator set addr %v\n", v.Address)
+		fmt.Printf("validator set addr %v\n", common.BytesToAddress(v.Address))
 		for _, addr := range aggr.Addresses {
 			if bytes.Compare(addr[:], v.Address) == 0 {
 				aggrVotes.Add(aggrVotes, v.VotingPower)
@@ -343,14 +344,15 @@ func (valSet *ValidatorSet) VerifyCommit(chainID string, height uint64, commit *
 		}
 	}
 
+	log.Debugf("VerifyCommit aggregate votes %v", aggrVotes)
 	//quorum := Loose23MajorThreshold(valSet.TotalVotingPower(), commit.Round)
 	quorum := Loose23MajorThreshold(totalVotes, commit.Round)
 	log.Debugf("Loose 2/3 major threshold  quorum %v", quorum)
-	if talliedVotingPower.Cmp(quorum) >= 0 {
+	if aggrVotes.Cmp(quorum) >= 0 {
 		return nil
 	} else {
 		return fmt.Errorf("invalid commit -- insufficient voting power: got %v, needed %v",
-			talliedVotingPower, quorum)
+			aggrVotes, quorum)
 	}
 }
 
