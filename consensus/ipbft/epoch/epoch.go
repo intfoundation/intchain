@@ -222,6 +222,7 @@ func (epoch *Epoch) ValidateNextEpoch(next *Epoch, lastHeight uint64, lastBlockT
 	myNextEpoch := epoch.ProposeNextEpoch(lastHeight, lastBlockTime)
 
 	if !myNextEpoch.Equals(next, false) {
+		log.Warnf("next epoch parameters are not expected, epoch propose next epoch: %v, next %v", myNextEpoch.String(), next.String())
 		return NextEpochNotEXPECTED
 	}
 
@@ -237,7 +238,8 @@ func (epoch *Epoch) ShouldProposeNextEpoch(curBlockHeight uint64) bool {
 		return false
 	}
 
-	shouldPropose := curBlockHeight > epoch.StartBlock && curBlockHeight != 1
+	// current block height bigger than epoch start block and not equal to 1
+	shouldPropose := curBlockHeight > epoch.StartBlock && curBlockHeight != 1 && curBlockHeight != epoch.EndBlock
 	return shouldPropose
 }
 
@@ -642,16 +644,18 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 	thisYear := epoch.Number / epochNumberPerYear
 	nextYear := thisYear + 1
 
-	log.Debugf("estimateForNextEpoch",
-		"previous epoch", epoch.previousEpoch,
-		"current epoch", epoch,
-		"last block height", lastBlockHeight,
-		"epoch start block", epoch.StartBlock)
+	log.Infof("estimateForNextEpoch, previous epoch %v, current epoch %v, last block height %v, epoch start block %v", epoch.previousEpoch, epoch, lastBlockHeight, epoch.StartBlock)
+
 	if epoch.previousEpoch != nil {
+		log.Infof("estimateForNextEpoch previous epoch, start time %v, end time %v", epoch.previousEpoch.StartTime.UnixNano(), epoch.previousEpoch.EndTime.UnixNano())
 		prevEpoch := epoch.previousEpoch
 		timePerBlockOfEpoch = prevEpoch.EndTime.Sub(prevEpoch.StartTime).Nanoseconds() / int64(prevEpoch.EndBlock-prevEpoch.StartBlock)
 	} else {
 		timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
+	}
+
+	if timePerBlockOfEpoch == 0 {
+		timePerBlockOfEpoch = 1000000000
 	}
 
 	epochLeftThisYear := epochNumberPerYear - epoch.Number%epochNumberPerYear - 1

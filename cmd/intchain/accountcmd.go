@@ -18,6 +18,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/intfoundation/intchain/params"
 	"io/ioutil"
 
 	"github.com/intfoundation/intchain/accounts"
@@ -193,7 +194,7 @@ func accountList(ctx *cli.Context) error {
 	var index int
 	for _, wallet := range stack.AccountManager().Wallets() {
 		for _, account := range wallet.Accounts() {
-			fmt.Printf("Account #%d: {%x} %s\n", index, account.Address, &account.URL)
+			fmt.Printf("Account #%d: {%v} %s\n", index, account.Address.String(), &account.URL)
 			index++
 		}
 	}
@@ -297,7 +298,12 @@ func accountCreate(ctx *cli.Context) error {
 		}
 	}
 
-	cfg.Node.ChainId = clientIdentifier
+	cfg.Node.ChainId = params.MainnetChainConfig.IntChainId
+
+	if ctx.GlobalIsSet(utils.TestnetFlag.Name) {
+		fmt.Printf("testnet: %v\n", params.TestnetChainConfig.IntChainId)
+		cfg.Node.ChainId = params.TestnetChainConfig.IntChainId
+	}
 
 	utils.SetNodeConfig(ctx, &cfg.Node)
 	scryptN, scryptP, keydir, err := cfg.Node.AccountConfig()
@@ -313,7 +319,7 @@ func accountCreate(ctx *cli.Context) error {
 	if err != nil {
 		utils.Fatalf("Failed to create account: %v", err)
 	}
-	fmt.Printf("Address: {%x}\n", address)
+	fmt.Printf("Address: %v\n", address.String())
 	return nil
 }
 

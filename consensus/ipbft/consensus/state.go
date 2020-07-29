@@ -15,6 +15,9 @@ import (
 
 	"crypto/ecdsa"
 	"crypto/sha256"
+	. "github.com/intfoundation/go-common"
+	cfg "github.com/intfoundation/go-config"
+	tmdcrypto "github.com/intfoundation/go-crypto"
 	consss "github.com/intfoundation/intchain/consensus"
 	ep "github.com/intfoundation/intchain/consensus/ipbft/epoch"
 	sm "github.com/intfoundation/intchain/consensus/ipbft/state"
@@ -25,9 +28,6 @@ import (
 	intAbi "github.com/intfoundation/intchain/intabi/abi"
 	"github.com/intfoundation/intchain/params"
 	"github.com/intfoundation/intchain/rlp"
-	. "github.com/intfoundation/go-common"
-	cfg "github.com/intfoundation/go-config"
-	tmdcrypto "github.com/intfoundation/go-crypto"
 	"math/big"
 )
 
@@ -414,7 +414,7 @@ func BytesToBig(data []byte) *big.Int {
 	return n
 }
 
-//PDBFT VRF proposer selection
+//IPBFT VRF proposer selection
 func (cs *ConsensusState) updateProposer() {
 
 	//if need to re-initialize proposer, we use VRF
@@ -437,7 +437,7 @@ func (cs *ConsensusState) updateProposer() {
 	log.Debug("update proposer", "height", cs.Height, "round", cs.Round, "idx", cs.proposer.valIndex)
 }
 
-//PDBFT VRF proposer selection
+//IPBFT VRF proposer selection
 func (cs *ConsensusState) proposerByRound(round int) *VRFProposer {
 
 	byVRF := false
@@ -1094,31 +1094,6 @@ func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet
 		//fmt.Printf("consensus state createProposalBlock ethblock=%v\n", ethBlock)
 		var commit = &types.Commit{}
 		var epochBytes []byte
-
-		// After Reveal vote end height + 1, next epoch validator will be updated at end of block insert
-		// at height + 2, we should put the new epoch bytes into New Block
-		//if cs.Height == cs.Epoch.GetRevealVoteEndHeight()+2 {
-		//	fmt.Printf("createProposalBlock get next epoch\n")
-		//	// Save the next epoch data into block and tell the main chain
-		//	nextEp := cs.Epoch.GetNextEpoch()
-		//	if nextEp == nil {
-		//		panic("missing next epoch after reveal vote")
-		//	}
-		//	epochBytes = nextEp.Bytes()
-		//} else if cs.Height == cs.Epoch.StartBlock || cs.Height == 1 {
-		//	fmt.Printf("createProposalBlock start height %v\n", cs.Epoch.StartBlock)
-		//	// We're save the epoch data into block so that it'll be sent to the main chain.
-		//	// When block height equal to first block of Chain or Epoch
-		//	epochBytes = cs.Epoch.Bytes()
-		//} else {
-		//	shouldProposeEpoch := cs.Epoch.ShouldProposeNextEpoch(cs.Height)
-		//	fmt.Printf("createProposalBlock should propose next epoch %v\n", shouldProposeEpoch)
-		//	if shouldProposeEpoch {
-		//		lastHeight := cs.backend.ChainReader().CurrentBlock().Number().Uint64()
-		//		lastBlockTime := time.Unix(int64(cs.backend.ChainReader().CurrentBlock().Time()), 0)
-		//		epochBytes = cs.Epoch.ProposeNextEpoch(lastHeight, lastBlockTime).Bytes()
-		//	}
-		//}
 
 		// Only when height reach epoch end block, we should put the new epoch bytes into new block
 		if cs.Height == cs.Epoch.EndBlock {

@@ -1,5 +1,15 @@
 # INT Chain
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/intfoundation/intchain)](https://goreportcard.com/report/github.com/intfoundation/intchain)
+![INTChain License](https://img.shields.io/github/license/intfoundation/intchain)
+![Go](https://github.com/intfoundation/intchain/workflows/Go/badge.svg)
+![Top Languages](https://img.shields.io/github/languages/top/intfoundation/intchain?color=blueviolet)
+![Languages Count](https://img.shields.io/github/languages/count/intfoundation/intchain?color=green)
+![INTChain Counter](https://img.shields.io/github/search/intfoundation/intchain/intchain)
+![INTChain Size](https://img.shields.io/github/repo-size/intfoundation/intchain?color=ff69b4)
+![Go Version](https://img.shields.io/github/go-mod/go-version/intfoundation/intchain?color=yellow)
+![Last Commit](https://img.shields.io/github/last-commit/intfoundation/intchain)
+
 ![intchain](https://raw.githubusercontent.com/intfoundation/intchain/master/docs/intchain.jpg)
 
 INT Chain is the world's first bottom up new-generation blockchain of things (BoT) communication standard and base application platform. The ecosystem is specifically designed for easy integration with any IoT protocol.
@@ -11,7 +21,7 @@ To both improve and encourage device interconnectivity, we have built an economy
 
 ### Latest Version
 
-The latest INT Chain version for Testnet is [v4.0.2](https://github.com/intfoundation/intchain/releases/latest)
+The latest INT Chain version for Testnet is v4.0.5
 
 ### Install `Go`
 

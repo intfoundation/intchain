@@ -2,6 +2,7 @@ package state
 
 import (
 	"errors"
+	"fmt"
 	"github.com/intfoundation/intchain/consensus"
 	ep "github.com/intfoundation/intchain/consensus/ipbft/epoch"
 	"github.com/intfoundation/intchain/consensus/ipbft/types"
@@ -79,7 +80,6 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 		if epochInBlock.Number == currentEpoch.Number+1 {
 			//fmt.Printf("update local epoch 1\n")
 			// Save the next epoch
-			//if block.NumberU64() == currentEpoch.GetVoteStartHeight() {
 			if block.NumberU64() == currentEpoch.StartBlock+1 || block.NumberU64() == 2 {
 				//fmt.Printf("update local epoch block number %v, current epoch start block %v\n", block.NumberU64(), currentEpoch.StartBlock)
 				// Propose next epoch
@@ -87,7 +87,6 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 				epochInBlock.Status = ep.EPOCH_VOTED_NOT_SAVED
 				epochInBlock.SetRewardScheme(currentEpoch.GetRewardScheme())
 				currentEpoch.SetNextEpoch(epochInBlock)
-				//} else if block.NumberU64() == currentEpoch.GetRevealVoteEndHeight()+2 {
 			} else if block.NumberU64() == currentEpoch.EndBlock {
 				//fmt.Printf("update local epoch 2\n")
 				// Finalize next epoch
@@ -105,6 +104,7 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 
 			// Update the previous epoch End Time
 			if currentEpoch.Number > 0 {
+				currentEpoch.GetPreviousEpoch().EndTime = epochInBlock.StartTime // update previous epoch end time to the state to avoid different node epoch end time mismatch
 				ep.UpdateEpochEndTime(currentEpoch.GetDB(), currentEpoch.Number-1, epochInBlock.StartTime)
 			}
 		}
@@ -114,11 +114,10 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 func autoStartMining(bc *core.BlockChain, block *ethTypes.Block) {
 	eng := bc.Engine().(consensus.IPBFT)
 	currentEpoch := eng.GetEpoch()
-	// After Reveal Vote End stage, we should able to calculate the new validator
-	//if block.NumberU64() == currentEpoch.GetRevealVoteEndHeight()+1 {
 
-	// At one block before epoch end block, we should able to
-	if block.NumberU64() == (currentEpoch.EndBlock - 1) {
+	// At one block before epoch end block, we should able to calculate the new validator
+	if block.NumberU64() == currentEpoch.EndBlock-1 {
+		fmt.Printf("auto start mining %v\n", block.Number())
 		// Re-Calculate the next epoch validators
 		nextEp := currentEpoch.GetNextEpoch()
 		state, _ := bc.State()
@@ -130,6 +129,7 @@ func autoStartMining(bc *core.BlockChain, block *ethTypes.Block) {
 		nextEp.Validators = nextValidators
 
 		if nextValidators.HasAddress(eng.PrivateValidator().Bytes()) && !eng.IsStarted() {
+			fmt.Printf("auto start mining, post start mining event")
 			bc.PostChainEvents([]interface{}{core.StartMiningEvent{}}, nil)
 		}
 	}

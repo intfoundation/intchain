@@ -242,7 +242,7 @@ func New(mode SyncMode, stateDb intdb.Database, mux *event.TypeMux, chain BlockC
 // In addition, during the state download phase of fast synchronisation the number
 // of processed and the total number of known states are also returned. Otherwise
 // these are zero.
-func (d *Downloader) Progress() ethereum.SyncProgress {
+func (d *Downloader) Progress() intchain.SyncProgress {
 	// Lock the current stats and return the progress
 	d.syncStatsLock.RLock()
 	defer d.syncStatsLock.RUnlock()
@@ -254,7 +254,7 @@ func (d *Downloader) Progress() ethereum.SyncProgress {
 	case FastSync:
 		current = d.blockchain.CurrentFastBlock().NumberU64()
 	}
-	return ethereum.SyncProgress{
+	return intchain.SyncProgress{
 		StartingBlock: d.syncStatsChainOrigin,
 		CurrentBlock:  current,
 		HighestBlock:  d.syncStatsChainHeight,

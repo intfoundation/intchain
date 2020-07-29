@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package p2p implements the Ethereum p2p network protocols.
+// Package p2p implements the INT Chain p2p network protocols.
 package p2p
 
 import (
@@ -106,7 +106,7 @@ type Config struct {
 	LocalValidators []P2PValidator
 
 	// Validators set in all chains
-	// Should find nodes for all of them to support bls transport in PDBFT module
+	// Should find nodes for all of them to support bls transport in IPBFT module
 	Validators map[P2PValidator]*P2PValidatorNodeInfo
 
 	// Connectivity can be restricted to certain IP networks.

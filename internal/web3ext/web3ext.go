@@ -442,8 +442,8 @@ web3._extend({
 			inputFormatter: [web3._extend.formatters.inputBlockNumberFormatter, web3._extend.utils.toHex]
 		}),
 		new web3._extend.Method({
-			name: 'getFullBalance',
-			call: 'eth_getFullBalance',
+			name: 'getBalanceDetail',
+			call: 'eth_getBalanceDetail',
 			params: 3,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputDefaultBlockNumberFormatter, null]
 		}),
@@ -507,8 +507,8 @@ web3._extend({
 			inputFormatter: [web3._extend.formatters.inputBlockNumberFormatter, web3._extend.utils.toHex]
 		}),
 		new web3._extend.Method({
-			name: 'getFullBalance',
-			call: 'int_getFullBalance',
+			name: 'getBalanceDetail',
+			call: 'int_getBalanceDetail',
 			params: 3,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputDefaultBlockNumberFormatter, null]
 		}),
