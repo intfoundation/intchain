@@ -28,8 +28,8 @@ const (
 	EPOCH_VOTED_NOT_SAVED           // value --> 2
 	EPOCH_SAVED                     // value --> 3
 
-	MinimumValidatorsSize = 13
-	MaximumValidatorsSize = 28 // TODO the max validator size will increate to 100 in the future
+	MinimumValidatorsSize = 1
+	MaximumValidatorsSize = 2 // TODO the max validator size will increate to 100 in the future
 
 	epochKey       = "Epoch:%v"
 	latestEpochKey = "LatestEpoch"
