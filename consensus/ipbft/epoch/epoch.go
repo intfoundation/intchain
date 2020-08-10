@@ -3,6 +3,7 @@ package epoch
 import (
 	"errors"
 	"fmt"
+	goCrypto "github.com/intfoundation/go-crypto"
 	dbm "github.com/intfoundation/go-db"
 	"github.com/intfoundation/go-wire"
 	"github.com/intfoundation/intchain/common"
@@ -28,7 +29,7 @@ const (
 	EPOCH_SAVED                     // value --> 3
 
 	MinimumValidatorsSize = 13
-	MaximumValidatorsSize = 28 // TODO the max validator size will increate to 100 in the future
+	MaximumValidatorsSize = 52 // TODO the max validator size will increate to 100 in the future
 
 	epochKey       = "Epoch:%v"
 	latestEpochKey = "LatestEpoch"
@@ -238,8 +239,8 @@ func (epoch *Epoch) ShouldProposeNextEpoch(curBlockHeight uint64) bool {
 		return false
 	}
 
-	// current block height bigger than epoch start block and not equal to 1
-	shouldPropose := curBlockHeight > epoch.StartBlock && curBlockHeight != 1 && curBlockHeight != epoch.EndBlock
+	// current block height bigger than epoch start block and less than the epoch end block  and not equal to 1
+	shouldPropose := curBlockHeight > epoch.StartBlock && curBlockHeight < epoch.EndBlock && curBlockHeight != 1
 	return shouldPropose
 }
 
@@ -299,29 +300,6 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 	if height == epoch.EndBlock {
 		epoch.nextEpoch = epoch.GetNextEpoch()
 		if epoch.nextEpoch != nil {
-			// Step 0: Give the Epoch Reward
-			//currentEpochNumber := epoch.Number
-			//delegateAddress := common.Address{}
-			//for rewardAddress := range state.GetRewardSet() {
-			//	deleAddr := state.GetDelegateRewardAddress(rewardAddress)
-			//	for addr := range deleAddr {
-			//		fmt.Printf("ShouldEnterNewEpoch GetDelegateRewardAddress address %v\n", addr)
-			//		currentAddrReward := state.GetRewardBalanceByDelegateAddress(rewardAddress, addr)
-			//		if currentAddrReward.Sign() == 1 {
-			//			state.SubRewardBalanceByDelegateAddress(rewardAddress, addr, currentAddrReward)
-			//			//state.AddBalance(rewardAddress, currentEpochReward)
-			//
-			//			// add current epoch reward to the available balance of the state available
-			//			state.AddAvailableRewardBalance(rewardAddress, currentAddrReward)
-			//		}
-			//	}
-			//
-			//	// Check Remaining Reward Balance
-			//	if state.GetTotalRewardBalance(rewardAddress).Sign() == 0 {
-			//		state.ClearRewardSetByAddress(rewardAddress)
-			//	}
-			//}
-
 			// Step 1: Refund the Delegate (subtract the pending refund / deposit proxied amount)
 			for refundAddress := range state.GetDelegateAddressRefundSet() {
 				state.ForEachProxied(refundAddress, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
@@ -343,7 +321,8 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			// Step 2: Sort the Validators and potential Validators (with success vote) base on deposit amount + deposit proxied amount
 			// Step 2.1: Update deposit amount base on the vote (Add/Substract deposit amount base on vote)
-			// Step 2.2: Sort the address with deposit + deposit proxied amount
+			// Step 2.2: Add candidate to next epoch validator vote set
+			// Step 2.3: Sort the address with deposit + deposit proxied amount
 			var (
 				refunds []*tmTypes.RefundValidatorAmount
 			)
@@ -351,26 +330,85 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			newValidators := epoch.Validators.Copy()
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
-				vObj := state.GetOrNewStateObject(vAddr)
-				if !vObj.IsForbidden() {
-					totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
-					// Voting Power = Proxied amount + Deposit amount
-					newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
-					if newVotingPower.Sign() == 0 {
-						newValidators.Remove(v.Address)
-					} else {
-						v.VotingPower = newVotingPower
-					}
-				} else {
-					// if forbidden then remove form the validatorset
+				//vObj := state.GetOrNewStateObject(vAddr)
+				// remove forbidden
+				//if !vObj.IsForbidden() {
+				totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
+				// Voting Power = Proxied amount + Deposit amount
+				newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
+				if newVotingPower.Sign() == 0 {
 					newValidators.Remove(v.Address)
+				} else {
+					v.VotingPower = newVotingPower
+				}
+				//} else {
+				// if forbidden or not candidate, then remove form the validator set
+				//	newValidators.Remove(v.Address)
+				//
+				//	refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: v.VotingPower, Voteout: false})
+				//}
+			}
 
-					refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: v.VotingPower, Voteout: false})
+			nextEpochVoteSet := epoch.nextEpoch.validatorVoteSet
+			candidateList := state.GetCandidateSet()
+
+			if nextEpochVoteSet == nil {
+				fmt.Printf("Should enter new epoch, next epoch vote set is nil, %v\n", nextEpochVoteSet)
+			}
+
+			// if has candidate and next epoch vote set not nil, add them to next epoch vote set
+			if len(candidateList) > 0 && nextEpochVoteSet != nil {
+				epoch.logger.Debugf("Add candidate to next epoch vote set, candidate: %v", candidateList)
+				for _, v := range newValidators.Validators {
+					vAddr := common.BytesToAddress(v.Address)
+					delete(candidateList, vAddr)
+				}
+				fmt.Printf("Should enter new epoch, next epoch %v\n", epoch.nextEpoch)
+				fmt.Printf("Should enter new epoch, next epoch vote set %v\n", epoch.nextEpoch.validatorVoteSet)
+				for addr := range candidateList {
+					_, exist := nextEpochVoteSet.GetVoteByAddress(addr)
+					if !exist && state.IsCandidate(addr) {
+						// calculate the net proxied balance of this candidate
+						proxiedBalance := state.GetTotalProxiedBalance(addr)
+						depositProxiedBalance := state.GetTotalDepositProxiedBalance(addr)
+						pendingRefundBalance := state.GetTotalPendingRefundBalance(addr)
+						netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
+
+						if netProxied.Sign() == -1 {
+							continue
+						}
+
+						// Move delegate amount first if Candidate
+						state.ForEachProxied(addr, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+							// Move Proxied Amount to Deposit Proxied Amount
+							state.SubProxiedBalanceByUser(addr, key, proxiedBalance)
+							state.AddDepositProxiedBalanceByUser(addr, key, proxiedBalance)
+							return true
+						})
+
+						pubkey := state.GetPubkey(addr)
+						pubkeyBytes := common.FromHex(pubkey)
+						if pubkey == "" || len(pubkeyBytes) != 128 {
+							continue
+						}
+						var blsPK goCrypto.BLSPubKey
+						copy(blsPK[:], pubkeyBytes)
+
+						vote := &EpochValidatorVote{
+							Address: addr,
+							Amount:  netProxied,
+							PubKey:  blsPK,
+							Salt:    "intchain",
+							TxHash:  common.Hash{},
+						}
+
+						nextEpochVoteSet.StoreVote(vote)
+					}
 				}
 			}
 
 			// Update Validators with vote
-			refundsUpdate, err := updateEpochValidatorSet(newValidators, epoch.nextEpoch.validatorVoteSet)
+			refundsUpdate, err := updateEpochValidatorSet(newValidators, nextEpochVoteSet)
 			if err != nil {
 				epoch.logger.Warn("Error changing validator set", "error", err)
 				return false, nil, err
@@ -379,7 +417,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			// Now newValidators become a real new Validators
 			// Step 3: Special Case: For the existing Validator + Candidate + no vote, Move proxied amount to deposit proxied amount  (proxied amount -> deposit proxied amount)
-			// (if has vote, proxied amount has already move to deposit proxied amount during apply reveal vote)
+			// (if has vote, proxied amount has already move to deposit proxied amount)
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
 				if state.IsCandidate(vAddr) && state.GetTotalProxiedBalance(vAddr).Sign() > 0 {
@@ -500,7 +538,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 				// Add the new validator
 				added := validators.Add(tmTypes.NewValidator(v.Address[:], v.PubKey, v.Amount))
 				if !added {
-					return nil, fmt.Errorf("Failed to add new validator %x with voting power %d", v.Address, v.Amount)
+					return nil, fmt.Errorf("Failed to add new validator %v with voting power %d", v.Address, v.Amount)
 				}
 				newValSize++
 			} else if v.Amount.Sign() == 0 {
@@ -508,7 +546,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 				// Remove the Validator
 				_, removed := validators.Remove(validator.Address)
 				if !removed {
-					return nil, fmt.Errorf("Failed to remove validator %x", validator.Address)
+					return nil, fmt.Errorf("Failed to remove validator %v", validator.Address)
 				}
 			} else {
 				//refund if new amount less than the voting power
@@ -521,7 +559,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 				validator.VotingPower = v.Amount
 				updated := validators.Update(validator)
 				if !updated {
-					return nil, fmt.Errorf("Failed to update validator %x with voting power %d", validator.Address, v.Amount)
+					return nil, fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
 				}
 			}
 		}

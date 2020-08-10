@@ -386,6 +386,7 @@ func (sb *backend) verifyCommittedSeals(chain consensus.ChainReader, header *typ
 	}
 
 	if err = valSet.VerifyCommit(tdmExtra.ChainID, tdmExtra.Height, seenCommit); err != nil {
+		sb.logger.Errorf("verifyCommittedSeals verify commit err %v", err)
 		return errInvalidSignature
 	}
 

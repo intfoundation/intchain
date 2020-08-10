@@ -1081,7 +1081,7 @@ func (cs *ConsensusState) isProposalComplete() bool {
 // NOTE: keep it side-effect free for clarity.
 func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet) {
 
-	//here we wait for ethereum block to propose
+	//here we wait for intchain block to propose
 	if cs.blockFromMiner != nil {
 
 		if cs.Height != cs.blockFromMiner.NumberU64() {
@@ -1090,8 +1090,8 @@ func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet
 			return nil, nil
 		}
 
-		ethBlock := cs.blockFromMiner
-		//fmt.Printf("consensus state createProposalBlock ethblock=%v\n", ethBlock)
+		intBlock := cs.blockFromMiner
+		//fmt.Printf("consensus state createProposalBlock intBlock=%v\n", intBlock)
 		var commit = &types.Commit{}
 		var epochBytes []byte
 
@@ -1126,7 +1126,7 @@ func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet
 
 		// retrieve TX3ProofData for TX4
 		var tx3ProofData []*ethTypes.TX3ProofData
-		txs := ethBlock.Transactions()
+		txs := intBlock.Transactions()
 		for _, tx := range txs {
 			if intAbi.IsIntChainContractAddr(tx.To()) {
 				data := tx.Data()
@@ -1150,7 +1150,7 @@ func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet
 			}
 		}
 
-		return types.MakeBlock(cs.Height, cs.state.TdmExtra.ChainID, commit, ethBlock,
+		return types.MakeBlock(cs.Height, cs.state.TdmExtra.ChainID, commit, intBlock,
 			val.Hash(), cs.Epoch.Number, epochBytes,
 			tx3ProofData, 65536)
 	} else {
@@ -1802,16 +1802,37 @@ func (cs *ConsensusState) blsVerifySignAggr(signAggr *types.SignAggr) (bool, err
 			return false, fmt.Errorf(Fmt("validators are not matched, consensus validators:%v, signAggr validators:%v"), validators.Validators, signAggr.BitArray)
 		}
 	*/
-	powerSum, err := validators.TalliedVotingPower(bitMap)
-	if err != nil {
-		cs.logger.Info("tallied voting power")
-		return false, err
+
+	aggr, e := validators.GetAggrPubKeyAndAddress(bitMap)
+	if e != nil {
+		return false, e
 	}
 
-	quorum := types.Loose23MajorThreshold(validators.TotalVotingPower(), signAggr.Round)
+	var (
+		totalVotes = big.NewInt(0)
+		aggrVotes  = big.NewInt(0)
+	)
+	for _, v := range validators.Validators {
+		totalVotes.Add(totalVotes, v.VotingPower)
+
+		for _, addr := range aggr.Addresses {
+			if bytes.Compare(addr[:], v.Address) == 0 {
+				aggrVotes.Add(aggrVotes, v.VotingPower)
+			}
+		}
+	}
+
+	//powerSum, err := validators.TalliedVotingPower(bitMap)
+	//if err != nil {
+	//	cs.logger.Info("tallied voting power")
+	//	return false, err
+	//}
+
+	//quorum := types.Loose23MajorThreshold(validators.TotalVotingPower(), signAggr.Round)
+	quorum := types.Loose23MajorThreshold(totalVotes, signAggr.Round)
 
 	var maj23 bool
-	if powerSum.Cmp(quorum) >= 0 {
+	if aggrVotes.Cmp(quorum) >= 0 {
 		maj23 = true
 	} else {
 		maj23 = false
@@ -1830,7 +1851,7 @@ func (cs *ConsensusState) blsVerifySignAggr(signAggr *types.SignAggr) (bool, err
 		Type:    signAggr.Type,
 	}
 
-	if !aggrPubKey.VerifyBytes(types.SignBytes(signAggr.ChainID, vote), (signAggr.SignAggr())) {
+	if !aggrPubKey.VerifyBytes(types.SignBytes(signAggr.ChainID, vote), signAggr.SignAggr()) {
 		cs.logger.Info("Invalid aggregate signature")
 		return false, errors.New("Invalid aggregate signature")
 	}

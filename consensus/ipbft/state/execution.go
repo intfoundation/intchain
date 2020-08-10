@@ -115,9 +115,10 @@ func autoStartMining(bc *core.BlockChain, block *ethTypes.Block) {
 	eng := bc.Engine().(consensus.IPBFT)
 	currentEpoch := eng.GetEpoch()
 
+	fmt.Printf("auto start mining, current epoch start block height %v\n", currentEpoch.StartBlock)
 	// At one block before epoch end block, we should able to calculate the new validator
 	if block.NumberU64() == currentEpoch.EndBlock-1 {
-		fmt.Printf("auto start mining %v\n", block.Number())
+		fmt.Printf("auto start mining first %v\n", block.Number())
 		// Re-Calculate the next epoch validators
 		nextEp := currentEpoch.GetNextEpoch()
 		state, _ := bc.State()
@@ -129,7 +130,7 @@ func autoStartMining(bc *core.BlockChain, block *ethTypes.Block) {
 		nextEp.Validators = nextValidators
 
 		if nextValidators.HasAddress(eng.PrivateValidator().Bytes()) && !eng.IsStarted() {
-			fmt.Printf("auto start mining, post start mining event")
+			fmt.Printf("auto start mining first, post start mining event")
 			bc.PostChainEvents([]interface{}{core.StartMiningEvent{}}, nil)
 		}
 	}

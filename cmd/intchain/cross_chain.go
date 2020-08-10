@@ -799,7 +799,7 @@ func (cch *CrossChainHelper) GetAllTX3ProofData() []*types.TX3ProofData {
 func MustGetIntChainFromNode(node *node.Node) *intprotocol.IntChain {
 	intChain, err := getIntChainFromNode(node)
 	if err != nil {
-		panic("getEthereumFromNode error: " + err.Error())
+		panic("getIntChainFromNode error: " + err.Error())
 	}
 	return intChain
 }
