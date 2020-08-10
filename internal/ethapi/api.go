@@ -50,7 +50,7 @@ import (
 
 const (
 	defaultGasPrice          = params.GWei
-	updateValidatorThreshold = 28
+	updateValidatorThreshold = 52
 )
 
 // PublicINTChainAPI provides an API to access intchain related information.
@@ -2449,7 +2449,7 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 	if currentEpochVoteSet == nil {
 		update = true
 	} else {
-		// if current validator size less than updateValidatorThreshold and the netProxied is bigger then one of the current validator voting power
+		// if current validator size bigger than updateValidatorThreshold and the netProxied is bigger then one of the current validator voting power
 		if len(currentEpochVoteSet.Votes) >= updateValidatorThreshold {
 			for _, val := range currentEpochVoteSet.Votes {
 				// TODO whether need compare
