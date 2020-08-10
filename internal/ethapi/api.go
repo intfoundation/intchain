@@ -1627,7 +1627,7 @@ func (s *PublicNetAPI) Version() string {
 }
 
 var (
-	minimumRegisterAmount = math.MustParseBig256("10000000000000000000000") // 10,000 * e18
+	minimumRegisterAmount = math.MustParseBig256("1000000000000000000") // 1 * e18
 
 	maxDelegationAddresses = 1000
 
