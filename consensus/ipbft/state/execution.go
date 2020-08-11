@@ -115,7 +115,6 @@ func autoStartMining(bc *core.BlockChain, block *ethTypes.Block) {
 	eng := bc.Engine().(consensus.IPBFT)
 	currentEpoch := eng.GetEpoch()
 
-	fmt.Printf("auto start mining, current epoch start block height %v\n", currentEpoch.StartBlock)
 	// At one block before epoch end block, we should able to calculate the new validator
 	if block.NumberU64() == currentEpoch.EndBlock-1 {
 		fmt.Printf("auto start mining first %v\n", block.Number())
