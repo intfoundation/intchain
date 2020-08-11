@@ -358,11 +358,12 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			// if has candidate and next epoch vote set not nil, add them to next epoch vote set
 			if len(candidateList) > 0 && nextEpochVoteSet != nil {
-				epoch.logger.Debugf("Add candidate to next epoch vote set, candidate: %v", candidateList)
+				epoch.logger.Debugf("Add candidate to next epoch vote set before, candidate: %v", candidateList)
 				for _, v := range newValidators.Validators {
 					vAddr := common.BytesToAddress(v.Address)
 					delete(candidateList, vAddr)
 				}
+				epoch.logger.Debugf("Add candidate to next epoch vote set after, candidate: %v", candidateList)
 				fmt.Printf("Should enter new epoch, next epoch %v\n", epoch.nextEpoch)
 				fmt.Printf("Should enter new epoch, next epoch vote set %v\n", epoch.nextEpoch.validatorVoteSet)
 				for addr := range candidateList {
