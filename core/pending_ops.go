@@ -46,9 +46,9 @@ func ApplyOp(op types.PendingOp, bc *BlockChain, cch CrossChainHelper) error {
 			}
 
 			// Start the Engine if we are in the new validators
-			if op.NewValidators.HasAddress(eng.PrivateValidator().Bytes()) && !eng.IsStarted() {
-				bc.PostChainEvents([]interface{}{StartMiningEvent{}}, nil)
-			}
+			//if op.NewValidators.HasAddress(eng.PrivateValidator().Bytes()) && !eng.IsStarted() {
+			//	bc.PostChainEvents([]interface{}{StartMiningEvent{}}, nil)
+			//}
 
 			eng.SetEpoch(nextEp)
 			cch.ChangeValidators(op.ChainId) //must after eng.SetEpoch(nextEp), it uses epoch just set
