@@ -20,11 +20,13 @@ func (self *StateDB) MarkAddressCandidate(addr common.Address) {
 }
 
 func (self *StateDB) ClearCandidateSetByAddress(addr common.Address) {
+	fmt.Printf("candidate set bug, clear candidate set by address, %v\n", self.candidateSet)
 	delete(self.candidateSet, addr)
 	self.candidateSetDirty = true
 }
 
 func (self *StateDB) GetCandidateSet() CandidateSet {
+	fmt.Printf("candidate set bug, get candidate set 1, %v\n", self.candidateSet)
 	if len(self.candidateSet) != 0 {
 		return self.candidateSet
 	}
@@ -42,10 +44,12 @@ func (self *StateDB) GetCandidateSet() CandidateSet {
 		}
 		self.candidateSet = value
 	}
+	fmt.Printf("candidate set bug, get candidate set 2, %v\n", value)
 	return value
 }
 
 func (self *StateDB) commitCandidateSet() {
+	fmt.Printf("candidate set bug, commit candidate set, %v\n", self.candidateSet)
 	data, err := rlp.EncodeToBytes(self.candidateSet)
 	if err != nil {
 		panic(fmt.Errorf("can't encode candidate set : %v", err))

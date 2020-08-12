@@ -500,7 +500,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 				// Add the new validator
 				added := validators.Add(tmTypes.NewValidator(v.Address[:], v.PubKey, v.Amount))
 				if !added {
-					return nil, fmt.Errorf("Failed to add new validator %x with voting power %d", v.Address, v.Amount)
+					return nil, fmt.Errorf("Failed to add new validator %v with voting power %d", v.Address, v.Amount)
 				}
 				newValSize++
 			} else if v.Amount.Sign() == 0 {
@@ -508,7 +508,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 				// Remove the Validator
 				_, removed := validators.Remove(validator.Address)
 				if !removed {
-					return nil, fmt.Errorf("Failed to remove validator %x", validator.Address)
+					return nil, fmt.Errorf("Failed to remove validator %v", validator.Address)
 				}
 			} else {
 				//refund if new amount less than the voting power
@@ -521,7 +521,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 				validator.VotingPower = v.Amount
 				updated := validators.Update(validator)
 				if !updated {
-					return nil, fmt.Errorf("Failed to update validator %x with voting power %d", validator.Address, v.Amount)
+					return nil, fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
 				}
 			}
 		}

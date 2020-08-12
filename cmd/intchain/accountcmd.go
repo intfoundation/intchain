@@ -190,7 +190,14 @@ nodes.
 )
 
 func accountList(ctx *cli.Context) error {
-	stack, _ := makeConfigNode(ctx, clientIdentifier)
+	ChainId := params.MainnetChainConfig.IntChainId
+
+	if ctx.GlobalIsSet(utils.TestnetFlag.Name) {
+		fmt.Printf("testnet: %v\n", params.TestnetChainConfig.IntChainId)
+		ChainId = params.TestnetChainConfig.IntChainId
+	}
+
+	stack, _ := makeConfigNode(ctx, ChainId)
 	var index int
 	for _, wallet := range stack.AccountManager().Wallets() {
 		for _, account := range wallet.Accounts() {
