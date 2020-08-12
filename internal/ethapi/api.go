@@ -1961,7 +1961,7 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	// mark address candidate
 	state.MarkAddressCandidate(from)
 
-	verror = updateNextEpochValidatorVoteSet(tx, state, bc, from)
+	verror = updateNextEpochValidatorVoteSet(tx, state, bc, from, ops)
 	if verror != nil {
 		return verror
 	}
@@ -2110,7 +2110,7 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	// Add Balance to Candidate's Proxied Balance
 	state.AddProxiedBalanceByUser(args.Candidate, from, amount)
 
-	verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate)
+	verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate, ops)
 	if verror != nil {
 		return verror
 	}
@@ -2424,7 +2424,7 @@ func updateValidation(bc *core.BlockChain) error {
 	return nil
 }
 
-func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, candidate common.Address) error {
+func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, candidate common.Address, ops *types.PendingOps) error {
 	var update bool
 	ep, err := getEpoch(bc)
 	if err != nil {
@@ -2473,37 +2473,26 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 			return true
 		})
 
-		voteSet := ep.GetNextEpoch().GetEpochValidatorVoteSet()
-		if voteSet == nil {
-			voteSet = epoch.NewEpochValidatorVoteSet()
-		}
-
 		var pubkey string
-		vote, exist := voteSet.GetVoteByAddress(candidate)
+		pubkey = state.GetPubkey(candidate)
+		pubkeyBytes := common.FromHex(pubkey)
+		if pubkey == "" || len(pubkeyBytes) != 128 {
+			return errors.New("wrong format of required field 'pub_key'")
+		}
+		var blsPK goCrypto.BLSPubKey
+		copy(blsPK[:], pubkeyBytes)
 
-		if exist {
-			vote.Amount = netProxied
-		} else {
-			pubkey = state.GetPubkey(candidate)
-			pubkeyBytes := common.FromHex(pubkey)
-			if pubkey == "" || len(pubkeyBytes) != 128 {
-				return errors.New("wrong format of required field 'pub_key'")
-			}
-			var blsPK goCrypto.BLSPubKey
-			copy(blsPK[:], pubkeyBytes)
-
-			vote = &epoch.EpochValidatorVote{
-				Address: candidate,
-				Amount:  netProxied,
-				PubKey:  blsPK,
-				Salt:    "intchain",
-				TxHash:  tx.Hash(),
-			}
-
-			voteSet.StoreVote(vote)
+		op := types.UpdateNextEpochOp{
+			From:   candidate,
+			PubKey: blsPK,
+			Amount: netProxied,
+			Salt:   "intchain",
+			TxHash: tx.Hash(),
 		}
 
-		epoch.SaveEpochVoteSet(ep.GetDB(), ep.GetNextEpoch().Number, voteSet)
+		if ok := ops.Append(&op); !ok {
+			return fmt.Errorf("pending ops conflict: %v", op)
+		}
 	}
 
 	return nil

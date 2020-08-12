@@ -2,8 +2,8 @@ package types
 
 import (
 	"fmt"
-	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/go-crypto"
+	"github.com/intfoundation/intchain/common"
 	"math/big"
 )
 
@@ -138,4 +138,20 @@ func (op *RevealVoteOp) Conflict(op1 PendingOp) bool {
 
 func (op *RevealVoteOp) String() string {
 	return fmt.Sprintf("RevealVote")
+}
+
+type UpdateNextEpochOp struct {
+	From   common.Address
+	PubKey crypto.PubKey
+	Amount *big.Int
+	Salt   string
+	TxHash common.Hash
+}
+
+func (op *UpdateNextEpochOp) Conflict(op1 PendingOp) bool {
+	return false
+}
+
+func (op *UpdateNextEpochOp) String() string {
+	return fmt.Sprintf("UpdateNextEpoch")
 }

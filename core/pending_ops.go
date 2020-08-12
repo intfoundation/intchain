@@ -34,6 +34,10 @@ func ApplyOp(op types.PendingOp, bc *BlockChain, cch CrossChainHelper) error {
 		ep := bc.engine.(consensus.IPBFT).GetEpoch()
 		ep = ep.GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
 		return cch.RevealVote(ep, op.From, op.Pubkey, op.Amount, op.Salt, op.TxHash)
+	case *types.UpdateNextEpochOp:
+		ep := bc.engine.(consensus.IPBFT).GetEpoch()
+		ep = ep.GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
+		return cch.UpdateNextEpoch(ep, op.From, op.PubKey, op.Amount, op.Salt, op.TxHash)
 	case *types.SaveDataToMainChainOp:
 		return cch.SaveChildChainProofDataToMainChain(op.Data)
 	case *tmTypes.SwitchEpochOp:

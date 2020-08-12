@@ -277,6 +277,34 @@ func (cch *CrossChainHelper) RevealVote(ep *epoch.Epoch, from common.Address, pu
 	return nil
 }
 
+func (cch *CrossChainHelper) UpdateNextEpoch(ep *epoch.Epoch, from common.Address, pubkey crypto.PubKey, depositAmount *big.Int, salt string, txHash common.Hash) error {
+	voteSet := ep.GetNextEpoch().GetEpochValidatorVoteSet()
+	if voteSet == nil {
+		voteSet = epoch.NewEpochValidatorVoteSet()
+	}
+
+	vote, exist := voteSet.GetVoteByAddress(from)
+
+	if exist {
+		vote.Amount = depositAmount
+		vote.TxHash = txHash
+	} else {
+		vote = &epoch.EpochValidatorVote{
+			Address: from,
+			PubKey:  pubkey,
+			Amount:  depositAmount,
+			Salt:    "intchain",
+			TxHash:  txHash,
+		}
+
+		voteSet.StoreVote(vote)
+	}
+
+	// Save the VoteSet
+	epoch.SaveEpochVoteSet(ep.GetDB(), ep.GetNextEpoch().Number, voteSet)
+	return nil
+}
+
 func (cch *CrossChainHelper) GetHeightFromMainChain() *big.Int {
 	ethereum := MustGetIntChainFromNode(chainMgr.mainChain.IntNode)
 	return ethereum.BlockChain().CurrentBlock().Number()

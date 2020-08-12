@@ -2,14 +2,14 @@ package core
 
 import (
 	"errors"
+	"github.com/intfoundation/go-crypto"
+	dbm "github.com/intfoundation/go-db"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/consensus/ipbft/epoch"
 	"github.com/intfoundation/intchain/core/state"
 	"github.com/intfoundation/intchain/core/types"
 	intAbi "github.com/intfoundation/intchain/intabi/abi"
 	"github.com/intfoundation/intchain/intclient"
-	"github.com/intfoundation/go-crypto"
-	dbm "github.com/intfoundation/go-db"
 	"math/big"
 	"sync"
 )
@@ -39,6 +39,7 @@ type CrossChainHelper interface {
 
 	VoteNextEpoch(ep *epoch.Epoch, from common.Address, voteHash common.Hash, txHash common.Hash) error
 	RevealVote(ep *epoch.Epoch, from common.Address, pubkey crypto.PubKey, depositAmount *big.Int, salt string, txHash common.Hash) error
+	UpdateNextEpoch(ep *epoch.Epoch, from common.Address, pubkey crypto.PubKey, depositAmount *big.Int, salt string, txHash common.Hash) error
 
 	GetHeightFromMainChain() *big.Int
 	GetEpochFromMainChain() (string, *epoch.Epoch)
