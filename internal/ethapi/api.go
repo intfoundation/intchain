@@ -50,7 +50,7 @@ import (
 
 const (
 	defaultGasPrice          = params.GWei
-	updateValidatorThreshold = 28
+	updateValidatorThreshold = 52
 )
 
 // PublicINTChainAPI provides an API to access intchain related information.
@@ -1612,7 +1612,7 @@ func (s *PublicNetAPI) Version() string {
 }
 
 var (
-	minimumRegisterAmount = math.MustParseBig256("10000000000000000000000") // 10,000 * e18
+	minimumRegisterAmount = math.MustParseBig256("1000000000000000000") // 1 * e18
 
 	maxDelegationAddresses = 1000
 
@@ -2168,10 +2168,10 @@ func unDelegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Blo
 	state.SubDelegateBalance(from, immediatelyRefund)
 	state.AddBalance(from, immediatelyRefund)
 
-	verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate)
-	if verror != nil {
-		return verror
-	}
+	//verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate)
+	//if verror != nil {
+	//	return verror
+	//}
 
 	return nil
 }
