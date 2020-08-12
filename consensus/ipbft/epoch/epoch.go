@@ -351,22 +351,22 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			newValidators := epoch.Validators.Copy()
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
-				vObj := state.GetOrNewStateObject(vAddr)
-				if !vObj.IsForbidden() {
-					totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
-					// Voting Power = Proxied amount + Deposit amount
-					newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
-					if newVotingPower.Sign() == 0 {
-						newValidators.Remove(v.Address)
-					} else {
-						v.VotingPower = newVotingPower
-					}
-				} else {
-					// if forbidden then remove form the validatorset
+				//vObj := state.GetOrNewStateObject(vAddr)
+				//if !vObj.IsForbidden() {
+				totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
+				// Voting Power = Proxied amount + Deposit amount
+				newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
+				if newVotingPower.Sign() == 0 {
 					newValidators.Remove(v.Address)
-
-					refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: v.VotingPower, Voteout: false})
+				} else {
+					v.VotingPower = newVotingPower
 				}
+				//} else {
+				//	// if forbidden then remove form the validatorset
+				//	newValidators.Remove(v.Address)
+				//
+				//	refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: v.VotingPower, Voteout: false})
+				//}
 			}
 
 			// Update Validators with vote
