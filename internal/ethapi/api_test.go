@@ -33,6 +33,13 @@ var inputArray = []*MethoadParams{
 	},
 }
 
+func TestMethodId(t *testing.T) {
+	method := intAbi.ChainABI.Methods[intAbi.Delegate.String()]
+	methdid := method.ID()
+
+	fmt.Printf("method id, %v", hexutil.Encode(methdid))
+}
+
 func TestABI_UnpackMethodInputs(t *testing.T) {
 
 	//inputByte, err := hexutil.Decode(inputHex)

@@ -21,11 +21,13 @@ import (
 	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
+	"github.com/intfoundation/intchain/common/hexutil"
 	"math/big"
 	"testing"
 
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/crypto"
+	intAbi "github.com/intfoundation/intchain/intabi/abi"
 	"github.com/intfoundation/intchain/rlp"
 )
 
@@ -284,8 +286,8 @@ func TestSignTx(t *testing.T) {
 		t.Fatalf("could not decode key: %v", err)
 	}
 	signer := NewEIP155Signer(common.Big2) // mainnet 1，testnet 2
-	//address := common.StringToAddress("INT3Pkr1zMmk3mnFzihH5F4kNxFavJo4")
-	address := common.StringToAddress("0x1Abd8338C42B3Ade3F97EC7BaB10FE74599D5e10")
+	address := common.StringToAddress("INT3Pkr1zMmk3mnFzihH5F4kNxFavJo4")
+	//address := common.StringToAddress("0x1Abd8338C42B3Ade3F97EC7BaB10FE74599D5e10")
 
 	d := txdata{
 		AccountNonce: 0,
@@ -313,4 +315,74 @@ func TestSignTx(t *testing.T) {
 	}
 
 	fmt.Printf("ecn %x\n", enc)
+}
+
+func TestDelegateTx(t *testing.T) {
+	key, err := crypto.HexToECDSA("c15c038a5a9f8f948a2ac0eb102c249e4ae1c4fa1e0971b50c63db46dc5fcf8b")
+	if err != nil {
+		t.Fatalf("could not decode key: %v", err)
+	}
+	signer := NewEIP155Signer(common.Big2) // mainnet 1，testnet 2
+	//address := common.StringToAddress("INT3Pkr1zMmk3mnFzihH5F4kNxFavJo4")
+	address := common.StringToAddress("INT3FFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+	//address := common.StringToAddress("0x1Abd8338C42B3Ade3F97EC7BaB10FE74599D5e10")
+
+	input, err := intAbi.ChainABI.Pack(intAbi.Delegate.String(), common.StringToAddress("INT3CFVNpTwr3QrykhPWiLP8n9wsyCVa"))
+	fmt.Printf("delegate input %v\n", hexutil.Encode(input))
+	if err != nil {
+		t.Errorf("could not pack data, err %v\n", err)
+	}
+
+	d := txdata{
+		AccountNonce: 1,
+		Recipient:    &address,
+		//Payload:      []byte(""),
+		Payload:  input,
+		Amount:   big.NewInt(1000000000000000000),
+		GasLimit: 50000,
+		Price:    big.NewInt(10000000000),
+		V:        new(big.Int),
+		R:        new(big.Int),
+		S:        new(big.Int),
+	}
+
+	tx := &Transaction{data: d}
+	t.Logf("tx before sign  %v\n", tx)
+	signTx, err := SignTx(tx, signer, key)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("tx after sign  %v\n", signTx)
+
+	enc, err := rlp.EncodeToBytes(&signTx.data)
+	if err != nil {
+		t.Logf("rlp encode to byte err %v\n", err)
+	}
+
+	fmt.Printf("ecn %x\n", enc)
+}
+
+func TestDecodeTx(t *testing.T) {
+	//_, addr := defaultTestKey()
+
+	//str := "f89c808502540be40082c350a0494e543346464646464646464646464646464646464646464646464646464646880de0b6b3a7640000a449339f0f494e54334346564e70547772335172796b685057694c50386e3977737943566128a036d1416bdc8e42917e078937571c2388cc84bb7ded75dbc195142e76ec614961a05091454f075fd35488a96f712dfa4108ea092dacbcf7d67d07fd2d2d882a7f89"
+	str := "f8c4820127843b9aca00827530a0494e543346464646464646464646464646464646464646464646464646464646880de0b6b3a7640000b84a307834393333396630663439346535343333343634633533363637323539353637393738363536353461356134323736366634653633346136393464376134313632363236333332363928a0fdbfa3a7791134e739729bc2fa44260b2e9c2c01fdad959495e0e74e4c4d4d23a06a9c1af504dc8255f1b00170d5fcca9e962ea8f8fde93cb5a2c84b7bd144bcfd"
+
+	tx, err := decodeTx(common.Hex2Bytes(str))
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	fmt.Printf("decode tx %v\n", tx.String())
+
+	//from, err := Sender(HomesteadSigner{}, tx)
+	//if err != nil {
+	//	t.Error(err)
+	//	t.FailNow()
+	//}
+
+	//if addr != from {
+	//	t.Error("derived address doesn't match")
+	//}
 }
