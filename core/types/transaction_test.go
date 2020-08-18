@@ -287,7 +287,6 @@ func TestSignTx(t *testing.T) {
 	}
 	signer := NewEIP155Signer(common.Big2) // mainnet 1，testnet 2
 	address := common.StringToAddress("INT3Pkr1zMmk3mnFzihH5F4kNxFavJo4")
-	//address := common.StringToAddress("0x1Abd8338C42B3Ade3F97EC7BaB10FE74599D5e10")
 
 	d := txdata{
 		AccountNonce: 0,
@@ -325,7 +324,6 @@ func TestDelegateTx(t *testing.T) {
 	signer := NewEIP155Signer(common.Big2) // mainnet 1，testnet 2
 	//address := common.StringToAddress("INT3Pkr1zMmk3mnFzihH5F4kNxFavJo4")
 	address := common.StringToAddress("INT3FFFFFFFFFFFFFFFFFFFFFFFFFFFF")
-	//address := common.StringToAddress("0x1Abd8338C42B3Ade3F97EC7BaB10FE74599D5e10")
 
 	input, err := intAbi.ChainABI.Pack(intAbi.Delegate.String(), common.StringToAddress("INT3CFVNpTwr3QrykhPWiLP8n9wsyCVa"))
 	fmt.Printf("delegate input %v\n", hexutil.Encode(input))
