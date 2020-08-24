@@ -3,9 +3,9 @@ package types
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/intfoundation/intchain/common/hexutil"
 	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/go-wire"
+	"github.com/intfoundation/intchain/common/hexutil"
 	"math/big"
 	"testing"
 )
@@ -77,12 +77,12 @@ func TestValidatorSet_Hash(t *testing.T) {
 	}
 	fmt.Printf("extra data %v\n\n", extraData)
 
-	talliedVotingPower, err := valSet.TalliedVotingPower(extraData.SeenCommit.BitArray)
+	talliedVotingPower, votesSum, totalVotes, err := valSet.TalliedVotingPower(extraData.SeenCommit.BitArray)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	fmt.Printf("talliedVotingPower %v\n", talliedVotingPower)
+	fmt.Printf("talliedVotingPower %v, votesSum %v, totalVotes %v\n", talliedVotingPower, votesSum, totalVotes)
 
 	aggr, _ := valSet.GetAggrPubKeyAndAddress(extraData.SeenCommit.BitArray)
 	for _, v := range aggr.PublicKeys {

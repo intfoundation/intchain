@@ -290,21 +290,33 @@ func (voteSet *VoteSet) addVerifiedVote(vote *Vote, blockKey string, votingPower
 	}
 
 	// Before adding to votesByBlock, see if we'll exceed quorum
-	origSum := new(big.Int).Set(votesByBlock.sum)
+	//origSum := new(big.Int).Set(votesByBlock.sum)
+
+	//
+	_, origSum, totalVotes, err := voteSet.valSet.TalliedVotingPower(votesByBlock.bitArray)
+
+	if err != nil {
+		return false, conflicting
+	}
 
 	/*
 		twoThird := new(big.Int).Mul(voteSet.valSet.TotalVotingPower(), big.NewInt(2))
 		twoThird.Div(twoThird, big.NewInt(3))
 		quorum := new(big.Int).Add(twoThird, big.NewInt(1))
 	*/
-	quorum := Loose23MajorThreshold(voteSet.valSet.TotalVotingPower(), int(vote.Round))
+	//quorum := Loose23MajorThreshold(voteSet.valSet.TotalVotingPower(), int(vote.Round))
+	quorum := Loose23MajorThreshold(totalVotes, int(vote.Round))
 
 	// Add vote to votesByBlock
 	votesByBlock.addVerifiedVote(vote, votingPower)
 
+	voteSum := origSum.Add(origSum, voteSet.valSet.Validators[vote.ValidatorIndex].VotingPower)
+
 	// If we just crossed the quorum threshold and have 2/3 majority...
 	// if origSum < quorum && quorum <= votesByBlock.sum {
-	if origSum.Cmp(quorum) == -1 && quorum.Cmp(votesByBlock.sum) <= 0 {
+	//if origSum.Cmp(quorum) == -1 && quorum.Cmp(votesByBlock.sum) <= 0 {
+
+	if origSum.Cmp(quorum) == -1 && quorum.Cmp(voteSum) <= 0 {
 		// Only consider the first quorum reached
 		if voteSet.maj23 == nil {
 			maj23BlockID := vote.BlockID
@@ -427,22 +439,22 @@ func (voteSet *VoteSet) IsCommit() bool {
 	return voteSet.maj23 != nil
 }
 
-func (voteSet *VoteSet) HasTwoThirdsAny() bool {
-	if voteSet == nil {
-		return false
-	}
-	voteSet.mtx.Lock()
-	defer voteSet.mtx.Unlock()
-
-	/*
-		twoThird := new(big.Int).Mul(voteSet.valSet.TotalVotingPower(), big.NewInt(2))
-		twoThird.Div(twoThird, big.NewInt(3))
-	*/
-	twoThirdPlus1 := Loose23MajorThreshold(voteSet.valSet.TotalVotingPower(), voteSet.round)
-	twoThird := twoThirdPlus1.Sub(twoThirdPlus1, big.NewInt(1))
-
-	return voteSet.sum.Cmp(twoThird) == 1
-}
+//func (voteSet *VoteSet) HasTwoThirdsAny() bool {
+//	if voteSet == nil {
+//		return false
+//	}
+//	voteSet.mtx.Lock()
+//	defer voteSet.mtx.Unlock()
+//
+//	/*
+//		twoThird := new(big.Int).Mul(voteSet.valSet.TotalVotingPower(), big.NewInt(2))
+//		twoThird.Div(twoThird, big.NewInt(3))
+//	*/
+//	twoThirdPlus1 := Loose23MajorThreshold(voteSet.valSet.TotalVotingPower(), voteSet.round)
+//	twoThird := twoThirdPlus1.Sub(twoThirdPlus1, big.NewInt(1))
+//
+//	return voteSet.sum.Cmp(twoThird) == 1
+//}
 
 func (voteSet *VoteSet) HasAll() bool {
 	return voteSet.sum == voteSet.valSet.TotalVotingPower()

@@ -96,24 +96,28 @@ func (valSet *ValidatorSet) GetAggrPubKeyAndAddress(bitMap *cmn.BitArray) (*Cons
 	return aggr, nil
 }
 
-func (valSet *ValidatorSet) TalliedVotingPower(bitMap *cmn.BitArray) (*big.Int, error) {
+func (valSet *ValidatorSet) TalliedVotingPower(bitMap *cmn.BitArray) (*big.Int, *big.Int, *big.Int, error) {
 	if bitMap == nil {
-		return big.NewInt(0), fmt.Errorf("invalid bitmap(nil)")
+		return big.NewInt(0), big.NewInt(0), big.NewInt(0), fmt.Errorf("invalid bitmap(nil)")
 	}
 	validators := valSet.Validators
 	if validators == nil {
-		return big.NewInt(0), fmt.Errorf("invalid validators(nil)")
+		return big.NewInt(0), big.NewInt(0), big.NewInt(0), fmt.Errorf("invalid validators(nil)")
 	}
 	if valSet.Size() != (int)(bitMap.Size()) {
-		return big.NewInt(0), fmt.Errorf("size is not equal, validators size:%v, bitmap size:%v", valSet.Size(), bitMap.Size())
+		return big.NewInt(0), big.NewInt(0), big.NewInt(0), fmt.Errorf("size is not equal, validators size:%v, bitmap size:%v", valSet.Size(), bitMap.Size())
 	}
 	powerSum := big.NewInt(0)
+	votesSum := big.NewInt(0)
+	totalVotes := big.NewInt(0)
 	for i := (uint64)(0); i < bitMap.Size(); i++ {
 		if bitMap.GetIndex(i) {
 			powerSum.Add(powerSum, common.Big1)
+			votesSum.Add(votesSum, validators[i].VotingPower)
 		}
+		totalVotes.Add(totalVotes, validators[i].VotingPower)
 	}
-	return powerSum, nil
+	return powerSum, votesSum, totalVotes, nil
 }
 
 func (valSet *ValidatorSet) Equals(other *ValidatorSet) bool {
@@ -311,8 +315,10 @@ func (valSet *ValidatorSet) VerifyCommit(chainID string, height uint64, commit *
 		return fmt.Errorf("invalid commit -- wrong Signature:%v or BitArray:%v", commit.SignAggr, commit.BitArray)
 	}
 
-	talliedVotingPower, err := valSet.TalliedVotingPower(commit.BitArray)
-	log.Debugf("VerifyCommit talliedVotingPower %v, totalVotingPower %v", talliedVotingPower, valSet.TotalVotingPower())
+	//talliedVotingPower, err := valSet.TalliedVotingPower(commit.BitArray)
+	_, votesSum, totalVotes, err := valSet.TalliedVotingPower(commit.BitArray)
+	//log.Debugf("VerifyCommit talliedVotingPower %v, totalVotingPower %v", talliedVotingPower, valSet.TotalVotingPower())
+	log.Debugf("VerifyCommit talliedVotes %v, totalVotes %v", votesSum, totalVotes)
 	if err != nil {
 		return err
 	}
@@ -324,35 +330,15 @@ func (valSet *ValidatorSet) VerifyCommit(chainID string, height uint64, commit *
 		quorum.Add(quorum, big.NewInt(1))
 	*/
 
-	//aggr, e := valSet.GetAggrPubKeyAndAddress(commit.BitArray)
-	//if e != nil {
-	//	return e
-	//}
-	//
-	//var (
-	//	totalVotes = big.NewInt(0)
-	//	aggrVotes  = big.NewInt(0)
-	//)
-	//for _, v := range valSet.Validators {
-	//	totalVotes.Add(totalVotes, v.VotingPower)
-	//	fmt.Printf("validator set addr %v\n", v.Address)
-	//	fmt.Printf("validator set addr %v\n", common.BytesToAddress(v.Address))
-	//	for _, addr := range aggr.Addresses {
-	//		if bytes.Compare(addr[:], v.Address) == 0 {
-	//			aggrVotes.Add(aggrVotes, v.VotingPower)
-	//		}
-	//	}
-	//}
-
 	//log.Debugf("VerifyCommit aggregate votes %v", aggrVotes)
-	quorum := Loose23MajorThreshold(valSet.TotalVotingPower(), commit.Round)
-	//quorum := Loose23MajorThreshold(totalVotes, commit.Round)
+	//quorum := Loose23MajorThreshold(valSet.TotalVotingPower(), commit.Round)
+	quorum := Loose23MajorThreshold(totalVotes, commit.Round)
 	log.Debugf("Loose 2/3 major threshold  quorum %v", quorum)
-	if talliedVotingPower.Cmp(quorum) >= 0 {
+	if votesSum.Cmp(quorum) >= 0 {
 		return nil
 	} else {
 		return fmt.Errorf("invalid commit -- insufficient voting power: got %v, needed %v",
-			talliedVotingPower, quorum)
+			votesSum, quorum)
 	}
 }
 

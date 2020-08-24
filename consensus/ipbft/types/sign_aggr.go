@@ -82,7 +82,7 @@ func (sa *SignAggr) HasTwoThirdsMajority(valSet *ValidatorSet) bool {
 	if valSet == nil {
 		return false
 	}
-	talliedVotingPower, err := valSet.TalliedVotingPower(sa.BitArray)
+	_, votesSum, totalVotes, err := valSet.TalliedVotingPower(sa.BitArray)
 	if err != nil {
 		return false
 	}
@@ -93,9 +93,11 @@ func (sa *SignAggr) HasTwoThirdsMajority(valSet *ValidatorSet) bool {
 		quorum.Div(quorum, big.NewInt(3))
 		quorum.Add(quorum, big.NewInt(1))
 	*/
-	quorum := Loose23MajorThreshold(valSet.TotalVotingPower(), sa.Round)
+	//quorum := Loose23MajorThreshold(valSet.TotalVotingPower(), sa.Round)
+	quorum := Loose23MajorThreshold(totalVotes, sa.Round)
 
-	return talliedVotingPower.Cmp(quorum) >= 0
+	//return talliedVotingPower.Cmp(quorum) >= 0
+	return votesSum.Cmp(quorum) >= 0
 }
 
 func (sa *SignAggr) SetMaj23(blockID BlockID) {
@@ -157,20 +159,20 @@ func (sa *SignAggr) SignAggrVerify(msg []byte, valSet *ValidatorSet) bool {
 	return pubKey.VerifyBytes(msg, sa.SignatureAggr) && sa.HasTwoThirdsMajority(valSet)
 }
 
-func (sa *SignAggr) HasTwoThirdsAny(valSet *ValidatorSet) bool {
-	if sa == nil {
-		return false
-	}
-
-	/*
-		twoThird := new(big.Int).Mul(voteSet.valSet.TotalVotingPower(), big.NewInt(2))
-		twoThird.Div(twoThird, big.NewInt(3))sa
-	*/
-	twoThirdPlus1 := Loose23MajorThreshold(valSet.TotalVotingPower(), sa.Round)
-	twoThird := twoThirdPlus1.Sub(twoThirdPlus1, big.NewInt(1))
-
-	return big.NewInt(sa.Sum).Cmp(twoThird) == 1
-}
+//func (sa *SignAggr) HasTwoThirdsAny(valSet *ValidatorSet) bool {
+//	if sa == nil {
+//		return false
+//	}
+//
+//	/*
+//		twoThird := new(big.Int).Mul(voteSet.valSet.TotalVotingPower(), big.NewInt(2))
+//		twoThird.Div(twoThird, big.NewInt(3))sa
+//	*/
+//	twoThirdPlus1 := Loose23MajorThreshold(valSet.TotalVotingPower(), sa.Round)
+//	twoThird := twoThirdPlus1.Sub(twoThirdPlus1, big.NewInt(1))
+//
+//	return big.NewInt(sa.Sum).Cmp(twoThird) == 1
+//}
 
 func (sa *SignAggr) HasAll(valSet *ValidatorSet) bool {
 	return big.NewInt(sa.Sum).Cmp(valSet.TotalVotingPower()) == 0
