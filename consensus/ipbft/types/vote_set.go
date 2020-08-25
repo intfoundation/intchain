@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"fmt"
-	"github.com/intfoundation/intchain/common"
 	"strings"
 	"sync"
 
@@ -216,7 +215,8 @@ func (voteSet *VoteSet) addVote(vote *Vote) (added bool, err error) {
 	}
 
 	// Add vote and get conflicting vote if any
-	added, conflicting := voteSet.addVerifiedVote(vote, blockKey, common.Big1)
+	//added, conflicting := voteSet.addVerifiedVote(vote, blockKey, common.Big1)
+	added, conflicting := voteSet.addVerifiedVote(vote, blockKey, val.VotingPower)
 	if conflicting != nil {
 		return added, &ErrVoteConflictingVotes{
 			VoteA: conflicting,
@@ -290,10 +290,9 @@ func (voteSet *VoteSet) addVerifiedVote(vote *Vote, blockKey string, votingPower
 	}
 
 	// Before adding to votesByBlock, see if we'll exceed quorum
-	//origSum := new(big.Int).Set(votesByBlock.sum)
+	origSum := new(big.Int).Set(votesByBlock.sum)
 
-	//
-	_, origSum, totalVotes, err := voteSet.valSet.TalliedVotingPower(votesByBlock.bitArray)
+	_, _, totalVotes, err := voteSet.valSet.TalliedVotingPower(votesByBlock.bitArray)
 
 	if err != nil {
 		return false, conflicting
@@ -310,13 +309,15 @@ func (voteSet *VoteSet) addVerifiedVote(vote *Vote, blockKey string, votingPower
 	// Add vote to votesByBlock
 	votesByBlock.addVerifiedVote(vote, votingPower)
 
-	voteSum := origSum.Add(origSum, voteSet.valSet.Validators[vote.ValidatorIndex].VotingPower)
+	//voteSum := origSum.Add(origSum, voteSet.valSet.Validators[vote.ValidatorIndex].VotingPower)
+
+	//fmt.Printf("add verified vote, origsum: %v, votesum: %v, totalvotes: %v, quorum: %v\n", origSum, votesByBlock.sum, totalVotes, quorum)
 
 	// If we just crossed the quorum threshold and have 2/3 majority...
 	// if origSum < quorum && quorum <= votesByBlock.sum {
 	//if origSum.Cmp(quorum) == -1 && quorum.Cmp(votesByBlock.sum) <= 0 {
 
-	if origSum.Cmp(quorum) == -1 && quorum.Cmp(voteSum) <= 0 {
+	if origSum.Cmp(quorum) == -1 && quorum.Cmp(votesByBlock.sum) <= 0 {
 		// Only consider the first quorum reached
 		if voteSet.maj23 == nil {
 			maj23BlockID := vote.BlockID
