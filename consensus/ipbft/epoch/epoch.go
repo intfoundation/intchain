@@ -369,6 +369,64 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				//}
 			}
 
+			//nextEpochVoteSet := epoch.nextEpoch.validatorVoteSet
+			//candidateList := state.GetCandidateSet()
+			//
+			//if nextEpochVoteSet == nil {
+			//	fmt.Printf("Should enter new epoch, next epoch vote set is nil, %v\n", nextEpochVoteSet)
+			//}
+
+			// if has candidate and next epoch vote set not nil, add them to next epoch vote set
+			//if len(candidateList) > 0 && nextEpochVoteSet != nil {
+			//	epoch.logger.Debugf("Add candidate to next epoch vote set before, candidate: %v", candidateList)
+			//	for _, v := range newValidators.Validators {
+			//		vAddr := common.BytesToAddress(v.Address)
+			//		delete(candidateList, vAddr)
+			//	}
+			//	epoch.logger.Debugf("Add candidate to next epoch vote set after, candidate: %v", candidateList)
+			//
+			//	for addr := range candidateList {
+			//		_, exist := nextEpochVoteSet.GetVoteByAddress(addr)
+			//		if !exist && state.IsCandidate(addr) {
+			//			// calculate the net proxied balance of this candidate
+			//			proxiedBalance := state.GetTotalProxiedBalance(addr)
+			//			depositProxiedBalance := state.GetTotalDepositProxiedBalance(addr)
+			//			pendingRefundBalance := state.GetTotalPendingRefundBalance(addr)
+			//			netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
+			//
+			//			if netProxied.Sign() == -1 {
+			//				continue
+			//			}
+			//
+			//			// Move delegate amount first if Candidate
+			//			state.ForEachProxied(addr, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+			//				// Move Proxied Amount to Deposit Proxied Amount
+			//				state.SubProxiedBalanceByUser(addr, key, proxiedBalance)
+			//				state.AddDepositProxiedBalanceByUser(addr, key, proxiedBalance)
+			//				return true
+			//			})
+			//
+			//			pubkey := state.GetPubkey(addr)
+			//			pubkeyBytes := common.FromHex(pubkey)
+			//			if pubkey == "" || len(pubkeyBytes) != 128 {
+			//				continue
+			//			}
+			//			var blsPK goCrypto.BLSPubKey
+			//			copy(blsPK[:], pubkeyBytes)
+			//
+			//			vote := &EpochValidatorVote{
+			//				Address: addr,
+			//				Amount:  netProxied,
+			//				PubKey:  blsPK,
+			//				Salt:    "intchain",
+			//				TxHash:  common.Hash{},
+			//			}
+			//
+			//			nextEpochVoteSet.StoreVote(vote)
+			//		}
+			//	}
+			//}
+
 			// Update Validators with vote
 			refundsUpdate, err := updateEpochValidatorSet(newValidators, epoch.nextEpoch.validatorVoteSet)
 			if err != nil {
