@@ -50,7 +50,7 @@ import (
 
 const (
 	defaultGasPrice          = params.GWei
-	updateValidatorThreshold = 52
+	updateValidatorThreshold = 2
 )
 
 // PublicINTChainAPI provides an API to access intchain related information.
