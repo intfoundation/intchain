@@ -1629,6 +1629,8 @@ func (s *PublicNetAPI) Version() string {
 var (
 	minimumRegisterAmount = math.MustParseBig256("1000000000000000000") // 1 * e18
 
+	maxCandidateNumber = 1000
+
 	maxDelegationAddresses = 1000
 
 	maxEditValidatorLength = 100
@@ -1970,6 +1972,11 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 }
 
 func registerValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.RegisterArgs, error) {
+	candidateSet := state.GetCandidateSet()
+	if len(candidateSet) > maxCandidateNumber {
+		return nil, core.ErrMaxCandidate
+	}
+
 	// Check cleaned Candidate
 	if !state.IsCleanAddress(from) {
 		return nil, core.ErrAlreadyCandidate

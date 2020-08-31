@@ -59,6 +59,8 @@ var (
 	// ErrCannotCandidate is returned if the request address belongs to Annual/SemiAnnual Supernode
 	ErrCannotCandidate = errors.New("Annual/SemiAnnual Supernode can not become candidate")
 
+	ErrMaxCandidate = errors.New("candidate number bigger than the maximum number")
+
 	// ErrCannotUnRegister is returned if the request address belongs to Annual/SemiAnnual Supernode
 	ErrCannotUnRegister = errors.New("Annual/SemiAnnual Supernode can not unregister")
 
