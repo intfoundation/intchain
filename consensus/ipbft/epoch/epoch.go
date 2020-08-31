@@ -350,7 +350,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			}
 
 			// Invoke the get next epoch method to avoid next epoch vote set is nil
-			nextEpochVoteSet := epoch.GetNextEpoch().GetEpochValidatorVoteSet()
+			nextEpochVoteSet := epoch.GetNextEpoch().GetEpochValidatorVoteSet().Copy() // copy vote set
 			candidateList := state.GetCandidateSet()
 
 			if nextEpochVoteSet == nil {
