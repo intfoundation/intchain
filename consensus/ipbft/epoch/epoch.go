@@ -29,7 +29,7 @@ const (
 	EPOCH_SAVED                     // value --> 3
 
 	MinimumValidatorsSize = 1
-	MaximumValidatorsSize = 2 // TODO the max validator size will increate to 100 in the future
+	MaximumValidatorsSize = 3 // TODO the max validator size will increate to 100 in the future
 
 	epochKey       = "Epoch:%v"
 	latestEpochKey = "LatestEpoch"
@@ -329,29 +329,33 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			)
 
 			newValidators := epoch.Validators.Copy()
+			// Invoke the get next epoch method to avoid next epoch vote set is nil
+			nextEpochVoteSet := epoch.GetNextEpoch().GetEpochValidatorVoteSet().Copy() // copy vote set
+			candidateList := state.GetCandidateSet()
+
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
 				//vObj := state.GetOrNewStateObject(vAddr)
 				//if !vObj.IsForbidden() {
-				totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
-				// Voting Power = Proxied amount + Deposit amount
-				newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
-				if newVotingPower.Sign() == 0 {
-					newValidators.Remove(v.Address)
+				if flag := state.GetForbidden(vAddr); !flag {
+					fmt.Printf("Should enter new epoch, validator %v is not forbidden\n", vAddr.String())
+					totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
+					// Voting Power = Proxied amount + Deposit amount
+					newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
+					if newVotingPower.Sign() == 0 {
+						newValidators.Remove(v.Address)
+					} else {
+						v.VotingPower = newVotingPower
+					}
 				} else {
-					v.VotingPower = newVotingPower
-				}
-				//} else {
-				//	// if forbidden then remove form the validatorset
-				//	newValidators.Remove(v.Address)
-				//
-				//	refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: v.VotingPower, Voteout: false})
-				//}
-			}
+					// if forbidden then remove from the validator set and candidateList
+					newValidators.Remove(v.Address)
+					delete(candidateList, vAddr)
 
-			// Invoke the get next epoch method to avoid next epoch vote set is nil
-			nextEpochVoteSet := epoch.GetNextEpoch().GetEpochValidatorVoteSet().Copy() // copy vote set
-			candidateList := state.GetCandidateSet()
+					refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: v.VotingPower, Voteout: true})
+					fmt.Printf("Should enter new epoch, validator %v is forbidden\n", vAddr.String())
+				}
+			}
 
 			if nextEpochVoteSet == nil {
 				nextEpochVoteSet = NewEpochValidatorVoteSet()
@@ -888,38 +892,54 @@ func (epoch *Epoch) GetForbiddenDuration() time.Duration {
 
 // Update validator block time and set forbidden if this validator did not participate in consensus more than 4 Hours
 func (epoch *Epoch) UpdateForbiddenState(header *types.Header, prevHeader *types.Header, commit *tmTypes.Commit, state *state.StateDB) {
-	validators := epoch.GetEpochByBlockNumber(prevHeader.Number.Uint64()).Validators.Validators
+	validators := epoch.Validators.Validators
 	height := header.Number.Uint64()
-	blockTime := prevHeader.Time
 
-	epoch.logger.Infof("Update validator forbidden state height %v\n", height)
+	epoch.logger.Infof("Update validator forbidden state height %v", height)
 
-	if height <= 1 {
+	if height <= 1 || height == epoch.StartBlock {
 		return
-	}
-
-	if commit == nil || commit.BitArray == nil {
-		epoch.logger.Debugf("Update validator forbidden state seenCommit %v\n", commit)
-		return
-	}
-
-	bitMap := commit.BitArray
-	for i := uint64(0); i < bitMap.Size(); i++ {
-		addr := common.BytesToAddress(validators[i].Address)
-		vObj := state.GetOrNewStateObject(addr)
-		if bitMap.GetIndex(i) {
-			vObj.SetBlockTime(blockTime)
-
-			epoch.logger.Debugf("Update validator forbidden state, block time %v, current height %v", blockTime, height)
-		} else {
-			lastBlockTime := vObj.BlockTime()
-			durationTime := new(big.Int).Sub(blockTime, lastBlockTime)
-			epoch.logger.Debugf("Update validator forbidden state last block time, duration time %v, default forbidden time %v", durationTime, TimeForForbidden)
-			if durationTime.Cmp(big.NewInt(int64(TimeForForbidden.Seconds()))) >= 0 {
-				epoch.logger.Debugf("Update validator forbidden state true")
+	} else if height == epoch.EndBlock {
+		epoch.logger.Debugf("Update validator forbidden state, epoch end block %v", height)
+		// epoch end block set all validators mined block times 0
+		for _, v := range validators {
+			addr := common.BytesToAddress(v.Address[:])
+			vObj := state.GetOrNewStateObject(addr)
+			vObj.SetBlockTime(common.Big0)
+		}
+	} else if height == (epoch.EndBlock - 1) {
+		epoch.logger.Debugf("Update validator forbidden state, epoch end block - 1 %v", height)
+		// epoch end block - 1, if mined block times 0, set the validator forbidden true
+		for _, v := range validators {
+			addr := common.BytesToAddress(v.Address[:])
+			vObj := state.GetOrNewStateObject(addr)
+			times := vObj.BlockTime()
+			if times.Cmp(common.Big0) == 0 {
+				epoch.logger.Debugf("Update validator forbidden state, set %v forbidden, mined block times %v", addr.String(), times)
 				vObj.SetForbidden(true)
-				vObj.SetBlockTime(big.NewInt(time.Now().Unix()))
 				state.MarkAddressForbidden(addr)
+			}
+		}
+	} else {
+		if commit == nil || commit.BitArray == nil {
+			epoch.logger.Debugf("Update validator forbidden state seenCommit %v", commit)
+			return
+		}
+
+		// update the mined block times
+		bitMap := commit.BitArray
+		for i := uint64(0); i < bitMap.Size(); i++ {
+			if bitMap.GetIndex(i) {
+				addr := common.BytesToAddress(validators[i].Address)
+				vObj := state.GetOrNewStateObject(addr)
+
+				times := vObj.BlockTime()
+				newTimes := big.NewInt(0)
+				newTimes.Add(times, common.Big1)
+
+				vObj.SetBlockTime(newTimes)
+
+				epoch.logger.Debugf("Update validator forbidden state, mined block times %v, current times %v", newTimes, times)
 			}
 		}
 	}
