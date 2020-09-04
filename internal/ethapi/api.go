@@ -50,7 +50,7 @@ import (
 
 const (
 	defaultGasPrice          = params.GWei
-	updateValidatorThreshold = 2
+	updateValidatorThreshold = 3
 )
 
 // PublicINTChainAPI provides an API to access intchain related information.
@@ -1779,6 +1779,19 @@ func (api *PublicINTAPI) CheckCandidate(ctx context.Context, address common.Addr
 	return fields, state.Error()
 }
 
+func (api *PublicINTAPI) GetForbiddenStatus(ctx context.Context, address common.Address, blockNr rpc.BlockNumber) (map[string]interface{}, error) {
+	state, _, err := api.b.StateAndHeaderByNumber(ctx, blockNr)
+	if state == nil || err != nil {
+		return nil, err
+	}
+
+	fields := map[string]interface{}{
+		"forbidden": state.GetForbidden(address),
+		"blocks":    state.GetMinedBlocks(address),
+	}
+	return fields, state.Error()
+}
+
 func (api *PublicINTAPI) SetCommission(ctx context.Context, from common.Address, commission uint8, gasPrice *hexutil.Big) (common.Hash, error) {
 	input, err := intAbi.ChainABI.Pack(intAbi.SetCommission.String(), commission)
 	if err != nil {
@@ -2363,9 +2376,15 @@ func unForbidValidation(from common.Address, state *state.StateDB, bc *core.Bloc
 		return core.ErrNotCandidate
 	}
 
-	ep, err := getEpoch(bc)
-	if err != nil {
-		return err
+	//ep, err := getEpoch(bc)
+	//if err != nil {
+	//	return err
+	//}
+
+	// block height validation
+	verror := updateValidation(bc)
+	if verror != nil {
+		return verror
 	}
 
 	fromObj := state.GetOrNewStateObject(from)
@@ -2374,13 +2393,13 @@ func unForbidValidation(from common.Address, state *state.StateDB, bc *core.Bloc
 		return fmt.Errorf("should not unforbid")
 	}
 
-	forbiddenDuration := ep.GetForbiddenDuration()
-	forbiddenTime := fromObj.BlockTime()
-
-	durationToNow := new(big.Int).Sub(big.NewInt(time.Now().Unix()), forbiddenTime)
-	if durationToNow.Cmp(big.NewInt(int64(forbiddenDuration.Seconds()))) < 0 {
-		return fmt.Errorf("time is too short to unforbid, forbidden duration %v, but duratrion to now %v", forbiddenDuration.Seconds(), durationToNow)
-	}
+	//forbiddenDuration := ep.GetForbiddenDuration()
+	//forbiddenTime := fromObj.BlockTime()
+	//
+	//durationToNow := new(big.Int).Sub(big.NewInt(time.Now().Unix()), forbiddenTime)
+	//if durationToNow.Cmp(big.NewInt(int64(forbiddenDuration.Seconds()))) < 0 {
+	//	return fmt.Errorf("time is too short to unforbid, forbidden duration %v, but duratrion to now %v", forbiddenDuration.Seconds(), durationToNow)
+	//}
 	return nil
 }
 

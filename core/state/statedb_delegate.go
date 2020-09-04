@@ -323,6 +323,15 @@ func (self *StateDB) GetForbidden(addr common.Address) bool {
 	return false
 }
 
+func (self *StateDB) GetMinedBlocks(addr common.Address) *big.Int {
+	stateObject := self.GetOrNewStateObject(addr)
+	if stateObject != nil {
+		return stateObject.BlockTime()
+	}
+
+	return common.Big0
+}
+
 // ClearCommission Set the Candidate commission to 0
 func (self *StateDB) ClearCommission(addr common.Address) {
 	stateObject := self.GetOrNewStateObject(addr)
