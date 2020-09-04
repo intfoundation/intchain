@@ -1786,8 +1786,9 @@ func (api *PublicINTAPI) GetForbiddenStatus(ctx context.Context, address common.
 	}
 
 	fields := map[string]interface{}{
-		"forbidden": state.GetForbidden(address),
-		"blocks":    state.GetMinedBlocks(address),
+		"forbidden":     state.GetForbidden(address),
+		"forbiddenTime": state.GetForbiddenTime(address),
+		"blocks":        state.GetMinedBlocks(address),
 	}
 	return fields, state.Error()
 }
@@ -2081,7 +2082,12 @@ func unRegisterValidation(from common.Address, tx *types.Transaction, state *sta
 		return core.ErrNotCandidate
 	}
 
-	// Super node can't cancel Candidate
+	// Forbidden candidate can't unregister
+	if state.GetForbidden(from) {
+		return core.ErrForbiddenUnRegister
+	}
+
+	// Super node can't unregister
 	var ep *epoch.Epoch
 	if tdm, ok := bc.Engine().(consensus.IPBFT); ok {
 		ep = tdm.GetEpoch().GetEpochByBlockNumber(bc.CurrentBlock().NumberU64())
@@ -2363,7 +2369,7 @@ func unForbidApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 		return err
 	}
 
-	state.GetOrNewStateObject(from).SetForbidden(false)
+	state.SetForbidden(from, false)
 
 	// remove address from forbidden set
 	state.ClearForbiddenSetByAddress(from)
@@ -2376,10 +2382,10 @@ func unForbidValidation(from common.Address, state *state.StateDB, bc *core.Bloc
 		return core.ErrNotCandidate
 	}
 
-	//ep, err := getEpoch(bc)
-	//if err != nil {
-	//	return err
-	//}
+	ep, err := getEpoch(bc)
+	if err != nil {
+		return err
+	}
 
 	// block height validation
 	verror := updateValidation(bc)
@@ -2387,19 +2393,19 @@ func unForbidValidation(from common.Address, state *state.StateDB, bc *core.Bloc
 		return verror
 	}
 
-	fromObj := state.GetOrNewStateObject(from)
-	isForbidden := fromObj.IsForbidden()
-	if !isForbidden {
+	if !state.GetForbidden(from) {
 		return fmt.Errorf("should not unforbid")
 	}
 
 	//forbiddenDuration := ep.GetForbiddenDuration()
-	//forbiddenTime := fromObj.BlockTime()
+	//forbiddenTime := state.GetForbiddenTime(from)
+	//fmt.Printf("unforbidden validation, forbidden duration %v, forbidden time %v\n", forbiddenDuration, forbiddenTime)
 	//
 	//durationToNow := new(big.Int).Sub(big.NewInt(time.Now().Unix()), forbiddenTime)
 	//if durationToNow.Cmp(big.NewInt(int64(forbiddenDuration.Seconds()))) < 0 {
-	//	return fmt.Errorf("time is too short to unforbid, forbidden duration %v, but duratrion to now %v", forbiddenDuration.Seconds(), durationToNow)
+	//	return fmt.Errorf("time is too short to unforbid, forbidden duration %v, but duration to now %v", forbiddenDuration.Seconds(), durationToNow)
 	//}
+
 	return nil
 }
 

@@ -131,11 +131,12 @@ type Account struct {
 	PendingRefundBalance  *big.Int    // the accumulative balance which other user try to cancel their delegate balance (this balance will be refund to user's address after epoch end)
 	ProxiedRoot           common.Hash // merkle root of the Proxied trie
 	// Candidate
-	Candidate   bool     // flag for Account, true indicate the account has been applied for the Delegation Candidate
-	Commission  uint8    // commission percentage of Delegation Candidate (0-100)
-	BlockTime   *big.Int // timestamp for last consensus block
-	IsForbidden bool     // candidate is forbidden or not
-	Pubkey      string
+	Candidate     bool     // flag for Account, true indicate the account has been applied for the Delegation Candidate
+	Commission    uint8    // commission percentage of Delegation Candidate (0-100)
+	BlockTime     *big.Int // number for mined blocks current epoch
+	ForbiddenTime *big.Int // timestamp for last consensus block
+	IsForbidden   bool     // candidate is forbidden or not
+	Pubkey        string
 
 	// Reward
 	RewardBalance          *big.Int    // the accumulative reward balance for this account
@@ -179,6 +180,10 @@ func newObject(db *StateDB, address common.Address, data Account, onDirty func(a
 
 	if data.BlockTime == nil {
 		data.BlockTime = new(big.Int)
+	}
+
+	if data.ForbiddenTime == nil {
+		data.ForbiddenTime = new(big.Int)
 	}
 
 	if data.CodeHash == nil {

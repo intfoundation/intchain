@@ -448,3 +448,24 @@ func (self *stateObject) setBlockTime(blockTime *big.Int) {
 		self.onDirty = nil
 	}
 }
+
+func (self *stateObject) ForbiddenTime() *big.Int {
+	return self.data.ForbiddenTime
+}
+
+func (self *stateObject) SetForbiddenTime(forbiddenTime *big.Int) {
+	self.db.journal = append(self.db.journal, forbiddenTimeChange{
+		account: &self.address,
+		prev:    self.data.ForbiddenTime,
+	})
+	self.setForbiddenTime(forbiddenTime)
+}
+
+func (self *stateObject) setForbiddenTime(forbiddenTime *big.Int) {
+	self.data.BlockTime = forbiddenTime
+
+	if self.onDirty != nil {
+		self.onDirty(self.Address())
+		self.onDirty = nil
+	}
+}

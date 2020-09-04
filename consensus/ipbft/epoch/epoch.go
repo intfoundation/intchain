@@ -335,9 +335,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
-				//vObj := state.GetOrNewStateObject(vAddr)
-				//if !vObj.IsForbidden() {
-				if flag := state.GetForbidden(vAddr); !flag {
+				if !state.GetForbidden(vAddr) {
 					fmt.Printf("Should enter new epoch, validator %v is not forbidden\n", vAddr.String())
 					totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
 					// Voting Power = Proxied amount + Deposit amount
@@ -348,7 +346,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 						v.VotingPower = newVotingPower
 					}
 				} else {
-					// if forbidden then remove from the validator set and candidateList
+					// if forbidden then remove from the validator set and candidate list
 					newValidators.Remove(v.Address)
 					delete(candidateList, vAddr)
 
@@ -894,6 +892,7 @@ func (epoch *Epoch) GetForbiddenDuration() time.Duration {
 func (epoch *Epoch) UpdateForbiddenState(header *types.Header, prevHeader *types.Header, commit *tmTypes.Commit, state *state.StateDB) {
 	validators := epoch.Validators.Validators
 	height := header.Number.Uint64()
+	forbiddenTime := prevHeader.Time
 
 	epoch.logger.Infof("Update validator forbidden state height %v", height)
 
@@ -904,19 +903,19 @@ func (epoch *Epoch) UpdateForbiddenState(header *types.Header, prevHeader *types
 		// epoch end block set all validators mined block times 0
 		for _, v := range validators {
 			addr := common.BytesToAddress(v.Address[:])
-			vObj := state.GetOrNewStateObject(addr)
-			vObj.SetBlockTime(common.Big0)
+			state.SetMinedBlocks(addr, common.Big0)
 		}
 	} else if height == (epoch.EndBlock - 1) {
 		epoch.logger.Debugf("Update validator forbidden state, epoch end block - 1 %v", height)
 		// epoch end block - 1, if mined block times 0, set the validator forbidden true
 		for _, v := range validators {
 			addr := common.BytesToAddress(v.Address[:])
-			vObj := state.GetOrNewStateObject(addr)
-			times := vObj.BlockTime()
+			times := state.GetMinedBlocks(addr)
 			if times.Cmp(common.Big0) == 0 {
-				epoch.logger.Debugf("Update validator forbidden state, set %v forbidden, mined block times %v", addr.String(), times)
-				vObj.SetForbidden(true)
+				epoch.logger.Debugf("Update validator forbidden state, set %v forbidden, mined block times %v, forbidden time %v", addr.String(), times, forbiddenTime)
+				state.SetForbidden(addr, true)
+				state.SetForbiddenTime(addr, forbiddenTime)
+
 				state.MarkAddressForbidden(addr)
 			}
 		}
@@ -931,13 +930,13 @@ func (epoch *Epoch) UpdateForbiddenState(header *types.Header, prevHeader *types
 		for i := uint64(0); i < bitMap.Size(); i++ {
 			if bitMap.GetIndex(i) {
 				addr := common.BytesToAddress(validators[i].Address)
-				vObj := state.GetOrNewStateObject(addr)
+				//vObj := state.GetOrNewStateObject(addr)
 
-				times := vObj.BlockTime()
+				times := state.GetMinedBlocks(addr)
 				newTimes := big.NewInt(0)
 				newTimes.Add(times, common.Big1)
 
-				vObj.SetBlockTime(newTimes)
+				state.SetMinedBlocks(addr, newTimes)
 
 				epoch.logger.Debugf("Update validator forbidden state, mined block times %v, current times %v", newTimes, times)
 			}

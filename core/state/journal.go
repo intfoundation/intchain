@@ -137,6 +137,11 @@ type (
 		prev    *big.Int
 	}
 
+	forbiddenTimeChange struct {
+		account *common.Address
+		prev    *big.Int
+	}
+
 	codeChange struct {
 		account            *common.Address
 		prevcode, prevhash []byte
@@ -290,6 +295,10 @@ func (ch forbiddenChange) undo(s *StateDB) {
 
 func (ch blockTimeChange) undo(s *StateDB) {
 	s.getStateObject(*ch.account).setBlockTime(ch.prev)
+}
+
+func (ch forbiddenTimeChange) undo(s *StateDB) {
+	s.getStateObject(*ch.account).setForbiddenTime(ch.prev)
 }
 
 func (ch refundChange) undo(s *StateDB) {
