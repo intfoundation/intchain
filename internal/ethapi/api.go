@@ -2382,10 +2382,10 @@ func unForbidValidation(from common.Address, state *state.StateDB, bc *core.Bloc
 		return core.ErrNotCandidate
 	}
 
-	ep, err := getEpoch(bc)
-	if err != nil {
-		return err
-	}
+	//ep, err := getEpoch(bc)
+	//if err != nil {
+	//	return err
+	//}
 
 	// block height validation
 	verror := updateValidation(bc)
@@ -2397,14 +2397,12 @@ func unForbidValidation(from common.Address, state *state.StateDB, bc *core.Bloc
 		return fmt.Errorf("should not unforbid")
 	}
 
-	//forbiddenDuration := ep.GetForbiddenDuration()
-	//forbiddenTime := state.GetForbiddenTime(from)
-	//fmt.Printf("unforbidden validation, forbidden duration %v, forbidden time %v\n", forbiddenDuration, forbiddenTime)
-	//
-	//durationToNow := new(big.Int).Sub(big.NewInt(time.Now().Unix()), forbiddenTime)
-	//if durationToNow.Cmp(big.NewInt(int64(forbiddenDuration.Seconds()))) < 0 {
-	//	return fmt.Errorf("time is too short to unforbid, forbidden duration %v, but duration to now %v", forbiddenDuration.Seconds(), durationToNow)
-	//}
+	forbiddenEpoch := state.GetForbiddenTime(from)
+	fmt.Printf("unforbidden validation, forbidden epoch %v\n", forbiddenEpoch)
+
+	if forbiddenEpoch.Cmp(common.Big0) == 1 {
+		return fmt.Errorf("please unforbid %v epoch later", forbiddenEpoch)
+	}
 
 	return nil
 }
