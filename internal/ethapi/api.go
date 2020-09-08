@@ -1786,9 +1786,9 @@ func (api *PublicINTAPI) GetForbiddenStatus(ctx context.Context, address common.
 	}
 
 	fields := map[string]interface{}{
-		"forbidden":     state.GetForbidden(address),
-		"forbiddenTime": state.GetForbiddenTime(address),
-		"blocks":        state.GetMinedBlocks(address),
+		"forbidden":      state.GetForbidden(address),
+		"forbiddenEpoch": state.GetForbiddenTime(address),
+		"blocks":         state.GetMinedBlocks(address),
 	}
 	return fields, state.Error()
 }
@@ -2136,9 +2136,12 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	// Add Balance to Candidate's Proxied Balance
 	state.AddProxiedBalanceByUser(args.Candidate, from, amount)
 
-	verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate, ops)
-	if verror != nil {
-		return verror
+	// if forbidden, don't add to next epoch validator vote set
+	if !state.GetForbidden(from) {
+		verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate, ops)
+		if verror != nil {
+			return verror
+		}
 	}
 
 	return nil

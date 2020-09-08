@@ -374,6 +374,9 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			if len(candidateList) > 0 {
 				for addr := range candidateList {
 					if state.GetForbidden(addr) {
+						// first, delete from the candidate list
+						delete(candidateList, addr)
+
 						// if forbidden epoch bigger than 0, subtract 1 epoch
 						forbiddenEpoch := state.GetForbiddenTime(addr)
 						if forbiddenEpoch.Cmp(common.Big0) == 1 {
@@ -391,18 +394,9 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 					delete(candidateList, vAddr)
 				}
 
-				for i, v := range nextEpochVoteSet.Votes {
+				for _, v := range nextEpochVoteSet.Votes {
 					// first, delete from the candidate list
 					delete(candidateList, v.Address)
-
-					// two, if forbidden, remove from next epoch vote set and refund it
-					if state.GetForbidden(v.Address) {
-						nextEpochVoteSet.Votes = append(nextEpochVoteSet.Votes[:i], nextEpochVoteSet.Votes[i+1:]...)
-						delete(nextEpochVoteSet.votesByAddress, v.Address)
-						fmt.Printf("Add candidate to next epoch vote set, remove forbidden validator %v, next epoch vote set is %v\n", v.Address.String(), nextEpochVoteSet)
-
-						refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: v.Amount, Voteout: true})
-					}
 				}
 
 				epoch.logger.Debugf("Add candidate to next epoch vote set after, candidate: %v", candidateList)
