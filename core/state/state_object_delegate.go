@@ -462,7 +462,7 @@ func (self *stateObject) SetForbiddenTime(forbiddenTime *big.Int) {
 }
 
 func (self *stateObject) setForbiddenTime(forbiddenTime *big.Int) {
-	self.data.BlockTime = forbiddenTime
+	self.data.ForbiddenTime = forbiddenTime
 
 	if self.onDirty != nil {
 		self.onDirty(self.Address())
