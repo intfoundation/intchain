@@ -562,8 +562,8 @@ web3._extend({
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter]
 		}),
 		new web3._extend.Method({
-			name: 'unForbid',
-			call: 'int_unForbid',
+			name: 'unForbidden',
+			call: 'int_unForbidden',
 			params: 2,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null]
 		}),

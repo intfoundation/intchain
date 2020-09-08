@@ -915,7 +915,7 @@ func (epoch *Epoch) GetForbiddenDuration() time.Duration {
 	return ForbiddenDuration
 }
 
-// Update validator block time and set forbidden if this validator did not participate in consensus more than 4 Hours
+// Update validator block time and set forbidden if this validator did not participate in consensus in one epoch
 func (epoch *Epoch) UpdateForbiddenState(header *types.Header, prevHeader *types.Header, commit *tmTypes.Commit, state *state.StateDB) {
 	validators := epoch.Validators.Validators
 	height := header.Number.Uint64()
@@ -939,7 +939,7 @@ func (epoch *Epoch) UpdateForbiddenState(header *types.Header, prevHeader *types
 			addr := common.BytesToAddress(v.Address[:])
 			times := state.GetMinedBlocks(addr)
 			if times.Cmp(common.Big0) == 0 {
-				epoch.logger.Debugf("Update validator forbidden state, set %v forbidden, mined block times %v, forbidden epoch %v", addr.String(), times, ForbiddenEpoch)
+				epoch.logger.Debugf("Update validator forbidden state, set %v forbidden, mined blocks %v, forbidden epoch %v", addr.String(), times, ForbiddenEpoch)
 				state.SetForbidden(addr, true)
 				state.SetForbiddenTime(addr, ForbiddenEpoch)
 
@@ -965,7 +965,7 @@ func (epoch *Epoch) UpdateForbiddenState(header *types.Header, prevHeader *types
 
 				state.SetMinedBlocks(addr, newTimes)
 
-				epoch.logger.Debugf("Update validator forbidden state, mined block times %v, current times %v", newTimes, times)
+				epoch.logger.Debugf("Update validator forbidden state, %v new mined block times %v, current times %v", addr.String(), newTimes, times)
 			}
 		}
 	}

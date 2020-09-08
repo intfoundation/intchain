@@ -88,7 +88,7 @@ func ApplyTransactionEx(config *params.ChainConfig, bc *BlockChain, author *comm
 		if err != nil {
 			return nil, 0, err
 		}
-		//log.Infof("ApplyTransactionEx() 0, Chain Function is %v\n", function.String())
+		log.Infof("ApplyTransactionEx() 0, Chain Function is %v", function.String())
 
 		// check Function main/child flag
 		if config.IsMainChain() && !function.AllowInMainChain() {
@@ -136,6 +136,7 @@ func ApplyTransactionEx(config *params.ChainConfig, bc *BlockChain, author *comm
 		if applyCb := GetApplyCb(function); applyCb != nil {
 			if function.IsCrossChainType() {
 				if fn, ok := applyCb.(CrossChainApplyCb); ok {
+					fmt.Printf("application transaction apply callback %v\n", ok)
 					cch.GetMutex().Lock()
 					err := fn(tx, statedb, ops, cch, mining)
 					cch.GetMutex().Unlock()

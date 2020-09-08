@@ -1835,13 +1835,13 @@ func (api *PublicINTAPI) EditValidator(ctx context.Context, from common.Address,
 	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
 }
 
-func (api *PublicINTAPI) UnForbid(ctx context.Context, from common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
-	input, err := intAbi.ChainABI.Pack(intAbi.UnForbid.String())
+func (api *PublicINTAPI) UnForbidden(ctx context.Context, from common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
+	input, err := intAbi.ChainABI.Pack(intAbi.UnForbidden.String())
 	if err != nil {
 		return common.Hash{}, err
 	}
 
-	defaultGas := intAbi.UnForbid.RequiredGas()
+	defaultGas := intAbi.UnForbidden.RequiredGas()
 
 	args := SendTxArgs{
 		From:     from,
@@ -1884,9 +1884,9 @@ func init() {
 	// Edit Validator
 	core.RegisterValidateCb(intAbi.EditValidator, editValidatorValidateCb)
 
-	// UnForbid
-	core.RegisterValidateCb(intAbi.UnForbid, unForbidValidateCb)
-	core.RegisterApplyCb(intAbi.UnForbid, unForbidApplyCb)
+	// UnForbidden
+	core.RegisterValidateCb(intAbi.UnForbidden, unForbiddenValidateCb)
+	core.RegisterApplyCb(intAbi.UnForbidden, unForbiddenApplyCb)
 }
 
 func withdrawRewardValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
@@ -2354,10 +2354,10 @@ func editValidatorValidateCb(tx *types.Transaction, state *state.StateDB, bc *co
 	return nil
 }
 
-func unForbidValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+func unForbiddenValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)
 
-	err := unForbidValidation(from, state, bc)
+	err := unForbiddenValidation(from, state, bc)
 	if err != nil {
 		return err
 	}
@@ -2365,9 +2365,9 @@ func unForbidValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.Bl
 	return nil
 }
 
-func unForbidApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+func unForbiddenApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
 	from := derivedAddressFromTx(tx)
-	err := unForbidValidation(from, state, bc)
+	err := unForbiddenValidation(from, state, bc)
 	if err != nil {
 		return err
 	}
@@ -2380,7 +2380,7 @@ func unForbidApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	return nil
 }
 
-func unForbidValidation(from common.Address, state *state.StateDB, bc *core.BlockChain) error {
+func unForbiddenValidation(from common.Address, state *state.StateDB, bc *core.BlockChain) error {
 	if !state.IsCandidate(from) {
 		return core.ErrNotCandidate
 	}
@@ -2397,14 +2397,14 @@ func unForbidValidation(from common.Address, state *state.StateDB, bc *core.Bloc
 	}
 
 	if !state.GetForbidden(from) {
-		return fmt.Errorf("should not unforbid")
+		return fmt.Errorf("should not unforbidden")
 	}
 
 	forbiddenEpoch := state.GetForbiddenTime(from)
-	fmt.Printf("unforbidden validation, forbidden epoch %v\n", forbiddenEpoch)
+	fmt.Printf("Unforbiddenden validation, forbidden epoch %v\n", forbiddenEpoch)
 
 	if forbiddenEpoch.Cmp(common.Big0) == 1 {
-		return fmt.Errorf("please unforbid %v epoch later", forbiddenEpoch)
+		return fmt.Errorf("please unforbidden %v epoch later", forbiddenEpoch)
 	}
 
 	return nil
