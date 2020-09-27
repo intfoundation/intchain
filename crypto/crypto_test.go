@@ -431,7 +431,7 @@ func TestEthAddress(t *testing.T) {
 }
 
 func TestByte(t *testing.T) {
-	ultTest := "Like Coin"
+	ultTest := "LikeToken"
 	ultt := "LC"
 
 	byte1 := hexutil.Encode([]byte(ultTest))

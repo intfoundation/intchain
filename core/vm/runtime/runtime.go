@@ -54,9 +54,11 @@ func setDefaults(cfg *Config) {
 		cfg.ChainConfig = &params.ChainConfig{
 			ChainId:        big.NewInt(1),
 			HomesteadBlock: new(big.Int),
-			EIP150Block:    new(big.Int),
-			EIP155Block:    new(big.Int),
-			EIP158Block:    new(big.Int),
+			//DAOForkBlock:   new(big.Int),
+			//DAOForkSupport: false,
+			EIP150Block: new(big.Int),
+			EIP155Block: new(big.Int),
+			EIP158Block: new(big.Int),
 		}
 	}
 
@@ -88,8 +90,8 @@ func setDefaults(cfg *Config) {
 // Execute executes the code using the input as call data during the execution.
 // It returns the EVM's return value, the new state and an error if it failed.
 //
-// Execute sets up an in-memory, temporary, environment for the execution of
-// the given code. It makes sure that it's restored to its original state afterwards.
+// Executes sets up a in memory, temporarily, environment for the execution of
+// the given code. It makes sure that it's restored to it's original state afterwards.
 func Execute(code, input []byte, cfg *Config) ([]byte, *state.StateDB, error) {
 	if cfg == nil {
 		cfg = new(Config)

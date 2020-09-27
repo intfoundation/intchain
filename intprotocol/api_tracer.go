@@ -17,13 +17,11 @@
 package intprotocol
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"runtime"
 	"sync"
 	"time"
@@ -486,112 +484,112 @@ func (api *PrivateDebugAPI) traceBlock(ctx context.Context, block *types.Block, 
 // standardTraceBlockToFile configures a new tracer which uses standard JSON output,
 // and traces either a full block or an individual transaction. The return value will
 // be one filename per transaction traced.
-func (api *PrivateDebugAPI) standardTraceBlockToFile(ctx context.Context, block *types.Block, config *StdTraceConfig) ([]string, error) {
-	// If we're tracing a single transaction, make sure it's present
-	if config != nil && config.TxHash != (common.Hash{}) {
-		if !containsTx(block, config.TxHash) {
-			return nil, fmt.Errorf("transaction %#x not found in block", config.TxHash)
-		}
-	}
-	// Create the parent state database
-	if err := api.eth.engine.VerifyHeader(api.eth.blockchain, block.Header(), true); err != nil {
-		return nil, err
-	}
-	parent := api.eth.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1)
-	if parent == nil {
-		return nil, fmt.Errorf("parent %#x not found", block.ParentHash())
-	}
-	reexec := defaultTraceReexec
-	if config != nil && config.Reexec != nil {
-		reexec = *config.Reexec
-	}
-	statedb, err := api.computeStateDB(parent, reexec)
-	if err != nil {
-		return nil, err
-	}
-	// Retrieve the tracing configurations, or use default values
-	var (
-		logConfig vm.LogConfig
-		txHash    common.Hash
-	)
-	if config != nil {
-		if config.LogConfig != nil {
-			logConfig = *config.LogConfig
-		}
-		txHash = config.TxHash
-	}
-	logConfig.Debug = true
-
-	// Execute transaction, either tracing all or just the requested one
-	var (
-		signer = types.MakeSigner(api.eth.blockchain.Config(), block.Number())
-		dumps  []string
-	)
-	for i, tx := range block.Transactions() {
-		// Prepare the trasaction for un-traced execution
-		var (
-			msg, _ = tx.AsMessage(signer)
-			vmctx  = core.NewEVMContext(msg, block.Header(), api.eth.blockchain, nil)
-
-			vmConf vm.Config
-			dump   *os.File
-			writer *bufio.Writer
-			err    error
-		)
-		// If the transaction needs tracing, swap out the configs
-		if tx.Hash() == txHash || txHash == (common.Hash{}) {
-			// Generate a unique temporary file to dump it into
-			prefix := fmt.Sprintf("block_%#x-%d-%#x-", block.Hash().Bytes()[:4], i, tx.Hash().Bytes()[:4])
-
-			dump, err = ioutil.TempFile(os.TempDir(), prefix)
-			if err != nil {
-				return nil, err
-			}
-			dumps = append(dumps, dump.Name())
-
-			// Swap out the noop logger to the standard tracer
-			writer = bufio.NewWriter(dump)
-			vmConf = vm.Config{
-				Debug:                   true,
-				Tracer:                  vm.NewJSONLogger(&logConfig, writer),
-				EnablePreimageRecording: true,
-			}
-		}
-		// Execute the transaction and flush any traces to disk
-		vmenv := vm.NewEVM(vmctx, statedb, api.eth.blockchain.Config(), vmConf)
-		_, _, _, err = core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(msg.Gas()))
-		if writer != nil {
-			writer.Flush()
-		}
-		if dump != nil {
-			dump.Close()
-			log.Info("Wrote standard trace", "file", dump.Name())
-		}
-		if err != nil {
-			return dumps, err
-		}
-		// Finalize the state so any modifications are written to the trie
-		// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
-		statedb.Finalise(vmenv.ChainConfig().IsEIP158(block.Number()))
-
-		// If we've traced the transaction we were looking for, abort
-		if tx.Hash() == txHash {
-			break
-		}
-	}
-	return dumps, nil
-}
-
-// containsTx reports whether the transaction with a certain hash
-// is contained within the specified block.
-func containsTx(block *types.Block, hash common.Hash) bool {
-	for _, tx := range block.Transactions() {
-		if tx.Hash() == hash {
-			return true
-		}
-	}
-	return false
-}
+//func (api *PrivateDebugAPI) standardTraceBlockToFile(ctx context.Context, block *types.Block, config *StdTraceConfig) ([]string, error) {
+//	// If we're tracing a single transaction, make sure it's present
+//	if config != nil && config.TxHash != (common.Hash{}) {
+//		if !containsTx(block, config.TxHash) {
+//			return nil, fmt.Errorf("transaction %#x not found in block", config.TxHash)
+//		}
+//	}
+//	// Create the parent state database
+//	if err := api.eth.engine.VerifyHeader(api.eth.blockchain, block.Header(), true); err != nil {
+//		return nil, err
+//	}
+//	parent := api.eth.blockchain.GetBlock(block.ParentHash(), block.NumberU64()-1)
+//	if parent == nil {
+//		return nil, fmt.Errorf("parent %#x not found", block.ParentHash())
+//	}
+//	reexec := defaultTraceReexec
+//	if config != nil && config.Reexec != nil {
+//		reexec = *config.Reexec
+//	}
+//	statedb, err := api.computeStateDB(parent, reexec)
+//	if err != nil {
+//		return nil, err
+//	}
+//	// Retrieve the tracing configurations, or use default values
+//	var (
+//		logConfig vm.LogConfig
+//		txHash    common.Hash
+//	)
+//	if config != nil {
+//		if config.LogConfig != nil {
+//			logConfig = *config.LogConfig
+//		}
+//		txHash = config.TxHash
+//	}
+//	logConfig.Debug = true
+//
+//	// Execute transaction, either tracing all or just the requested one
+//	var (
+//		signer = types.MakeSigner(api.eth.blockchain.Config(), block.Number())
+//		dumps  []string
+//	)
+//	for i, tx := range block.Transactions() {
+//		// Prepare the trasaction for un-traced execution
+//		var (
+//			msg, _ = tx.AsMessage(signer)
+//			vmctx  = core.NewEVMContext(msg, block.Header(), api.eth.blockchain, nil)
+//
+//			vmConf vm.Config
+//			dump   *os.File
+//			writer *bufio.Writer
+//			err    error
+//		)
+//		// If the transaction needs tracing, swap out the configs
+//		if tx.Hash() == txHash || txHash == (common.Hash{}) {
+//			// Generate a unique temporary file to dump it into
+//			prefix := fmt.Sprintf("block_%#x-%d-%#x-", block.Hash().Bytes()[:4], i, tx.Hash().Bytes()[:4])
+//
+//			dump, err = ioutil.TempFile(os.TempDir(), prefix)
+//			if err != nil {
+//				return nil, err
+//			}
+//			dumps = append(dumps, dump.Name())
+//
+//			// Swap out the noop logger to the standard tracer
+//			writer = bufio.NewWriter(dump)
+//			vmConf = vm.Config{
+//				Debug:                   true,
+//				Tracer:                  vm.NewJSONLogger(&logConfig, writer),
+//				EnablePreimageRecording: true,
+//			}
+//		}
+//		// Execute the transaction and flush any traces to disk
+//		vmenv := vm.NewEVM(vmctx, statedb, api.eth.blockchain.Config(), vmConf)
+//		_, _, _, err = core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(msg.Gas()))
+//		if writer != nil {
+//			writer.Flush()
+//		}
+//		if dump != nil {
+//			dump.Close()
+//			log.Info("Wrote standard trace", "file", dump.Name())
+//		}
+//		if err != nil {
+//			return dumps, err
+//		}
+//		// Finalize the state so any modifications are written to the trie
+//		// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
+//		statedb.Finalise(vmenv.ChainConfig().IsEIP158(block.Number()))
+//
+//		// If we've traced the transaction we were looking for, abort
+//		if tx.Hash() == txHash {
+//			break
+//		}
+//	}
+//	return dumps, nil
+//}
+//
+//// containsTx reports whether the transaction with a certain hash
+//// is contained within the specified block.
+//func containsTx(block *types.Block, hash common.Hash) bool {
+//	for _, tx := range block.Transactions() {
+//		if tx.Hash() == hash {
+//			return true
+//		}
+//	}
+//	return false
+//}
 
 // computeStateDB retrieves the state database associated with a certain block.
 // If no state is locally available for the given block, a number of blocks are
