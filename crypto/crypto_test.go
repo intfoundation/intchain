@@ -431,12 +431,12 @@ func TestEthAddress(t *testing.T) {
 }
 
 func TestByte(t *testing.T) {
-	ultTest := "LikeToken"
-	ultt := "LC"
+	name := "LikeToken"
+	symbol := "LC"
 
-	byte1 := hexutil.Encode([]byte(ultTest))
-	byte2 := hexutil.Encode([]byte(ultt))
-	fmt.Printf("ultTest %v, ultt %v\n", byte1, byte2)
+	byte1 := hexutil.Encode([]byte(name))
+	byte2 := hexutil.Encode([]byte(symbol))
+	fmt.Printf("name %v, symbol %v\n", byte1, byte2)
 }
 
 var messageByte = []byte("")
