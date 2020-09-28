@@ -1124,6 +1124,33 @@ func (s *PublicTransactionPoolAPI) GetRawTransactionByHash(ctx context.Context, 
 	return rlp.EncodeToBytes(tx)
 }
 
+type Log struct {
+	// Consensus fields:
+	// address of the contract that generated the event
+	Address string `json:"address" gencodec:"required"`
+	// list of topics provided by the contract.
+	Topics []common.Hash `json:"topics" gencodec:"required"`
+	// supplied by the contract, usually ABI-encoded
+	Data string `json:"data" gencodec:"required"`
+
+	// Derived fields. These fields are filled in by the node
+	// but not secured by consensus.
+	// block in which the transaction was included
+	BlockNumber uint64 `json:"blockNumber"`
+	// hash of the transaction
+	TxHash common.Hash `json:"transactionHash" gencodec:"required"`
+	// index of the transaction in the block
+	TxIndex uint `json:"transactionIndex" gencodec:"required"`
+	// hash of the block in which the transaction was included
+	BlockHash common.Hash `json:"blockHash"`
+	// index of the log in the receipt
+	Index uint `json:"logIndex" gencodec:"required"`
+
+	// The Removed field is true if this log was reverted due to a chain reorganisation.
+	// You must pay attention to this field if you receive logs through a filter query.
+	Removed bool `json:"removed"`
+}
+
 // GetTransactionReceipt returns the transaction receipt for the given transaction hash.
 func (s *PublicTransactionPoolAPI) GetTransactionReceipt(ctx context.Context, hash common.Hash) (map[string]interface{}, error) {
 	tx, blockHash, blockNumber, index := rawdb.ReadTransaction(s.b.ChainDb(), hash)
@@ -1173,8 +1200,26 @@ func (s *PublicTransactionPoolAPI) GetTransactionReceipt(ctx context.Context, ha
 	}
 	if receipt.Logs == nil {
 		fields["logs"] = [][]*types.Log{}
+	} else {
+		var log []*Log
+		for _, l := range receipt.Logs {
+			newLog := &Log{
+				Address:     l.Address.String(),
+				Topics:      l.Topics,
+				Data:        hexutil.Encode(l.Data),
+				BlockNumber: l.BlockNumber,
+				TxHash:      l.TxHash,
+				TxIndex:     l.TxIndex,
+				BlockHash:   l.BlockHash,
+				Index:       l.Index,
+				Removed:     l.Removed,
+			}
+			log = append(log, newLog)
+		}
+		fields["logs"] = log
 	}
-	// If the ContractAddress is 20 0x0 bytes, assume it is not a contract creation
+
+	// If the ContractAddress is 32 0x0 bytes, assume it is not a contract creation
 	if receipt.ContractAddress != (common.Address{}) {
 		fields["contractAddress"] = receipt.ContractAddress.String()
 	}
