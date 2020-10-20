@@ -144,7 +144,7 @@ func makeConfigNode(ctx *cli.Context, chainId string) (*node.Node, gethConfig) {
 func makeFullNode(ctx *cli.Context, cch core.CrossChainHelper, chainId string) *node.Node {
 	stack, cfg := makeConfigNode(ctx, chainId)
 
-	utils.RegisterEthService(stack, &cfg.Eth, ctx, cch)
+	utils.RegisterIntService(stack, &cfg.Eth, ctx, cch)
 
 	// Whisper must be explicitly enabled by specifying at least 1 whisper flag or in dev mode
 	//shhEnabled := enableWhisper(ctx)

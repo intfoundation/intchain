@@ -284,7 +284,7 @@ func importChain(ctx *cli.Context) error {
 
 	stack, cfg := makeConfigNode(ctx, chainName)
 	cch := GetCMInstance(ctx).cch
-	utils.RegisterEthService(stack, &cfg.Eth, ctx, cch)
+	utils.RegisterIntService(stack, &cfg.Eth, ctx, cch)
 	//stack := makeFullNode(ctx)
 	defer stack.Close()
 
@@ -386,7 +386,7 @@ func exportChain(ctx *cli.Context) error {
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
-	utils.RegisterEthService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
+	utils.RegisterIntService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
 	//stack := makeFullNode(ctx)
 	defer stack.Close()
 
@@ -429,7 +429,7 @@ func importPreimages(ctx *cli.Context) error {
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
-	utils.RegisterEthService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
+	utils.RegisterIntService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
 	defer stack.Close()
 
 	db := utils.MakeChainDatabase(ctx, stack)
@@ -454,7 +454,7 @@ func exportPreimages(ctx *cli.Context) error {
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
-	utils.RegisterEthService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
+	utils.RegisterIntService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
 	defer stack.Close()
 
 	db := utils.MakeChainDatabase(ctx, stack)
@@ -602,7 +602,7 @@ func countBlockState(ctx *cli.Context) error {
 	}
 
 	stack, cfg := makeConfigNode(ctx, chainName)
-	utils.RegisterEthService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
+	utils.RegisterIntService(stack, &cfg.Eth, ctx, GetCMInstance(ctx).cch)
 	defer stack.Close()
 
 	chainDb := utils.MakeChainDatabase(ctx, stack)

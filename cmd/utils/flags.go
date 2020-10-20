@@ -1075,8 +1075,8 @@ func SetGeneralConfig(ctx *cli.Context) {
 	params.GenCfg.PerfTest = ctx.GlobalBool(PerfTestFlag.Name)
 }
 
-// registerEthService adds an INT Chain client to the stack.
-func RegisterEthService(stack *node.Node, cfg *intprotocol.Config, cliCtx *cli.Context, cch core.CrossChainHelper) {
+// registerIntService adds an INT Chain client to the stack.
+func RegisterIntService(stack *node.Node, cfg *intprotocol.Config, cliCtx *cli.Context, cch core.CrossChainHelper) {
 	var err error
 	err = stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
 		//return NewBackend(ctx, cfg, cliCtx, pNode, cch)
@@ -1093,7 +1093,7 @@ func RegisterEthService(stack *node.Node, cfg *intprotocol.Config, cliCtx *cli.C
 }
 
 //// RegisterEthService adds an INT Chain client to the stack.
-//func RegisterEthService(stack *node.Node, cfg *intprotocol.Config) {
+//func RegisterIntService(stack *node.Node, cfg *intprotocol.Config) {
 //	var err error
 //	err = stack.Register(func(ctx *node.ServiceContext) (node.Service, error) {
 //		fullNode, err := intprotocol.New(ctx, cfg, nil, nil, stack.GetLogger(), false)

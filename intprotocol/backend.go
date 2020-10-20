@@ -122,7 +122,7 @@ func New(ctx *node.ServiceContext, config *Config, cliCtx *cli.Context,
 	chainConfig.ChainLogger = logger
 	logger.Info("Initialised chain configuration", "config", chainConfig)
 
-	eth := &IntChain{
+	intChain := &IntChain{
 		config:         config,
 		chainDb:        chainDb,
 		pruneDb:        pruneDb,
@@ -167,7 +167,7 @@ func New(ctx *node.ServiceContext, config *Config, cliCtx *cli.Context,
 	)
 	//eth.engine = CreateConsensusEngine(ctx, config, chainConfig, chainDb, cliCtx, cch)
 
-	eth.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, eth.chainConfig, eth.engine, vmConfig, cch)
+	intChain.blockchain, err = core.NewBlockChain(chainDb, cacheConfig, intChain.chainConfig, intChain.engine, vmConfig, cch)
 	if err != nil {
 		return nil, err
 	}
@@ -175,30 +175,30 @@ func New(ctx *node.ServiceContext, config *Config, cliCtx *cli.Context,
 	// Rewind the chain in case of an incompatible config upgrade.
 	if compat, ok := genesisErr.(*params.ConfigCompatError); ok {
 		logger.Warn("Rewinding chain to upgrade configuration", "err", compat)
-		eth.blockchain.SetHead(compat.RewindTo)
+		intChain.blockchain.SetHead(compat.RewindTo)
 		rawdb.WriteChainConfig(chainDb, genesisHash, chainConfig)
 	}
-	eth.bloomIndexer.Start(eth.blockchain)
+	intChain.bloomIndexer.Start(intChain.blockchain)
 
 	if config.TxPool.Journal != "" {
 		config.TxPool.Journal = ctx.ResolvePath(config.TxPool.Journal)
 	}
-	eth.txPool = core.NewTxPool(config.TxPool, eth.chainConfig, eth.blockchain, cch)
+	intChain.txPool = core.NewTxPool(config.TxPool, intChain.chainConfig, intChain.blockchain, cch)
 
-	if eth.protocolManager, err = NewProtocolManager(eth.chainConfig, config.SyncMode, config.NetworkId, eth.eventMux, eth.txPool, eth.engine, eth.blockchain, chainDb, cch); err != nil {
+	if intChain.protocolManager, err = NewProtocolManager(intChain.chainConfig, config.SyncMode, config.NetworkId, intChain.eventMux, intChain.txPool, intChain.engine, intChain.blockchain, chainDb, cch); err != nil {
 		return nil, err
 	}
-	eth.miner = miner.New(eth, eth.chainConfig, eth.EventMux(), eth.engine, config.MinerGasFloor, config.MinerGasCeil, cch)
-	eth.miner.SetExtra(makeExtraData(config.ExtraData))
+	intChain.miner = miner.New(intChain, intChain.chainConfig, intChain.EventMux(), intChain.engine, config.MinerGasFloor, config.MinerGasCeil, cch)
+	intChain.miner.SetExtra(makeExtraData(config.ExtraData))
 
-	eth.ApiBackend = &EthApiBackend{eth, nil, cch}
+	intChain.ApiBackend = &EthApiBackend{intChain, nil, cch}
 	gpoParams := config.GPO
 	if gpoParams.Default == nil {
 		gpoParams.Default = config.MinerGasPrice
 	}
-	eth.ApiBackend.gpo = gasprice.NewOracle(eth.ApiBackend, gpoParams)
+	intChain.ApiBackend.gpo = gasprice.NewOracle(intChain.ApiBackend, gpoParams)
 
-	return eth, nil
+	return intChain, nil
 }
 
 func makeExtraData(extra []byte) []byte {
