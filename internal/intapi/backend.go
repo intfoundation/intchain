@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
 
-// Package ethapi implements the general INT Chain API functions.
-package ethapi
+// Package intapi implements the general INT Chain API functions.
+package intapi
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package ethapi
+package intapi
 
 import (
 	"bytes"

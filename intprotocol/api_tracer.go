@@ -33,7 +33,7 @@ import (
 	"github.com/intfoundation/intchain/core/state"
 	"github.com/intfoundation/intchain/core/types"
 	"github.com/intfoundation/intchain/core/vm"
-	"github.com/intfoundation/intchain/internal/ethapi"
+	"github.com/intfoundation/intchain/internal/intapi"
 	"github.com/intfoundation/intchain/intprotocol/tracers"
 	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/rlp"
@@ -726,11 +726,11 @@ func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, v
 	// Depending on the tracer type, format and return the output
 	switch tracer := tracer.(type) {
 	case *vm.StructLogger:
-		return &ethapi.ExecutionResult{
+		return &intapi.ExecutionResult{
 			Gas:         gas,
 			Failed:      failed,
 			ReturnValue: fmt.Sprintf("%x", ret),
-			StructLogs:  ethapi.FormatLogs(tracer.StructLogs()),
+			StructLogs:  intapi.FormatLogs(tracer.StructLogs()),
 		}, nil
 
 	case *tracers.Tracer:

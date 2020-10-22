@@ -34,7 +34,7 @@ import (
 	"github.com/intfoundation/intchain/core/vm"
 	"github.com/intfoundation/intchain/event"
 	"github.com/intfoundation/intchain/intdb"
-	"github.com/intfoundation/intchain/internal/ethapi"
+	"github.com/intfoundation/intchain/internal/intapi"
 	"github.com/intfoundation/intchain/intprotocol/downloader"
 	"github.com/intfoundation/intchain/intprotocol/filters"
 	"github.com/intfoundation/intchain/intprotocol/gasprice"
@@ -91,7 +91,7 @@ type IntChain struct {
 	solcPath string
 
 	networkId     uint64
-	netRPCService *ethapi.PublicNetAPI
+	netRPCService *intapi.PublicNetAPI
 
 	lock sync.RWMutex // Protects the variadic fields (e.g. gas price and etherbase)
 }
@@ -233,7 +233,7 @@ func CreateConsensusEngine(ctx *node.ServiceContext, config *Config, chainConfig
 // NOTE, some of these services probably need to be moved to somewhere else.
 func (s *IntChain) APIs() []rpc.API {
 
-	apis := ethapi.GetAPIs(s.ApiBackend, s.solcPath)
+	apis := intapi.GetAPIs(s.ApiBackend, s.solcPath)
 	// Append any APIs exposed explicitly by the consensus engine
 	apis = append(apis, s.engine.APIs(s.BlockChain())...)
 	// Append all the local APIs and return
@@ -408,7 +408,7 @@ func (s *IntChain) Start(srvr *p2p.Server) error {
 	s.startBloomHandlers()
 
 	// Start the RPC service
-	s.netRPCService = ethapi.NewPublicNetAPI(srvr, s.NetVersion())
+	s.netRPCService = intapi.NewPublicNetAPI(srvr, s.NetVersion())
 
 	// Figure out a max peers count based on the server limits
 	maxPeers := srvr.MaxPeers
