@@ -37,11 +37,11 @@ import (
 	"github.com/intfoundation/intchain/rpc"
 )
 
-// EthApiBackend implements ethapi.Backend for full nodes
+// EthApiBackend implements intapi.Backend for full nodes
 type EthApiBackend struct {
 	eth *IntChain
 	gpo *gasprice.Oracle
-	//apiBridge        ethapi.InnerAPIBridge
+	//apiBridge        intapi.InnerAPIBridge
 	crossChainHelper core.CrossChainHelper
 }
 
@@ -222,11 +222,11 @@ func (b *EthApiBackend) ServiceFilter(ctx context.Context, session *bloombits.Ma
 	}
 }
 
-//func (b *EthApiBackend) SetInnerAPIBridge(inBridge ethapi.InnerAPIBridge) {
+//func (b *EthApiBackend) SetInnerAPIBridge(inBridge intapi.InnerAPIBridge) {
 //	b.apiBridge = inBridge
 //}
 //
-//func (b *EthApiBackend) GetInnerAPIBridge() ethapi.InnerAPIBridge {
+//func (b *EthApiBackend) GetInnerAPIBridge() intapi.InnerAPIBridge {
 //	return b.apiBridge
 //}
 
