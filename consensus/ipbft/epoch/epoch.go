@@ -338,7 +338,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
 				if !state.GetForbidden(vAddr) {
-					fmt.Printf("Should enter new epoch, validator %v is not forbidden\n", vAddr.String())
+					//epoch.logger.Debugf("Should enter new epoch, validator %v is not forbidden", vAddr.String())
 					totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
 					// Voting Power = Proxied amount + Deposit amount
 					newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
@@ -348,6 +348,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 						v.VotingPower = newVotingPower
 					}
 				} else {
+					epoch.logger.Debugf("Should enter new epoch, validator %v is forbidden", vAddr.String())
 					// if forbidden then remove from the validator set and candidate list
 					newValidators.Remove(v.Address)
 					delete(candidateList, vAddr)
@@ -357,17 +358,16 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 					if forbiddenEpoch.Cmp(common.Big0) == 1 {
 						forbiddenEpoch.Sub(forbiddenEpoch, common.Big1)
 						state.SetForbiddenTime(vAddr, forbiddenEpoch)
-						fmt.Printf("Should enter new epoch 1, left forbidden epoch is %v\n", forbiddenEpoch)
+						epoch.logger.Debugf("Should enter new epoch 1, left forbidden epoch is %v", forbiddenEpoch)
 					}
 
 					refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: v.VotingPower, Voteout: true})
-					epoch.logger.Debugf("Should enter new epoch, validator %v is forbidden", vAddr.String())
 				}
 			}
 
 			if nextEpochVoteSet == nil {
 				nextEpochVoteSet = NewEpochValidatorVoteSet()
-				fmt.Printf("Should enter new epoch, next epoch vote set is nil, %v\n", nextEpochVoteSet)
+				epoch.logger.Debugf("Should enter new epoch, next epoch vote set is nil, %v", nextEpochVoteSet)
 			}
 
 			// if has candidate and next epoch vote set not nil, add them to next epoch vote set
@@ -382,7 +382,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 						if forbiddenEpoch.Cmp(common.Big0) == 1 {
 							forbiddenEpoch.Sub(forbiddenEpoch, common.Big1)
 							state.SetForbiddenTime(addr, forbiddenEpoch)
-							fmt.Printf("Should enter new epoch 2, left forbidden epoch is %v\n", forbiddenEpoch)
+							//epoch.logger.Debugf("Should enter new epoch 2, left forbidden epoch is %v\n", forbiddenEpoch)
 						}
 					}
 				}
@@ -457,7 +457,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 				// Store the vote
 				for i := range voteArr {
-					fmt.Printf("address:%v, amount: %v\n", voteArr[i].Address.String(), voteArr[i].Amount)
+					epoch.logger.Debugf("address:%v, amount: %v\n", voteArr[i].Address.String(), voteArr[i].Amount)
 					nextEpochVoteSet.StoreVote(voteArr[i])
 				}
 			}
