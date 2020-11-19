@@ -921,7 +921,7 @@ func (epoch *Epoch) UpdateForbiddenState(header *types.Header, prevHeader *types
 	height := header.Number.Uint64()
 	//forbiddenTime := prevHeader.Time
 
-	epoch.logger.Infof("Update validator forbidden state height %v", height)
+	//epoch.logger.Infof("Update validator forbidden state height %v", height)
 
 	if height <= 1 || height == epoch.StartBlock {
 		return
@@ -965,7 +965,7 @@ func (epoch *Epoch) UpdateForbiddenState(header *types.Header, prevHeader *types
 
 				state.SetMinedBlocks(addr, newTimes)
 
-				epoch.logger.Debugf("Update validator forbidden state, %v new mined block times %v, current times %v", addr.String(), newTimes, times)
+				//epoch.logger.Debugf("Update validator forbidden state, %v new mined block times %v, current times %v", addr.String(), newTimes, times)
 			}
 		}
 	}
