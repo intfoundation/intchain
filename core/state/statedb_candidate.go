@@ -49,7 +49,7 @@ func (self *StateDB) GetCandidateSet() CandidateSet {
 }
 
 func (self *StateDB) commitCandidateSet() {
-	fmt.Printf("candidate set bug, commit candidate set, %v\n", self.candidateSet)
+	//fmt.Printf("candidate set bug, commit candidate set, %v\n", self.candidateSet)
 	data, err := rlp.EncodeToBytes(self.candidateSet)
 	if err != nil {
 		panic(fmt.Errorf("can't encode candidate set : %v", err))

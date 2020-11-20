@@ -746,7 +746,7 @@ func (s *StateDB) Finalise(deleteEmptyObjects bool) {
 	}
 
 	if s.candidateSetDirty {
-		fmt.Printf("candidate set bug, candidate set dirty commit candidate set")
+		//fmt.Printf("candidate set bug, candidate set dirty commit candidate set")
 		s.commitCandidateSet()
 	}
 
