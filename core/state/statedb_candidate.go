@@ -26,7 +26,7 @@ func (self *StateDB) ClearCandidateSetByAddress(addr common.Address) {
 }
 
 func (self *StateDB) GetCandidateSet() CandidateSet {
-	fmt.Printf("candidate set bug, get candidate set 1, %v\n", self.candidateSet)
+	//fmt.Printf("candidate set bug, get candidate set 1, %v\n", self.candidateSet)
 	if len(self.candidateSet) != 0 {
 		return self.candidateSet
 	}
@@ -44,7 +44,7 @@ func (self *StateDB) GetCandidateSet() CandidateSet {
 		}
 		self.candidateSet = value
 	}
-	fmt.Printf("candidate set bug, get candidate set 2, %v\n", value)
+	//fmt.Printf("candidate set bug, get candidate set 2, %v\n", value)
 	return value
 }
 
