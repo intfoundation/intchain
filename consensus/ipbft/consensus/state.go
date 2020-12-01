@@ -85,7 +85,7 @@ func (tp *TimeoutParams) Prevote(round int) time.Duration {
 	if round < 5 {
 		return time.Duration(tp.Prevote0+tp.PrevoteDelta*round) * time.Millisecond
 	} else {
-		return time.Duration(tp.Prevote0+tp.PrevoteDelta*int(math.Pow(2, float64(round-1)))) * time.Millisecond
+		return time.Duration(tp.Prevote0+tp.PrevoteDelta*int(math.Pow(1.5, float64(round-1)))) * time.Millisecond
 	}
 }
 
@@ -94,7 +94,7 @@ func (tp *TimeoutParams) Precommit(round int) time.Duration {
 	if round < 5 {
 		return time.Duration(tp.Precommit0+tp.PrecommitDelta*round) * time.Millisecond
 	} else {
-		return time.Duration(tp.Precommit0+tp.PrecommitDelta*int(math.Pow(2, float64(round-1)))) * time.Millisecond
+		return time.Duration(tp.Precommit0+tp.PrecommitDelta*int(math.Pow(1.5, float64(round-1)))) * time.Millisecond
 	}
 }
 
@@ -1585,28 +1585,28 @@ func (cs *ConsensusState) defaultSetProposal(proposal *types.Proposal) error {
 	}
 
 	if proposal.Round == cs.Round {
-		fmt.Printf("default set proposal1, proposal.Round %v, cs.Round %v\n", proposal.Round, cs.Round)
-		fmt.Printf("default set proposal1, proposal %v, cs %v\n", proposal, cs)
-		fmt.Printf("default set proposal1, proposal.Signature %v\n", proposal.Signature.String())
-		fmt.Printf("default set proposal1, cs.GetProposer().PubKey %v\n", cs.GetProposer().PubKey.KeyString())
-		fmt.Printf("default set proposal1, cs.chainConfig.IntChainId %v\n", cs.chainConfig.IntChainId)
-		fmt.Printf("default set proposal1, verifyBytes(cs, proposal.Signature) %v, %v\n", types.SignBytes(cs.chainConfig.IntChainId, proposal), proposal.Signature.String())
 
 		// Verify signature
 		if !cs.GetProposer().PubKey.VerifyBytes(types.SignBytes(cs.chainConfig.IntChainId, proposal), proposal.Signature) {
+			fmt.Printf("default set proposal1, proposal.Round %v, cs.Round %v\n", proposal.Round, cs.Round)
+			fmt.Printf("default set proposal1, proposal %v, cs %v\n", proposal, cs)
+			fmt.Printf("default set proposal1, proposal.Signature %v\n", proposal.Signature.String())
+			fmt.Printf("default set proposal1, cs.GetProposer().PubKey %v\n", cs.GetProposer().PubKey.KeyString())
+			fmt.Printf("default set proposal1, cs.chainConfig.IntChainId %v\n", cs.chainConfig.IntChainId)
+			fmt.Printf("default set proposal1, verifyBytes(cs, proposal.Signature) %v, %v\n", types.SignBytes(cs.chainConfig.IntChainId, proposal), proposal.Signature.String())
 			return ErrInvalidProposalSignature
 		}
 
 	} else /*proposal.Round < cs.Round*/ {
-		fmt.Printf("default set proposal2, proposal.Round %v, cs.Round %v\n", proposal.Round, cs.Round)
-		fmt.Printf("default set proposal2, proposal %v, cs %v\n", proposal, cs)
-		fmt.Printf("default set proposal2, proposal.Signature %v\n", proposal.Signature.String())
-		fmt.Printf("default set proposal2, cs.proposerByRound(proposal.Round).Proposer.PubKey %v\n", cs.proposerByRound(proposal.Round).Proposer.PubKey.KeyString())
-		fmt.Printf("default set proposal2, cs.chainConfig.IntChainId %v\n", cs.chainConfig.IntChainId)
-		fmt.Printf("default set proposal2, verifyBytes(cs, proposal.Signature) %v, %v\n", types.SignBytes(cs.chainConfig.IntChainId, proposal), proposal.Signature.String())
 
 		// Verify signature
 		if !cs.proposerByRound(proposal.Round).Proposer.PubKey.VerifyBytes(types.SignBytes(cs.chainConfig.IntChainId, proposal), proposal.Signature) {
+			fmt.Printf("default set proposal2, proposal.Round %v, cs.Round %v\n", proposal.Round, cs.Round)
+			fmt.Printf("default set proposal2, proposal %v, cs %v\n", proposal, cs)
+			fmt.Printf("default set proposal2, proposal.Signature %v\n", proposal.Signature.String())
+			fmt.Printf("default set proposal2, cs.proposerByRound(proposal.Round).Proposer.PubKey %v\n", cs.proposerByRound(proposal.Round).Proposer.PubKey.KeyString())
+			fmt.Printf("default set proposal2, cs.chainConfig.IntChainId %v\n", cs.chainConfig.IntChainId)
+			fmt.Printf("default set proposal2, verifyBytes(cs, proposal.Signature) %v, %v\n", types.SignBytes(cs.chainConfig.IntChainId, proposal), proposal.Signature.String())
 			return ErrInvalidProposalSignature
 		}
 
