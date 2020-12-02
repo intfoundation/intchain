@@ -26,7 +26,7 @@ var MainnetBootnodes = []string{
 // TestnetBootnodes are the enode URLs of the P2P bootstrap nodes running on the
 // INT Chain test network.
 var TestnetBootnodes = []string{
-	//"enode://6134c7e0034ac4ae16d0f16ba0fb08aa3ebdc5a141c566241ee98a87b2f805e85c8671a03fb916ce445a8938b9f8f5fd48310c6469314a44a80b701bf09e63fe@101.32.74.50:8550",   // Titans
+	"enode://6134c7e0034ac4ae16d0f16ba0fb08aa3ebdc5a141c566241ee98a87b2f805e85c8671a03fb916ce445a8938b9f8f5fd48310c6469314a44a80b701bf09e63fe@101.32.74.50:8550", // Titans
 	//"enode://d5f3fc19f459b7684f2f9c27170f719551763bd2d8c1c90cdc6c84fb537deb56866d1bd4a15150e65dced40206c8e4d686058e0251d7db194435c4689ec3ad75@129.226.59.148:8551", // Oceanus
 	//"enode://7e6322f103803be6f3f5d8faba8da2effd8462e6171435dbff723d55ba30df61bb0145fa8b826644bc99c0207c8dc198d95fc8cab06ce53c140f0136bf95f9ef@129.226.128.55:8551", // Iapetus
 	//"enode://b1b1d48898bfa0c0a40700c351cc50e0a9d2407c7ce952dc4d6e671cbe1921d0ba79fb88acedcd8d633a2a19e6951d0837a99a6a5169a0dbd74122b6584a99e8@129.226.63.13:8551",  // Mnemosyne
