@@ -31,12 +31,11 @@ const (
 	EPOCH_SAVED                     // value --> 3
 
 	MinimumValidatorsSize = 1
-	MaximumValidatorsSize = 100 // TODO the max validator size will increase to 100 in the future
+	MaximumValidatorsSize = 28
 
 	epochKey       = "Epoch:%v"
 	latestEpochKey = "LatestEpoch"
 
-	TimeForForbidden  = 4 * time.Hour
 	ForbiddenDuration = 24 * time.Hour
 )
 
