@@ -82,14 +82,6 @@ func UnmarshalFixedJSON(typ reflect.Type, input, out []byte) error {
 	return wrapTypeError(UnmarshalFixedText(typ.String(), input[1:len(input)-1], out), typ)
 }
 
-// 专门为地址解析准备
-func UnmarshalAddrFixedJSON(typ reflect.Type, input, out []byte) error {
-	if !isString(input) {
-		return errNonString(typ)
-	}
-	return wrapTypeError(UnmarshalAddrFixedText(typ.String(), input[1:len(input)-1], out), typ)
-}
-
 // UnmarshalFixedText decodes the input as a string with 0x prefix. The length of out
 // determines the required input length. This function is commonly used to implement the
 // UnmarshalText method for fixed-size types.
@@ -108,43 +100,6 @@ func UnmarshalFixedText(typname string, input, out []byte) error {
 		}
 	}
 	hex.Decode(out, raw)
-	//fmt.Printf("json UnmarshalFixedText out=%v\n", out)
-	return nil
-}
-
-// 专门为地址解析准备
-func UnmarshalAddrFixedText(typname string, input, out []byte) error {
-	raw, err := checkText(input, false)
-
-	if err != nil {
-		return err
-	}
-
-	var rawBytes []byte
-	if len(raw) == 2*len(out) {
-		rawBytes, err = Decode(string(append([]byte("0x"), raw...)))
-		if err != nil {
-			return fmt.Errorf("hex decode %s err %v ", typname, err)
-		}
-		raw = rawBytes
-	}
-
-	if len(raw) != len(out) {
-		return fmt.Errorf("byte has length %d, want %d for %s", len(raw), len(out), typname)
-	}
-
-	//var addr = common.Address{}
-
-	for i, v := range raw {
-		out[i] = v
-		//addr[i] = v
-	}
-
-	//b := addr.IsValidate()
-	//if !b {
-	//	return fmt.Errorf("invalid INT address")
-	//}
-	//fmt.Printf("json UnmarshalAddrFixedText out=%v\n", out)
 	return nil
 }
 

@@ -1319,8 +1319,6 @@ func (args *SendTxArgs) setDefaults(ctx context.Context, b Backend) error {
 		if len(input) == 0 {
 			return errors.New(`contract creation without any data provided`)
 		}
-	} else if !crypto.ValidateINTAddr(string(args.To[:])) { // added on 2019年11月02日
-		return errors.New(`invalid address`)
 	}
 
 	if args.Nonce == nil {
