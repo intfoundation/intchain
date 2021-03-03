@@ -30,7 +30,7 @@ const (
 	EPOCH_VOTED_NOT_SAVED           // value --> 2
 	EPOCH_SAVED                     // value --> 3
 
-	MinimumValidatorsSize = 1
+	MinimumValidatorsSize = 13
 	MaximumValidatorsSize = 28
 
 	epochKey       = "Epoch:%v"
@@ -628,8 +628,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 	}
 
 	// Determine the Validator Size
-	//valSize := oldValSize + newValSize/2
-	valSize := oldValSize + newValSize
+	valSize := oldValSize + newValSize/2
 	if valSize > MaximumValidatorsSize {
 		valSize = MaximumValidatorsSize
 	} else if valSize < MinimumValidatorsSize {
