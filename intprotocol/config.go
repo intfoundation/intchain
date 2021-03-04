@@ -33,18 +33,17 @@ import (
 	"github.com/intfoundation/intchain/params"
 )
 
-// DefaultConfig contains default settings for use on the INTChain main net.
+// DefaultConfig contains default settings for use on the INT Chain main net.
 var DefaultConfig = Config{
 	//SyncMode: downloader.FastSync,
-	SyncMode: downloader.FullSync,
-	//NetworkId:      1,
-	NetworkId:      8550,
-	DatabaseCache:  512,
+	SyncMode:       downloader.FullSync,
+	NetworkId:      1,
+	DatabaseCache:  768,
 	TrieCleanCache: 256,
 	TrieDirtyCache: 256,
 	TrieTimeout:    60 * time.Minute,
-	MinerGasFloor:  120000000,
-	MinerGasCeil:   120000000,
+	MinerGasFloor:  80000000,
+	MinerGasCeil:   80000000,
 	MinerGasPrice:  big.NewInt(params.GWei),
 
 	TxPool: core.DefaultTxPoolConfig,
