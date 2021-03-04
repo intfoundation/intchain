@@ -65,12 +65,12 @@ type StateDB struct {
 	rewardSetDirty bool
 
 	// candidate set
-	candidateSet      CandidateSet
-	candidateSetDirty bool
+	//candidateSet      CandidateSet
+	//candidateSetDirty bool
 
 	// forbidden set
-	forbiddenSet      ForbiddenSet
-	forbiddenSetDirty bool
+	//forbiddenSet      ForbiddenSet
+	//forbiddenSetDirty bool
 
 	// Cache of Child Chain Reward Per Block
 	childChainRewardPerBlock      *big.Int
@@ -108,18 +108,18 @@ func New(root common.Hash, db Database) (*StateDB, error) {
 	}
 
 	return &StateDB{
-		db:                            db,
-		trie:                          tr,
-		stateObjects:                  make(map[common.Address]*stateObject),
-		stateObjectsDirty:             make(map[common.Address]struct{}),
-		delegateRefundSet:             make(DelegateRefundSet),
-		delegateRefundSetDirty:        false,
-		rewardSet:                     make(RewardSet),
-		rewardSetDirty:                false,
-		candidateSet:                  make(CandidateSet),
-		candidateSetDirty:             false,
-		forbiddenSet:                  make(ForbiddenSet),
-		forbiddenSetDirty:             false,
+		db:                     db,
+		trie:                   tr,
+		stateObjects:           make(map[common.Address]*stateObject),
+		stateObjectsDirty:      make(map[common.Address]struct{}),
+		delegateRefundSet:      make(DelegateRefundSet),
+		delegateRefundSetDirty: false,
+		rewardSet:              make(RewardSet),
+		rewardSetDirty:         false,
+		//candidateSet:                  make(CandidateSet),
+		//candidateSetDirty:             false,
+		//forbiddenSet:                  make(ForbiddenSet),
+		//forbiddenSetDirty:             false,
 		childChainRewardPerBlock:      nil,
 		childChainRewardPerBlockDirty: false,
 		logs:                          make(map[common.Hash][]*types.Log),
@@ -150,8 +150,8 @@ func (self *StateDB) Reset(root common.Hash) error {
 	self.stateObjectsDirty = make(map[common.Address]struct{})
 	self.delegateRefundSet = make(DelegateRefundSet)
 	self.rewardSet = make(RewardSet)
-	self.candidateSet = make(CandidateSet)
-	self.forbiddenSet = make(ForbiddenSet)
+	//self.candidateSet = make(CandidateSet)
+	//self.forbiddenSet = make(ForbiddenSet)
 	self.childChainRewardPerBlock = nil
 	self.thash = common.Hash{}
 	self.bhash = common.Hash{}
@@ -632,18 +632,18 @@ func (db *StateDB) ForEachProxied(addr common.Address, cb func(key common.Addres
 func (self *StateDB) Copy() *StateDB {
 	// Copy all the basic fields, initialize the memory ones
 	state := &StateDB{
-		db:                            self.db,
-		trie:                          self.db.CopyTrie(self.trie),
-		stateObjects:                  make(map[common.Address]*stateObject, len(self.stateObjectsDirty)),
-		stateObjectsDirty:             make(map[common.Address]struct{}, len(self.stateObjectsDirty)),
-		delegateRefundSet:             make(DelegateRefundSet, len(self.delegateRefundSet)),
-		delegateRefundSetDirty:        self.delegateRefundSetDirty,
-		rewardSet:                     make(RewardSet, len(self.rewardSet)),
-		rewardSetDirty:                self.rewardSetDirty,
-		candidateSet:                  make(CandidateSet, len(self.candidateSet)),
-		candidateSetDirty:             self.candidateSetDirty,
-		forbiddenSet:                  make(ForbiddenSet, len(self.forbiddenSet)),
-		forbiddenSetDirty:             self.forbiddenSetDirty,
+		db:                     self.db,
+		trie:                   self.db.CopyTrie(self.trie),
+		stateObjects:           make(map[common.Address]*stateObject, len(self.stateObjectsDirty)),
+		stateObjectsDirty:      make(map[common.Address]struct{}, len(self.stateObjectsDirty)),
+		delegateRefundSet:      make(DelegateRefundSet, len(self.delegateRefundSet)),
+		delegateRefundSetDirty: self.delegateRefundSetDirty,
+		rewardSet:              make(RewardSet, len(self.rewardSet)),
+		rewardSetDirty:         self.rewardSetDirty,
+		//candidateSet:                  make(CandidateSet, len(self.candidateSet)),
+		//candidateSetDirty:             self.candidateSetDirty,
+		//forbiddenSet:                  make(ForbiddenSet, len(self.forbiddenSet)),
+		//forbiddenSetDirty:             self.forbiddenSetDirty,
 		childChainRewardPerBlockDirty: self.childChainRewardPerBlockDirty,
 		refund:                        self.refund,
 		logs:                          make(map[common.Hash][]*types.Log, len(self.logs)),
@@ -662,13 +662,13 @@ func (self *StateDB) Copy() *StateDB {
 		state.rewardSet[addr] = struct{}{}
 	}
 
-	for addr := range self.candidateSet {
-		state.candidateSet[addr] = struct{}{}
-	}
+	//for addr := range self.candidateSet {
+	//	state.candidateSet[addr] = struct{}{}
+	//}
 
-	for addr := range self.forbiddenSet {
-		state.forbiddenSet[addr] = struct{}{}
-	}
+	//for addr := range self.forbiddenSet {
+	//	state.forbiddenSet[addr] = struct{}{}
+	//}
 
 	if self.childChainRewardPerBlock != nil {
 		state.childChainRewardPerBlock = new(big.Int).Set(self.childChainRewardPerBlock)
@@ -745,14 +745,14 @@ func (s *StateDB) Finalise(deleteEmptyObjects bool) {
 		s.commitRewardSet()
 	}
 
-	if s.candidateSetDirty {
-		//fmt.Printf("candidate set bug, candidate set dirty commit candidate set")
-		s.commitCandidateSet()
-	}
+	//if s.candidateSetDirty {
+	//	//fmt.Printf("candidate set bug, candidate set dirty commit candidate set")
+	//	s.commitCandidateSet()
+	//}
 
-	if s.forbiddenSetDirty {
-		s.commitForbiddenSet()
-	}
+	//if s.forbiddenSetDirty {
+	//	s.commitForbiddenSet()
+	//}
 
 	// Update Child Chain Reward per Block if something changed
 	if s.childChainRewardPerBlockDirty {
@@ -863,15 +863,15 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (root common.Hash, err error) 
 		s.rewardSetDirty = false
 	}
 
-	if s.candidateSetDirty {
-		s.commitCandidateSet()
-		s.candidateSetDirty = false
-	}
+	//if s.candidateSetDirty {
+	//	s.commitCandidateSet()
+	//	s.candidateSetDirty = false
+	//}
 
-	if s.forbiddenSetDirty {
-		s.commitForbiddenSet()
-		s.forbiddenSetDirty = false
-	}
+	//if s.forbiddenSetDirty {
+	//	s.commitForbiddenSet()
+	//	s.forbiddenSetDirty = false
+	//}
 
 	// Commit Reward Per Block to the trie
 	if s.childChainRewardPerBlockDirty {

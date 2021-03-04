@@ -56,7 +56,7 @@ const (
 var (
 	minimumRegisterAmount = math.MustParseBig256("1000000000000000000000000") // 1000000 * e18
 
-	maxCandidateNumber = 1000
+	//maxCandidateNumber = 1000
 
 	maxDelegationAddresses = 1000
 
@@ -527,20 +527,20 @@ func (s *PublicBlockChainAPI) GetBalance(ctx context.Context, address common.Add
 	return (*hexutil.Big)(state.GetBalance(address)), state.Error()
 }
 
-func (s *PublicBlockChainAPI) GetCandidateSetByBlockNumber(ctx context.Context, blockNr rpc.BlockNumber) ([]string, error) {
-	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
-	if state == nil || err != nil {
-		return nil, err
-	}
-
-	var candidateList = make([]string, 0)
-
-	for addr := range state.GetCandidateSet() {
-		candidateList = append(candidateList, addr.String())
-	}
-
-	return candidateList, nil
-}
+//func (s *PublicBlockChainAPI) GetCandidateSetByBlockNumber(ctx context.Context, blockNr rpc.BlockNumber) ([]string, error) {
+//	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
+//	if state == nil || err != nil {
+//		return nil, err
+//	}
+//
+//	var candidateList = make([]string, 0)
+//
+//	for addr := range state.GetCandidateSet() {
+//		candidateList = append(candidateList, addr.String())
+//	}
+//
+//	return candidateList, nil
+//}
 
 // GetBalanceDetail returns the amount of wei for the given address in the state of the
 // given block number. The rpc.LatestBlockNumber and rpc.PendingBlockNumber meta
@@ -2023,7 +2023,7 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	state.ApplyForCandidate(from, blsPK.KeyString(), args.Commission)
 
 	// mark address candidate
-	state.MarkAddressCandidate(from)
+	//state.MarkAddressCandidate(from)
 
 	verror = updateNextEpochValidatorVoteSet(tx, state, bc, from, ops)
 	if verror != nil {
@@ -2034,10 +2034,10 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 }
 
 func registerValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.RegisterArgs, error) {
-	candidateSet := state.GetCandidateSet()
-	if len(candidateSet) > maxCandidateNumber {
-		return nil, core.ErrMaxCandidate
-	}
+	//candidateSet := state.GetCandidateSet()
+	//if len(candidateSet) > maxCandidateNumber {
+	//	return nil, core.ErrMaxCandidate
+	//}
 
 	// Check cleaned Candidate
 	if !state.IsCleanAddress(from) {
@@ -2114,12 +2114,12 @@ func unRegisterApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Blo
 
 	state.CancelCandidate(from, allRefund)
 
-	fmt.Printf("candidate set bug, unregiser clear candidate before\n")
-	fmt.Printf("candidate set bug, unregiser clear candidate before %v\n", state.GetCandidateSet())
-	// remove address form candidate set
-	state.ClearCandidateSetByAddress(from)
-	fmt.Printf("candidate set bug, unregiser clear candidate after\n")
-	fmt.Printf("candidate set bug, unregiser clear candidate after %v\n", state.GetCandidateSet())
+	//fmt.Printf("candidate set bug, unregiser clear candidate before\n")
+	//fmt.Printf("candidate set bug, unregiser clear candidate before %v\n", state.GetCandidateSet())
+	//// remove address form candidate set
+	//state.ClearCandidateSetByAddress(from)
+	//fmt.Printf("candidate set bug, unregiser clear candidate after\n")
+	//fmt.Printf("candidate set bug, unregiser clear candidate after %v\n", state.GetCandidateSet())
 
 	return nil
 }

@@ -2,7 +2,6 @@ package ipbft
 
 import (
 	"errors"
-	"fmt"
 	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/common/hexutil"
@@ -234,56 +233,56 @@ func (api *API) GetVoteHash(from common.Address, pubkey crypto.BLSPubKey, amount
 	return intCrypto.Keccak256Hash(ConcatCopyPreAllocate(byteData))
 }
 
-func (api *API) GetValidatorStatus(from common.Address) (*tdmTypes.ValidatorStatus, error) {
-	state, err := api.chain.State()
-	if state == nil || err != nil {
-		return nil, err
-	}
-	status := &tdmTypes.ValidatorStatus{
-		IsForbidden: state.GetOrNewStateObject(from).IsForbidden(),
-	}
+//func (api *API) GetValidatorStatus(from common.Address) (*tdmTypes.ValidatorStatus, error) {
+//	state, err := api.chain.State()
+//	if state == nil || err != nil {
+//		return nil, err
+//	}
+//	status := &tdmTypes.ValidatorStatus{
+//		IsForbidden: state.GetOrNewStateObject(from).IsForbidden(),
+//	}
+//
+//	return status, nil
+//}
 
-	return status, nil
-}
-
-func (api *API) GetCandidateList() (*tdmTypes.CandidateApi, error) {
-	state, err := api.chain.State()
-
-	if state == nil || err != nil {
-		return nil, err
-	}
-
-	candidateList := make([]string, 0)
-	candidateSet := state.GetCandidateSet()
-	fmt.Printf("candidate set %v", candidateSet)
-	for addr := range candidateSet {
-		candidateList = append(candidateList, addr.String())
-	}
-
-	candidates := &tdmTypes.CandidateApi{
-		CandidateList: candidateList,
-	}
-
-	return candidates, nil
-}
-
-func (api *API) GetForbiddenList() (*tdmTypes.ForbiddenApi, error) {
-	state, err := api.chain.State()
-
-	if state == nil || err != nil {
-		return nil, err
-	}
-
-	forbiddenList := make([]string, 0)
-	forbiddenSet := state.GetForbiddenSet()
-	fmt.Printf("forbidden set %v", forbiddenSet)
-	for addr := range forbiddenSet {
-		forbiddenList = append(forbiddenList, addr.String())
-	}
-
-	forbiddenAddresses := &tdmTypes.ForbiddenApi{
-		ForbiddenList: forbiddenList,
-	}
-
-	return forbiddenAddresses, nil
-}
+//func (api *API) GetCandidateList() (*tdmTypes.CandidateApi, error) {
+//	state, err := api.chain.State()
+//
+//	if state == nil || err != nil {
+//		return nil, err
+//	}
+//
+//	candidateList := make([]string, 0)
+//	candidateSet := state.GetCandidateSet()
+//	fmt.Printf("candidate set %v", candidateSet)
+//	for addr := range candidateSet {
+//		candidateList = append(candidateList, addr.String())
+//	}
+//
+//	candidates := &tdmTypes.CandidateApi{
+//		CandidateList: candidateList,
+//	}
+//
+//	return candidates, nil
+//}
+//
+//func (api *API) GetForbiddenList() (*tdmTypes.ForbiddenApi, error) {
+//	state, err := api.chain.State()
+//
+//	if state == nil || err != nil {
+//		return nil, err
+//	}
+//
+//	forbiddenList := make([]string, 0)
+//	forbiddenSet := state.GetForbiddenSet()
+//	fmt.Printf("forbidden set %v", forbiddenSet)
+//	for addr := range forbiddenSet {
+//		forbiddenList = append(forbiddenList, addr.String())
+//	}
+//
+//	forbiddenAddresses := &tdmTypes.ForbiddenApi{
+//		ForbiddenList: forbiddenList,
+//	}
+//
+//	return forbiddenAddresses, nil
+//}
