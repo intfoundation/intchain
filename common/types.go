@@ -186,7 +186,7 @@ func (a Address) Hex() string {
 
 // String implements the stringer interface and is used also by the logger.
 func (a Address) String() string {
-	return string(a[:])
+	return a.Hex()
 }
 
 // Format implements fmt.Formatter, forcing the byte slice to be formatted as is,
