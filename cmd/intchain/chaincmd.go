@@ -45,7 +45,7 @@ var (
 	initINTGenesisCmd = cli.Command{
 		Action:    utils.MigrateFlags(initIntGenesis),
 		Name:      "init-intchain",
-		Usage:     "Initialize INT genesis.json file. init-intchain {\"1000000000000000000000000000\",\"100000000000000000000000\"}",
+		Usage:     "Initialize INT genesis.json file. init-intchain {\"1000000000\",\"100000\"}",
 		ArgsUsage: "<genesisPath>",
 		Flags: []cli.Flag{
 			utils.DataDirFlag,
@@ -70,12 +70,12 @@ participating.
 
 It expects the genesis file as argument.`,
 	}
-	initChildChainCmd = cli.Command{
-		Action:      utils.MigrateFlags(InitChildChainCmd),
-		Name:        "init-child-chain",
-		Usage:       "intchain --childChain=child_0,child_1,child_2 init-child-chain",
-		Description: "Initialize child chain genesis from chain info db",
-	}
+	//initChildChainCmd = cli.Command{
+	//	Action:      utils.MigrateFlags(InitChildChainCmd),
+	//	Name:        "init-child-chain",
+	//	Usage:       "intchain --childChain=child_0,child_1,child_2 init-child-chain",
+	//	Description: "Initialize child chain genesis from chain info db",
+	//}
 	//	initCommand = cli.Command{
 	//		Action:    utils.MigrateFlags(initGenesis),
 	//		Name:      "init",

@@ -106,7 +106,7 @@ func init() {
 	// Initialize the CLI app and start intchain
 	app.Action = intchainCmd
 	app.HideVersion = true // we have a command to print the version
-	app.Copyright = "Copyright 2018-2020 The INT Chain Authors"
+	app.Copyright = "Copyright 2017-2021 The INT Chain Authors"
 	app.Commands = []cli.Command{
 		// See chaincmd.go:
 		createValidatorCmd,
