@@ -122,7 +122,7 @@ var (
 	}
 	NetworkIdFlag = cli.Uint64Flag{
 		Name:  "networkid",
-		Usage: "Network identifier (integer, mainnet=8550, testnet=8551)",
+		Usage: "Network identifier (integer, mainnet=1, testnet=2)",
 		Value: intprotocol.DefaultConfig.NetworkId,
 	}
 	TestnetFlag = cli.BoolFlag{
