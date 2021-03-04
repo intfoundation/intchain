@@ -18,29 +18,11 @@ type EpochApi struct {
 	Validators     []*EpochValidator `json:"validators"`
 }
 
-// For console
-type EpochApiForConsole struct {
-	Number         hexutil.Uint64              `json:"number"`
-	RewardPerBlock *hexutil.Big                `json:"rewardPerBlock"`
-	StartBlock     hexutil.Uint64              `json:"startBlock"`
-	EndBlock       hexutil.Uint64              `json:"endBlock"`
-	StartTime      time.Time                   `json:"startTime"`
-	EndTime        time.Time                   `json:"endTime"`
-	Validators     []*EpochValidatorForConsole `json:"validators"`
-}
-
 type EpochVotesApi struct {
 	EpochNumber hexutil.Uint64           `json:"voteForEpoch"`
 	StartBlock  hexutil.Uint64           `json:"startBlock"`
 	EndBlock    hexutil.Uint64           `json:"endBlock"`
 	Votes       []*EpochValidatorVoteApi `json:"votes"`
-}
-
-type EpochVotesApiForConsole struct {
-	EpochNumber hexutil.Uint64                     `json:"voteForEpoch"`
-	StartBlock  hexutil.Uint64                     `json:"startBlock"`
-	EndBlock    hexutil.Uint64                     `json:"endBlock"`
-	Votes       []*EpochValidatorVoteApiForConsole `json:"votes"`
 }
 
 type EpochValidatorVoteApi struct {
@@ -50,23 +32,8 @@ type EpochValidatorVoteApi struct {
 	TxHash   common.Hash `json:"txHash"`
 }
 
-type EpochValidatorVoteApiForConsole struct {
-	EpochValidatorForConsole
-	Salt     string      `json:"salt"`
-	VoteHash common.Hash `json:"voteHash"` // VoteHash = Keccak256(Epoch Number + PubKey + Amount + Salt)
-	TxHash   common.Hash `json:"txHash"`
-}
-
 type EpochValidator struct {
 	Address        common.Address `json:"address"`
-	PubKey         string         `json:"publicKey"`
-	Amount         *hexutil.Big   `json:"votingPower"`
-	RemainingEpoch hexutil.Uint64 `json:"remainEpoch"`
-}
-
-// For console
-type EpochValidatorForConsole struct {
-	Address        string         `json:"address"`
 	PubKey         string         `json:"publicKey"`
 	Amount         *hexutil.Big   `json:"votingPower"`
 	RemainingEpoch hexutil.Uint64 `json:"remainEpoch"`
@@ -113,14 +80,14 @@ type ConsensusAggr struct {
 	Addresses  []common.Address `json:"address"`
 }
 
-type ValidatorStatus struct {
-	IsForbidden bool `json:"isForbidden"`
-}
+//type ValidatorStatus struct {
+//	IsForbidden bool `json:"isForbidden"`
+//}
 
-type CandidateApi struct {
-	CandidateList []string `json:"candidateList"`
-}
+//type CandidateApi struct {
+//	CandidateList []string `json:"candidateList"`
+//}
 
-type ForbiddenApi struct {
-	ForbiddenList []string `json:"forbiddenList"`
-}
+//type ForbiddenApi struct {
+//	ForbiddenList []string `json:"forbiddenList"`
+//}

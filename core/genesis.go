@@ -63,29 +63,29 @@ type Genesis struct {
 }
 
 // 写入时使用
-type GenesisWrite struct {
-	Config     *params.ChainConfig `json:"config"`
-	Nonce      uint64              `json:"nonce"`
-	Timestamp  uint64              `json:"timestamp"`
-	ExtraData  []byte              `json:"extraData"`
-	GasLimit   uint64              `json:"gasLimit"   gencodec:"required"`
-	Difficulty *big.Int            `json:"difficulty" gencodec:"required"`
-	Mixhash    common.Hash         `json:"mixHash"`
-	Coinbase   string              `json:"coinbase"`
-	Alloc      GenesisAllocWrite   `json:"alloc"      gencodec:"required"`
-
-	// These fields are used for consensus tests. Please don't use them
-	// in actual genesis blocks.
-	Number     uint64      `json:"number"`
-	GasUsed    uint64      `json:"gasUsed"`
-	ParentHash common.Hash `json:"parentHash"`
-}
+//type GenesisWrite struct {
+//	Config     *params.ChainConfig `json:"config"`
+//	Nonce      uint64              `json:"nonce"`
+//	Timestamp  uint64              `json:"timestamp"`
+//	ExtraData  []byte              `json:"extraData"`
+//	GasLimit   uint64              `json:"gasLimit"   gencodec:"required"`
+//	Difficulty *big.Int            `json:"difficulty" gencodec:"required"`
+//	Mixhash    common.Hash         `json:"mixHash"`
+//	Coinbase   string              `json:"coinbase"`
+//	Alloc      GenesisAllocWrite   `json:"alloc"      gencodec:"required"`
+//
+//	// These fields are used for consensus tests. Please don't use them
+//	// in actual genesis blocks.
+//	Number     uint64      `json:"number"`
+//	GasUsed    uint64      `json:"gasUsed"`
+//	ParentHash common.Hash `json:"parentHash"`
+//}
 
 // GenesisAlloc specifies the initial state that is part of the genesis block.
 type GenesisAlloc map[common.Address]GenesisAccount
 
-// 写入时使用
-type GenesisAllocWrite map[string]GenesisAccount
+//// 写入时使用
+//type GenesisAllocWrite map[string]GenesisAccount
 
 func (ga *GenesisAlloc) UnmarshalJSON(data []byte) error {
 	m := make(map[common.UnprefixedAddress]GenesisAccount)

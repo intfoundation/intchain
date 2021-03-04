@@ -32,8 +32,7 @@ import (
 )
 
 const (
-	POSReward = "200000000000000000000000000" // 2亿
-	//LockReward = "11500000000000000000000000"  // 11.5m
+	POSReward = "200000000000000000000000000" // 20B
 
 	TotalYear = 10
 
@@ -91,20 +90,20 @@ func init_int_genesis(config cfg.Config, balanceStr string, isMainnet bool) erro
 		chainConfig = params.TestnetChainConfig
 	}
 
-	var coreGenesis = core.GenesisWrite{
+	var coreGenesis = core.Genesis{
 		Config:     chainConfig,
-		Nonce:      0xdeadbeefdeadbeef,
+		Nonce:      0x0,
 		Timestamp:  uint64(time.Now().Unix()),
 		ParentHash: common.Hash{},
 		ExtraData:  extraData,
-		GasLimit:   0x7270e00,
+		GasLimit:   0xe0000000,
 		Difficulty: new(big.Int).SetUint64(0x01),
 		Mixhash:    common.Hash{},
-		Coinbase:   "INT3AAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-		Alloc:      core.GenesisAllocWrite{},
+		Coinbase:   common.Address{},
+		Alloc:      core.GenesisAlloc{},
 	}
 	for i, validator := range validators {
-		coreGenesis.Alloc[validator.Address.String()] = core.GenesisAccount{
+		coreGenesis.Alloc[validator.Address] = core.GenesisAccount{
 			Balance: math.MustParseBig256(balanceAmounts[i].balance),
 			Amount:  math.MustParseBig256(balanceAmounts[i].amount),
 		}
@@ -237,29 +236,9 @@ func init_em_files(config cfg.Config, chainId string, genesisPath string, valida
 		utils.Fatalf("failed to read intchain genesis file: %v", err)
 		return err
 	}
-	var (
-		genesisW    core.GenesisWrite
-		coreGenesis core.Genesis
-	)
-	if err := json.Unmarshal(contents, &genesisW); err != nil {
+	var coreGenesis = core.Genesis{}
+	if err := json.Unmarshal(contents, &coreGenesis); err != nil {
 		return err
-	}
-
-	coreGenesis = core.Genesis{
-		Config:     genesisW.Config,
-		Nonce:      genesisW.Nonce,
-		Timestamp:  genesisW.Timestamp,
-		ParentHash: genesisW.ParentHash,
-		ExtraData:  genesisW.ExtraData,
-		GasLimit:   genesisW.GasLimit,
-		Difficulty: genesisW.Difficulty,
-		Mixhash:    genesisW.Mixhash,
-		Coinbase:   common.StringToAddress(genesisW.Coinbase),
-		Alloc:      core.GenesisAlloc{},
-	}
-
-	for k, v := range genesisW.Alloc {
-		coreGenesis.Alloc[common.StringToAddress(k)] = v
 	}
 
 	var privValidator *types.PrivValidator
@@ -309,7 +288,7 @@ func createGenesisDoc(config cfg.Config, chainId string, coreGenesis *core.Genes
 
 		var rewardPerBlock *big.Int
 		if chainId == MainChain || chainId == TestnetChain {
-			rewardPerBlock = big.NewInt(634195839675291700)
+			rewardPerBlock = big.NewInt(1902587519025875000)
 		} else {
 			rewardPerBlock = big.NewInt(0)
 		}
@@ -324,7 +303,7 @@ func createGenesisDoc(config cfg.Config, chainId string, coreGenesis *core.Genes
 				Number:         0,
 				RewardPerBlock: rewardPerBlock,
 				StartBlock:     0,
-				EndBlock:       7200,
+				EndBlock:       2400,
 				Status:         0,
 			},
 		}

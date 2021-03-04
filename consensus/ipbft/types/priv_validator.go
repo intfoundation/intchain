@@ -7,33 +7,19 @@ import (
 	"sync"
 
 	"github.com/intfoundation/bls"
-	"github.com/intfoundation/intchain/common"
 	. "github.com/intfoundation/go-common"
 	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/go-wire"
+	"github.com/intfoundation/intchain/common"
 )
 
 type PrivValidator struct {
-	// IntChain Account Address
+	// INT Chain Account Address
 	Address common.Address `json:"address"`
-	// IntChain Consensus Public Key, in BLS format
+	// INT Chain Consensus Public Key, in BLS format
 	PubKey crypto.PubKey `json:"consensus_pub_key"`
-	// IntChain Consensus Private Key, in BLS format
+	// INT Chain Consensus Private Key, in BLS format
 	// PrivKey should be empty if a Signer other than the default is being used.
-	PrivKey crypto.PrivKey `json:"consensus_priv_key"`
-
-	Signer `json:"-"`
-
-	// For persistence.
-	// Overloaded for testing.
-	filePath string
-	mtx      sync.Mutex
-}
-
-// 修改 privalidator 的地址类型为string
-type PrivV struct {
-	Address string         `json:"address"`
-	PubKey  crypto.PubKey  `json:"consensus_pub_key"`
 	PrivKey crypto.PrivKey `json:"consensus_priv_key"`
 
 	Signer `json:"-"`
@@ -84,40 +70,18 @@ func GenPrivValidatorKey(address common.Address) *PrivValidator {
 	}
 }
 
-//func LoadPrivValidator(filePath string) *PrivValidator {
-//	privValJSONBytes, err := ioutil.ReadFile(filePath)
-//	if err != nil {
-//		Exit(err.Error())
-//	}
-//	privVal := wire.ReadJSON(&PrivValidator{}, privValJSONBytes, &err).(*PrivValidator)
-//	if err != nil {
-//		Exit(Fmt("Error reading PrivValidator from %v: %v\n", filePath, err))
-//	}
-//	privVal.filePath = filePath
-//	privVal.Signer = NewDefaultSigner(privVal.PrivKey)
-//	return privVal
-//}
-
-// 修改加载文件的方法，兼容string 的地址类型
 func LoadPrivValidator(filePath string) *PrivValidator {
 	privValJSONBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		Exit(err.Error())
 	}
-	privVal := wire.ReadJSON(&PrivV{}, privValJSONBytes, &err).(*PrivV)
-
+	privVal := wire.ReadJSON(&PrivValidator{}, privValJSONBytes, &err).(*PrivValidator)
 	if err != nil {
 		Exit(Fmt("Error reading PrivValidator from %v: %v\n", filePath, err))
 	}
-	privV := &PrivValidator{
-		Address:  common.StringToAddress(privVal.Address),
-		PubKey:   privVal.PubKey,
-		PrivKey:  privVal.PrivKey,
-		filePath: filePath,
-		Signer:   NewDefaultSigner(privVal.PrivKey),
-	}
-
-	return privV
+	privVal.filePath = filePath
+	privVal.Signer = NewDefaultSigner(privVal.PrivKey)
+	return privVal
 }
 
 func (pv *PrivValidator) SetFile(filePath string) {
@@ -134,30 +98,12 @@ func (pv *PrivValidator) Save() {
 	pv.save()
 }
 
-//func (pv *PrivValidator) save() {
-//	if pv.filePath == "" {
-//		PanicSanity("Cannot save PrivValidator: filePath not set")
-//	}
-//	jsonBytes := wire.JSONBytesPretty(pv)
-//	// 使用 WriteFileAtomic（）方法，文件里面的地址为16进制的
-//	err := WriteFileAtomic(pv.filePath, jsonBytes, 0600)
-//	if err != nil {
-//		// `@; BOOM!!!
-//		PanicCrisis(err)
-//	}
-//}
-
 func (pv *PrivValidator) save() {
 	if pv.filePath == "" {
 		PanicSanity("Cannot save PrivValidator: filePath not set")
 	}
-	//jsonBytes := wire.JSONBytesPretty(pv)
-	var priv PrivV
-	priv.Address = pv.Address.String()
-	priv.PubKey = pv.PubKey
-	priv.PrivKey = pv.PrivKey
-
-	jsonBytes := wire.JSONBytesPretty(priv)
+	jsonBytes := wire.JSONBytesPretty(pv)
+	// 使用 WriteFileAtomic（）方法，文件里面的地址为16进制的
 	err := WriteFileAtomic(pv.filePath, jsonBytes, 0600)
 	if err != nil {
 		// `@; BOOM!!!

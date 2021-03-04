@@ -24,7 +24,7 @@ func (api *API) GetCurrentEpochNumber() (hexutil.Uint64, error) {
 }
 
 // GetEpoch retrieves the Epoch Detail by Number
-func (api *API) GetEpoch(num hexutil.Uint64) (*tdmTypes.EpochApiForConsole, error) {
+func (api *API) GetEpoch(num hexutil.Uint64) (*tdmTypes.EpochApi, error) {
 
 	number := uint64(num)
 	var resultEpoch *epoch.Epoch
@@ -39,17 +39,17 @@ func (api *API) GetEpoch(num hexutil.Uint64) (*tdmTypes.EpochApiForConsole, erro
 		resultEpoch = epoch.LoadOneEpoch(curEpoch.GetDB(), number, nil)
 	}
 
-	validators := make([]*tdmTypes.EpochValidatorForConsole, len(resultEpoch.Validators.Validators))
+	validators := make([]*tdmTypes.EpochValidator, len(resultEpoch.Validators.Validators))
 	for i, val := range resultEpoch.Validators.Validators {
-		validators[i] = &tdmTypes.EpochValidatorForConsole{
-			Address:        common.BytesToAddress(val.Address).String(),
+		validators[i] = &tdmTypes.EpochValidator{
+			Address:        common.BytesToAddress(val.Address),
 			PubKey:         val.PubKey.KeyString(),
 			Amount:         (*hexutil.Big)(val.VotingPower),
 			RemainingEpoch: hexutil.Uint64(val.RemainingEpoch),
 		}
 	}
 
-	return &tdmTypes.EpochApiForConsole{
+	return &tdmTypes.EpochApi{
 		Number:         hexutil.Uint64(resultEpoch.Number),
 		RewardPerBlock: (*hexutil.Big)(resultEpoch.RewardPerBlock),
 		StartBlock:     hexutil.Uint64(resultEpoch.StartBlock),
@@ -61,7 +61,7 @@ func (api *API) GetEpoch(num hexutil.Uint64) (*tdmTypes.EpochApiForConsole, erro
 }
 
 // GetEpochVote
-func (api *API) GetNextEpochVote() (*tdmTypes.EpochVotesApiForConsole, error) {
+func (api *API) GetNextEpochVote() (*tdmTypes.EpochVotesApi, error) {
 
 	ep := api.tendermint.core.consensusState.Epoch
 	if ep.GetNextEpoch() != nil {
@@ -70,16 +70,16 @@ func (api *API) GetNextEpochVote() (*tdmTypes.EpochVotesApiForConsole, error) {
 		if ep.GetNextEpoch().GetEpochValidatorVoteSet() != nil {
 			votes = ep.GetNextEpoch().GetEpochValidatorVoteSet().Votes
 		}
-		votesApi := make([]*tdmTypes.EpochValidatorVoteApiForConsole, 0, len(votes))
+		votesApi := make([]*tdmTypes.EpochValidatorVoteApi, 0, len(votes))
 		for _, v := range votes {
 			var pkstring string
 			if v.PubKey != nil {
 				pkstring = v.PubKey.KeyString()
 			}
 
-			votesApi = append(votesApi, &tdmTypes.EpochValidatorVoteApiForConsole{
-				EpochValidatorForConsole: tdmTypes.EpochValidatorForConsole{
-					Address: v.Address.String(),
+			votesApi = append(votesApi, &tdmTypes.EpochValidatorVoteApi{
+				EpochValidator: tdmTypes.EpochValidator{
+					Address: v.Address,
 					PubKey:  pkstring,
 					Amount:  (*hexutil.Big)(v.Amount),
 				},
@@ -89,7 +89,7 @@ func (api *API) GetNextEpochVote() (*tdmTypes.EpochVotesApiForConsole, error) {
 			})
 		}
 
-		return &tdmTypes.EpochVotesApiForConsole{
+		return &tdmTypes.EpochVotesApi{
 			EpochNumber: hexutil.Uint64(ep.GetNextEpoch().Number),
 			StartBlock:  hexutil.Uint64(ep.GetNextEpoch().StartBlock),
 			EndBlock:    hexutil.Uint64(ep.GetNextEpoch().EndBlock),
@@ -99,7 +99,7 @@ func (api *API) GetNextEpochVote() (*tdmTypes.EpochVotesApiForConsole, error) {
 	return nil, errors.New("next epoch has not been proposed")
 }
 
-func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidatorForConsole, error) {
+func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidator, error) {
 
 	//height := api.chain.CurrentBlock().NumberU64()
 
@@ -119,14 +119,14 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidatorForConsole, 
 			return nil, err
 		}
 
-		validators := make([]*tdmTypes.EpochValidatorForConsole, 0, len(nextValidators.Validators))
+		validators := make([]*tdmTypes.EpochValidator, 0, len(nextValidators.Validators))
 		for _, val := range nextValidators.Validators {
 			var pkstring string
 			if val.PubKey != nil {
 				pkstring = val.PubKey.KeyString()
 			}
-			validators = append(validators, &tdmTypes.EpochValidatorForConsole{
-				Address:        common.BytesToAddress(val.Address).String(),
+			validators = append(validators, &tdmTypes.EpochValidator{
+				Address:        common.BytesToAddress(val.Address),
 				PubKey:         pkstring,
 				Amount:         (*hexutil.Big)(val.VotingPower),
 				RemainingEpoch: hexutil.Uint64(val.RemainingEpoch),
@@ -138,14 +138,9 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidatorForConsole, 
 }
 
 // CreateValidator
-func (api *API) CreateValidator(from common.Address) (*tdmTypes.PrivV, error) {
+func (api *API) CreateValidator(from common.Address) (*tdmTypes.PrivValidator, error) {
 	validator := tdmTypes.GenPrivValidatorKey(from)
-	privV := &tdmTypes.PrivV{
-		Address: validator.Address.String(),
-		PubKey:  validator.PubKey,
-		PrivKey: validator.PrivKey,
-	}
-	return privV, nil
+	return validator, nil
 }
 
 // decode extra data

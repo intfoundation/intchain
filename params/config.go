@@ -37,10 +37,10 @@ var (
 		ChainId:             big.NewInt(1),
 		HomesteadBlock:      big.NewInt(0),
 		EIP150Block:         big.NewInt(0),
-		EIP150Hash:          common.HexToHash("0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0"),
+		EIP150Hash:          common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
 		EIP155Block:         big.NewInt(0),
 		EIP158Block:         big.NewInt(0),
-		ByzantiumBlock:      big.NewInt(0), //let's start from 1 block
+		ByzantiumBlock:      big.NewInt(0),
 		ConstantinopleBlock: nil,
 		IPBFT: &IPBFTConfig{
 			Epoch:          30000,
@@ -54,7 +54,7 @@ var (
 		ChainId:             big.NewInt(2),
 		HomesteadBlock:      big.NewInt(0),
 		EIP150Block:         big.NewInt(0),
-		EIP150Hash:          common.HexToHash("0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0"),
+		EIP150Hash:          common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
 		EIP155Block:         big.NewInt(0),
 		EIP158Block:         big.NewInt(0),
 		ByzantiumBlock:      big.NewInt(0),
@@ -116,14 +116,13 @@ func (c *IPBFTConfig) String() string {
 // Create a new Chain Config based on the Chain ID, for child chain creation purpose
 func NewChildChainConfig(childChainID string) *ChainConfig {
 	config := &ChainConfig{
-		IntChainId:     childChainID,
-		HomesteadBlock: big.NewInt(0),
-		EIP150Block:    big.NewInt(0),
-		EIP150Hash:     common.HexToHash("0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0"),
-		EIP155Block:    big.NewInt(0),
-		EIP158Block:    big.NewInt(0),
-		//ByzantiumBlock:      big.NewInt(4370000),
-		ByzantiumBlock:      big.NewInt(0), //let's start from 1 block
+		IntChainId:          childChainID,
+		HomesteadBlock:      big.NewInt(0),
+		EIP150Block:         big.NewInt(0),
+		EIP150Hash:          common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
+		EIP155Block:         big.NewInt(0),
+		EIP158Block:         big.NewInt(0),
+		ByzantiumBlock:      big.NewInt(0),
 		ConstantinopleBlock: nil,
 		IPBFT: &IPBFTConfig{
 			Epoch:          30000,

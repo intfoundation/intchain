@@ -14,53 +14,16 @@ import (
 )
 
 // WriteGenesisBlock writes the genesis block to the database as block number 0
-//func WriteGenesisBlock(chainDb intdb.Database, reader io.Reader) (*types.Block, error) {
-//	contents, err := ioutil.ReadAll(reader)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	var genesis = Genesis{}
-//
-//	if err := json.Unmarshal(contents, &genesis); err != nil {
-//		return nil, err
-//	}
-//
-//	return SetupGenesisBlockEx(chainDb, &genesis)
-//}
-
 func WriteGenesisBlock(chainDb intdb.Database, reader io.Reader) (*types.Block, error) {
 	contents, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, err
 	}
 
-	var (
-		genesis  Genesis
-		genesisW GenesisWrite
-	)
+	var genesis = Genesis{}
 
-	genesis.Alloc = GenesisAlloc{}
-
-	if err := json.Unmarshal(contents, &genesisW); err != nil {
+	if err := json.Unmarshal(contents, &genesis); err != nil {
 		return nil, err
-	}
-
-	genesis = Genesis{
-		Config:     genesisW.Config,
-		Nonce:      genesisW.Nonce,
-		Timestamp:  genesisW.Timestamp,
-		ParentHash: genesisW.ParentHash,
-		ExtraData:  genesisW.ExtraData,
-		GasLimit:   genesisW.GasLimit,
-		Difficulty: genesisW.Difficulty,
-		Mixhash:    genesisW.Mixhash,
-		Coinbase:   common.StringToAddress(genesisW.Coinbase),
-		Alloc:      GenesisAlloc{},
-	}
-
-	for k, v := range genesisW.Alloc {
-		genesis.Alloc[common.StringToAddress(k)] = v
 	}
 
 	return SetupGenesisBlockEx(chainDb, &genesis)
@@ -205,34 +168,13 @@ func SetupGenesisBlockWithDefault(db intdb.Database, genesis *Genesis, isMainCha
 	return newcfg, stored, nil
 }
 
-// DefaultGenesisBlock returns the Ethereum main net genesis block.
+// DefaultGenesisBlock returns the INT Chain main net genesis block.
 func DefaultGenesisBlockFromJson(genesisJson string) *Genesis {
 
-	var (
-		genesis  Genesis
-		genesisW GenesisWrite
-	)
+	var genesis = Genesis{}
 
-	genesis.Alloc = GenesisAlloc{}
-	if err := json.Unmarshal([]byte(genesisJson), &genesisW); err != nil {
+	if err := json.Unmarshal([]byte(genesisJson), &genesis); err != nil {
 		return nil
-	}
-
-	genesis = Genesis{
-		Config:     genesisW.Config,
-		Nonce:      genesisW.Nonce,
-		Timestamp:  genesisW.Timestamp,
-		ParentHash: genesisW.ParentHash,
-		ExtraData:  genesisW.ExtraData,
-		GasLimit:   genesisW.GasLimit,
-		Difficulty: genesisW.Difficulty,
-		Mixhash:    genesisW.Mixhash,
-		Coinbase:   common.StringToAddress(genesisW.Coinbase),
-		Alloc:      GenesisAlloc{},
-	}
-
-	for i, v := range genesisW.Alloc {
-		genesis.Alloc[common.StringToAddress(i)] = v
 	}
 
 	return &genesis
