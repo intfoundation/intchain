@@ -524,11 +524,11 @@ const jsonChainABI = `
 	}
 ]`
 
-// IntChain Child Chain Token Incentive Address
-var ChildChainTokenIncentiveAddr = common.StringToAddress("INT3EEEEEEEEEEEEEEEEEEEEEEEEEEEE")
+// INT Chain Child Chain Token Incentive Address
+var ChildChainTokenIncentiveAddr = common.HexToAddress("0x0000000000000000000000000000000000001002")
 
-// IntChain Internal Contract Address
-var ChainContractMagicAddr = common.StringToAddress("INT3FFFFFFFFFFFFFFFFFFFFFFFFFFFF") // don't conflict with intchain/core/vm/contracts.go
+// INT Chain Internal Contract Address
+var ChainContractMagicAddr = common.HexToAddress("0x0000000000000000000000000000000000001001") // don't conflict with intchain/core/vm/contracts.go
 
 var ChainABI abi.ABI
 
