@@ -152,8 +152,7 @@ func EncryptKey(key *Key, auth string, scryptN, scryptP int) ([]byte, error) {
 		MAC:          hex.EncodeToString(mac),
 	}
 	encryptedKeyJSONV3 := encryptedKeyJSONV3{
-		//hex.EncodeToString(key.Address[:]),
-		key.Address.String(),
+		hex.EncodeToString(key.Address[:]),
 		cryptoStruct,
 		key.Id.String(),
 		version,

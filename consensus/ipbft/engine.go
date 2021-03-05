@@ -3,7 +3,6 @@ package ipbft
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/hashicorp/golang-lru"
 	"github.com/intfoundation/go-wire"
 	"github.com/intfoundation/intchain/common"
@@ -112,7 +111,6 @@ func (sb *backend) Start(chain consensus.ChainReader, currentBlock func() *types
 	sb.vcommitCh = make(chan *tdmTypes.IntermediateBlockResult, 1)
 
 	sb.chain = chain
-	fmt.Printf("ipbft backend start chain %v\n", chain)
 	sb.currentBlock = currentBlock
 	sb.hasBadBlock = hasBadBlock
 

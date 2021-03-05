@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/intfoundation/intchain/common"
-	ethTypes "github.com/intfoundation/intchain/core/types"
 	. "github.com/intfoundation/go-common"
 	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/go-wire"
+	"github.com/intfoundation/intchain/common"
+	ethTypes "github.com/intfoundation/intchain/core/types"
 	"math/big"
 )
 
@@ -52,8 +52,8 @@ func (v *Validator) String() string {
 	if v == nil {
 		return "nil-Validator"
 	}
-	return fmt.Sprintf("Validator{ADD:%s PK:%X VP:%v EP:%d}",
-		string(v.Address),
+	return fmt.Sprintf("Validator{ADD:%X PK:%X VP:%v EP:%d}",
+		v.Address,
 		v.PubKey,
 		v.VotingPower,
 		v.RemainingEpoch)
