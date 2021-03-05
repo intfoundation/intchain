@@ -20,7 +20,7 @@ package params
 // the INT Chain main network.
 var MainnetBootnodes = []string{
 
-	"enode://7fc4452e7199520ff8db7727604ac194a47ec6a75e3a2e7e9451853b5bf915a3dbfd1958c9116c3d4b151e6e5b55e340eb0b6ce517aff0b9a2ce630b514c3a74@127.0.0.1:8550",
+	"enode://bbe4ef6582707fd70d98c4cd35a308883d6f920b72a6caf5c8c3c42c3a2455be893759baf2f3fbbfae972247242255b2b25bc033267b3d680877a19b8d36e1af@127.0.0.1:8550",
 }
 
 // TestnetBootnodes are the enode URLs of the P2P bootstrap nodes running on the
