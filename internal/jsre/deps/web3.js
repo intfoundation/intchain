@@ -2251,24 +2251,16 @@ var isStrictAddress = function (address) {
  * @return {Boolean}
 */
 var isAddress = function (address) {
-    // if (!/^(0x)?[0-9a-f]{40}$/i.test(address)) {
-    //     // check if it has the basic requirements of an address
-    //     return false;
-    // } else if (/^(0x)?[0-9a-f]{40}$/.test(address) || /^(0x)?[0-9A-F]{40}$/.test(address)) {
-    //     // If it's all small caps or all all caps, return true
-    //     return true;
-    // } else {
-    //     // Otherwise check each case
-    //     return isChecksumAddress(address);
-    // }
-  if (!isString(address)){
-      return false
-    }else if (address.length !== 32){
-      return false
-    }else if (address.substr(0, 4) !== "INT3"){
-      return false
+    if (!/^(0x)?[0-9a-f]{40}$/i.test(address)) {
+        // check if it has the basic requirements of an address
+        return false;
+    } else if (/^(0x)?[0-9a-f]{40}$/.test(address) || /^(0x)?[0-9A-F]{40}$/.test(address)) {
+        // If it's all small caps or all all caps, return true
+        return true;
+    } else {
+        // Otherwise check each case
+        return isChecksumAddress(address);
     }
-    return true
 };
 
 /**
@@ -2597,32 +2589,6 @@ Web3.prototype.toChecksumAddress = utils.toChecksumAddress;
 Web3.prototype.isIBAN = utils.isIBAN;
 Web3.prototype.padLeft = utils.padLeft;
 Web3.prototype.padRight = utils.padRight;
-
-Web3.prototype.getVoteHash =  function(from,pubKey,amount,salt){
-  if(pubKey.substr(0, 2) === '0x') pubKey = pubKey.substr(2);
-
-  if( (typeof amount) == "string" && amount.substr(0, 2) === '0x'){
-    amount = amount.substr(2);
-  }else{
-    amount = amount.toString("16");
-  }
-  // like add on 2019年10月21日
-  var fromCode = "";
-  for(var i =0; i < from.length; i++){
-    fromCode += from[i].charCodeAt().toString('16');
-  }
-
-  amount = (amount.length%2 == 0)?amount:("0"+amount);
-
-  var saltCode = "";
-  for(var i=0;i<salt.length;i++){
-    saltCode += salt[i].charCodeAt().toString("16");
-  }
-
-  var  concatString = fromCode+pubKey+amount+saltCode;
-
-  return "0x" + sha3(concatString.toLowerCase(),{encoding: 'hex'});
-};
 
 Web3.prototype.sha3 = function(string, options) {
     return '0x' + sha3(string, options);
@@ -3958,20 +3924,14 @@ var outputPostFormatter = function(post){
 };
 
 var inputAddressFormatter = function (address) {
-    // var iban = new Iban(address);
-    // if (iban.isValid() && iban.isDirect()) {
-    //     return '0x' + iban.address();
-    // } else if (utils.isStrictAddress(address)) {
-    //     return address;
-    // } else if (utils.isAddress(address)) {
-    //     return '0x' + address;
-    // }
-
-    if (!utils.isAddress(address)) {
-      throw new Error('invalid address');
+    var iban = new Iban(address);
+    if (iban.isValid() && iban.isDirect()) {
+        return '0x' + iban.address();
+    } else if (utils.isStrictAddress(address)) {
+        return address;
+    } else if (utils.isAddress(address)) {
+        return '0x' + address;
     }
-
-    return address
 };
 
 
