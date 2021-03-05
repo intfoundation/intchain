@@ -65,6 +65,6 @@ func TestVoteSetCompare(t *testing.T) {
 		return voteArr[i].Amount.Cmp(voteArr[j].Amount) == 1
 	})
 	for i := range voteArr {
-		fmt.Printf("address:%v, amount: %v\n", voteArr[i].Address.String(), voteArr[i].Amount)
+		fmt.Printf("address:%v, amount: %v\n", voteArr[i].Address, voteArr[i].Amount)
 	}
 }

@@ -335,7 +335,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
 				//if !state.GetForbidden(vAddr) {
-				//epoch.logger.Debugf("Should enter new epoch, validator %v is not forbidden", vAddr.String())
+				//epoch.logger.Debugf("Should enter new epoch, validator %v is not forbidden", vAddr)
 				totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
 				// Voting Power = Proxied amount + Deposit amount
 				newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
@@ -345,7 +345,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 					v.VotingPower = newVotingPower
 				}
 				//} else {
-				//	epoch.logger.Debugf("Should enter new epoch, validator %v is forbidden", vAddr.String())
+				//	epoch.logger.Debugf("Should enter new epoch, validator %v is forbidden", vAddr)
 				//	// if forbidden then remove from the validator set and candidate list
 				//	newValidators.Remove(v.Address)
 				//	delete(candidateList, vAddr)
@@ -454,7 +454,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			//
 			//	// Store the vote
 			//	for i := range voteArr {
-			//		epoch.logger.Debugf("address:%v, amount: %v\n", voteArr[i].Address.String(), voteArr[i].Amount)
+			//		epoch.logger.Debugf("address:%v, amount: %v\n", voteArr[i].Address, voteArr[i].Amount)
 			//		nextEpochVoteSet.StoreVote(voteArr[i])
 			//	}
 			//}
@@ -935,7 +935,7 @@ func UpdateEpochEndTime(db dbm.DB, epNumber uint64, endTime time.Time) {
 //			addr := common.BytesToAddress(v.Address[:])
 //			times := state.GetMinedBlocks(addr)
 //			if times.Cmp(common.Big0) == 0 {
-//				epoch.logger.Debugf("Update validator forbidden state, set %v forbidden, mined blocks %v, forbidden epoch %v", addr.String(), times, ForbiddenEpoch)
+//				epoch.logger.Debugf("Update validator forbidden state, set %v forbidden, mined blocks %v, forbidden epoch %v", addr, times, ForbiddenEpoch)
 //				state.SetForbidden(addr, true)
 //				state.SetForbiddenTime(addr, ForbiddenEpoch)
 //
@@ -961,7 +961,7 @@ func UpdateEpochEndTime(db dbm.DB, epNumber uint64, endTime time.Time) {
 //
 //				state.SetMinedBlocks(addr, newTimes)
 //
-//				//epoch.logger.Debugf("Update validator forbidden state, %v new mined block times %v, current times %v", addr.String(), newTimes, times)
+//				//epoch.logger.Debugf("Update validator forbidden state, %v new mined block times %v, current times %v", addr, newTimes, times)
 //			}
 //		}
 //	}

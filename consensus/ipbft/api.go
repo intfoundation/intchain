@@ -251,7 +251,7 @@ func (api *API) GetVoteHash(from common.Address, pubkey crypto.BLSPubKey, amount
 //	candidateSet := state.GetCandidateSet()
 //	fmt.Printf("candidate set %v", candidateSet)
 //	for addr := range candidateSet {
-//		candidateList = append(candidateList, addr.String())
+//		candidateList = append(candidateList, addr)
 //	}
 //
 //	candidates := &tdmTypes.CandidateApi{
@@ -272,7 +272,7 @@ func (api *API) GetVoteHash(from common.Address, pubkey crypto.BLSPubKey, amount
 //	forbiddenSet := state.GetForbiddenSet()
 //	fmt.Printf("forbidden set %v", forbiddenSet)
 //	for addr := range forbiddenSet {
-//		forbiddenList = append(forbiddenList, addr.String())
+//		forbiddenList = append(forbiddenList, addr)
 //	}
 //
 //	forbiddenAddresses := &tdmTypes.ForbiddenApi{
