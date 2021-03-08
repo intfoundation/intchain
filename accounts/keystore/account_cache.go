@@ -258,10 +258,7 @@ func (ac *accountCache) scanAccounts() error {
 		// Parse the address.
 		key.Address = ""
 		err = json.NewDecoder(buf).Decode(&key)
-
-		// TODO 兼容16进制和string 两种类型的地址
-		//addr := common.HexToAddress(key.Address)
-		addr := common.StringToAddress(key.Address)
+		addr := common.HexToAddress(key.Address)
 		switch {
 		case err != nil:
 			log.Debug("Failed to decode keystore key", "path", path, "err", err)

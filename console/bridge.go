@@ -137,12 +137,6 @@ func (b *bridge) UnlockAccount(call otto.FunctionCall) (response otto.Value) {
 		throwJSException("first argument must be the account to unlock")
 	}
 	account := call.Argument(0)
-	//account := call.Argument(0).String()
-
-	//accountByte := []byte(account)
-	//if len(accountByte) >= 2 && !(accountByte[0] == '0' && (accountByte[1] == 'x' || accountByte[1] == 'X')) {
-	//	account = hexutil.Encode(accountByte)
-	//}
 
 	// If password is not given or is the null value, prompt the user for it
 	var passwd otto.Value
