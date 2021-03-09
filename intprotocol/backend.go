@@ -144,8 +144,8 @@ func New(ctx *node.ServiceContext, config *Config, cliCtx *cli.Context,
 	if bcVersion != nil {
 		dbVer = fmt.Sprintf("%d", *bcVersion)
 	}
-	//logger.Info("Initialising IntChain protocol", "versions", eth.engine.Protocol().Versions, "network", config.NetworkId, "dbversion", dbVer)
-	logger.Info("Initialising intchain protocol", "network", config.NetworkId, "dbversion", dbVer)
+	logger.Info("Initialising IntChain protocol", "versions", intChain.engine.Protocol().Versions, "network", config.NetworkId, "dbversion", dbVer)
+	//logger.Info("Initialising intchain protocol", "network", config.NetworkId, "dbversion", dbVer)
 
 	if !config.SkipBcVersionCheck {
 		if bcVersion != nil && *bcVersion > core.BlockChainVersion {
@@ -221,7 +221,7 @@ func makeExtraData(extra []byte) []byte {
 // CreateConsensusEngine creates the required type of consensus engine instance for an IntChain service
 func CreateConsensusEngine(ctx *node.ServiceContext, config *Config, chainConfig *params.ChainConfig, db intdb.Database,
 	cliCtx *cli.Context, cch core.CrossChainHelper) consensus.IPBFT {
-	// If Tendermint is requested, set it up
+	// If IPBFT is requested, set it up
 	if chainConfig.IPBFT.Epoch != 0 {
 		config.IPBFT.Epoch = chainConfig.IPBFT.Epoch
 	}
@@ -345,6 +345,11 @@ func (s *IntChain) Coinbase() (eb common.Address, err error) {
 // set in js console via admin interface or wrapper from cli flags
 func (self *IntChain) SetCoinbase(coinbase common.Address) {
 
+	if _, ok := self.engine.(consensus.IPBFT); ok {
+		log.Error("Cannot set etherbase in IPBFT consensus")
+		return
+	}
+
 	self.lock.Lock()
 	self.coinbase = coinbase
 	self.lock.Unlock()
@@ -402,7 +407,7 @@ func (s *IntChain) Protocols() []p2p.Protocol {
 }
 
 // Start implements node.Service, starting all internal goroutines needed by the
-// IntChain protocol implementation.
+// INT Chain protocol implementation.
 func (s *IntChain) Start(srvr *p2p.Server) error {
 	// Start the bloom bits servicing goroutines
 	s.startBloomHandlers()

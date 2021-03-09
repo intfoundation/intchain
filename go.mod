@@ -22,9 +22,10 @@ require (
 	github.com/huin/goupnp v1.0.0
 	github.com/influxdata/influxdb v1.2.3
 	github.com/intfoundation/bls v1.0.6
+	github.com/intfoundation/ed25519 v1.0.1 // indirect
 	github.com/intfoundation/go-common v1.0.1
 	github.com/intfoundation/go-config v1.0.1
-	github.com/intfoundation/go-crypto v1.0.3
+	github.com/intfoundation/go-crypto v1.0.5
 	github.com/intfoundation/go-data v1.0.1 // indirect
 	github.com/intfoundation/go-db v1.0.1
 	github.com/intfoundation/go-events v1.0.1

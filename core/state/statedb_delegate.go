@@ -315,51 +315,51 @@ func (self *StateDB) CancelCandidate(addr common.Address, allRefund bool) {
 	}
 }
 
-func (self *StateDB) GetForbidden(addr common.Address) bool {
-	stateObject := self.GetOrNewStateObject(addr)
-	if stateObject != nil {
-		return stateObject.IsForbidden()
-	}
-	return false
-}
+//func (self *StateDB) GetForbidden(addr common.Address) bool {
+//	stateObject := self.GetOrNewStateObject(addr)
+//	if stateObject != nil {
+//		return stateObject.IsForbidden()
+//	}
+//	return false
+//}
 
-func (self *StateDB) SetForbidden(addr common.Address, forbidden bool) {
-	stateObject := self.GetOrNewStateObject(addr)
-	if stateObject != nil {
-		stateObject.SetForbidden(forbidden)
-	}
-}
+//func (self *StateDB) SetForbidden(addr common.Address, forbidden bool) {
+//	stateObject := self.GetOrNewStateObject(addr)
+//	if stateObject != nil {
+//		stateObject.SetForbidden(forbidden)
+//	}
+//}
 
-func (self *StateDB) GetForbiddenTime(addr common.Address) *big.Int {
-	stateObject := self.GetOrNewStateObject(addr)
-	if stateObject != nil {
-		return stateObject.ForbiddenTime()
-	}
-	return common.Big0
-}
+//func (self *StateDB) GetForbiddenTime(addr common.Address) *big.Int {
+//	stateObject := self.GetOrNewStateObject(addr)
+//	if stateObject != nil {
+//		return stateObject.ForbiddenTime()
+//	}
+//	return common.Big0
+//}
 
-func (self *StateDB) SetForbiddenTime(addr common.Address, forbiddenTime *big.Int) {
-	stateObject := self.GetOrNewStateObject(addr)
-	if stateObject != nil {
-		stateObject.SetForbiddenTime(forbiddenTime)
-	}
-}
+//func (self *StateDB) SetForbiddenTime(addr common.Address, forbiddenTime *big.Int) {
+//	stateObject := self.GetOrNewStateObject(addr)
+//	if stateObject != nil {
+//		stateObject.SetForbiddenTime(forbiddenTime)
+//	}
+//}
 
-func (self *StateDB) GetMinedBlocks(addr common.Address) *big.Int {
-	stateObject := self.GetOrNewStateObject(addr)
-	if stateObject != nil {
-		return stateObject.BlockTime()
-	}
+//func (self *StateDB) GetMinedBlocks(addr common.Address) *big.Int {
+//	stateObject := self.GetOrNewStateObject(addr)
+//	if stateObject != nil {
+//		return stateObject.BlockTime()
+//	}
+//
+//	return common.Big0
+//}
 
-	return common.Big0
-}
-
-func (self *StateDB) SetMinedBlocks(addr common.Address, blocks *big.Int) {
-	stateObject := self.GetOrNewStateObject(addr)
-	if stateObject != nil {
-		stateObject.SetBlockTime(blocks)
-	}
-}
+//func (self *StateDB) SetMinedBlocks(addr common.Address, blocks *big.Int) {
+//	stateObject := self.GetOrNewStateObject(addr)
+//	if stateObject != nil {
+//		stateObject.SetBlockTime(blocks)
+//	}
+//}
 
 // ClearCommission Set the Candidate commission to 0
 func (self *StateDB) ClearCommission(addr common.Address) {

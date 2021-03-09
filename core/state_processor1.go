@@ -51,6 +51,7 @@ func ApplyTransactionEx(config *params.ChainConfig, bc *BlockChain, author *comm
 			//log.Debugf("ApplyTransactionEx(), is byzantium\n")
 			statedb.Finalise(true)
 		} else {
+			// TODO: intermediate root need IsEIP158 block number or not
 			//log.Debugf("ApplyTransactionEx(), is not byzantium\n")
 			root = statedb.IntermediateRoot(false).Bytes()
 		}
@@ -174,6 +175,8 @@ func ApplyTransactionEx(config *params.ChainConfig, bc *BlockChain, author *comm
 		} else {
 			root = statedb.IntermediateRoot(config.IsEIP158(header.Number)).Bytes()
 		}
+
+		// TODO: whether true of false for the transaction receipt
 		receipt := types.NewReceipt(root, false, *usedGas)
 		receipt.TxHash = tx.Hash()
 		receipt.GasUsed = gas

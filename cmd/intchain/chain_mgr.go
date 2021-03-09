@@ -36,7 +36,7 @@ type ChainManager struct {
 	childChains          map[string]*Chain
 	childQuits           map[string]<-chan struct{}
 
-	stop chan struct{} // Channel wait for INTCHAIN stop
+	stop chan struct{} // Channel wait for INT CHAIN stop
 
 	server *utils.IntChainP2PServer
 	cch    *CrossChainHelper

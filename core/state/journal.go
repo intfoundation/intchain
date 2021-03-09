@@ -289,17 +289,17 @@ func (ch commissionChange) undo(s *StateDB) {
 	s.getStateObject(*ch.account).setCommission(ch.prev)
 }
 
-func (ch forbiddenChange) undo(s *StateDB) {
-	s.getStateObject(*ch.account).setForbidden(ch.prev)
-}
-
-func (ch blockTimeChange) undo(s *StateDB) {
-	s.getStateObject(*ch.account).setBlockTime(ch.prev)
-}
-
-func (ch forbiddenTimeChange) undo(s *StateDB) {
-	s.getStateObject(*ch.account).setForbiddenTime(ch.prev)
-}
+//func (ch forbiddenChange) undo(s *StateDB) {
+//	s.getStateObject(*ch.account).setForbidden(ch.prev)
+//}
+//
+//func (ch blockTimeChange) undo(s *StateDB) {
+//	s.getStateObject(*ch.account).setBlockTime(ch.prev)
+//}
+//
+//func (ch forbiddenTimeChange) undo(s *StateDB) {
+//	s.getStateObject(*ch.account).setForbiddenTime(ch.prev)
+//}
 
 func (ch refundChange) undo(s *StateDB) {
 	s.refund = ch.prev

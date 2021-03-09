@@ -2093,9 +2093,9 @@ func unRegisterValidation(from common.Address, tx *types.Transaction, state *sta
 	}
 
 	// Forbidden candidate can't unregister
-	if state.GetForbidden(from) {
-		return core.ErrForbiddenUnRegister
-	}
+	//if state.GetForbidden(from) {
+	//	return core.ErrForbiddenUnRegister
+	//}
 
 	// Super node can't unregister
 	var ep *epoch.Epoch
@@ -2147,12 +2147,12 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	state.AddProxiedBalanceByUser(args.Candidate, from, amount)
 
 	// if forbidden, don't add to next epoch validator vote set
-	if !state.GetForbidden(from) {
-		verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate, ops)
-		if verror != nil {
-			return verror
-		}
+	//if !state.GetForbidden(from) {
+	verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate, ops)
+	if verror != nil {
+		return verror
 	}
+	//}
 
 	return nil
 }

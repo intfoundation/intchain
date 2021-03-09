@@ -1124,6 +1124,7 @@ func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet
 		//This block could be used for later round
 		//cs.blockFromMiner = nil
 
+		// TODO: remove withdraw from main chain
 		// retrieve TX3ProofData for TX4
 		var tx3ProofData []*ethTypes.TX3ProofData
 		txs := intBlock.Transactions()
@@ -1214,6 +1215,7 @@ func (cs *ConsensusState) defaultDoPrevote(height uint64, round int) {
 		return
 	}
 
+	// TODO: remove validate tx4
 	// Validate TX4
 	err = cs.ValidateTX4(cs.ProposalBlock)
 	if err != nil {
@@ -1525,6 +1527,8 @@ func (cs *ConsensusState) finalizeCommit(height uint64) {
 				block.TdmExtra.NeedToSave = true
 				cs.logger.Infof("NeedToSave set to true due to epoch. Chain: %s, Height: %v", block.TdmExtra.ChainID, block.TdmExtra.Height)
 			}
+
+			// TODO: remove cross chain tx
 			// check special cross-chain tx
 			txs := block.Block.Transactions()
 			for _, tx := range txs {

@@ -571,14 +571,14 @@ type ChildChainProofDataV1 struct {
 //	return ret, nil
 //}
 
-func DecodeChildChainProofData(bs []byte) (*ChildChainProofData, error) {
-	proofData := &ChildChainProofData{}
-	err := rlp.DecodeBytes(bs, proofData)
-	if err != nil {
-		return nil, err
-	}
-	return proofData, nil
-}
+//func DecodeChildChainProofData(bs []byte) (*ChildChainProofData, error) {
+//	proofData := &ChildChainProofData{}
+//	err := rlp.DecodeBytes(bs, proofData)
+//	if err != nil {
+//		return nil, err
+//	}
+//	return proofData, nil
+//}
 
 //func DecodeChildChainProofDataV1(bs []byte) (*ChildChainProofDataV1, error) {
 //	proofData := &ChildChainProofDataV1{}

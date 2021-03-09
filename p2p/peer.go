@@ -322,7 +322,7 @@ func (p *Peer) handle(msg Msg) error {
 		p.log.Infof("Got confirm msg After add protocol. Caps %v, Running Proto %+v", p.Caps(), p.Info().Protocols)
 
 	case msg.Code == RefreshValidatorNodeInfoMsg:
-		p.log.Debug("Got refresh validation node infomation")
+		p.log.Debug("Got refresh validation node information")
 		var valNodeInfo P2PValidatorNodeInfo
 		if err := msg.Decode(&valNodeInfo); err != nil {
 			p.log.Debugf("decode error: %v", err)

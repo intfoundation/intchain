@@ -170,6 +170,8 @@ github.com/influxdata/influxdb v1.2.3/go.mod h1:qZna6X/4elxqT3yI9iZYdZrWWdeFOOpr
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/intfoundation/bls v1.0.6 h1:ix42BrDgPI4M5+XNSPfvi6Delu/n/T5B8Dgo2O+uHVo=
 github.com/intfoundation/bls v1.0.6/go.mod h1:pJTjESuL1PF0MOOzgU6cePXdkuHW+ZqXJhaKrElxWdg=
+github.com/intfoundation/ed25519 v1.0.1 h1:kSs00dyq6Agn/050ZtzX1z+XGQY+ZjKZEUhYrrx2wlQ=
+github.com/intfoundation/ed25519 v1.0.1/go.mod h1:XVOOcuyJg493DW0aLGaHXyjv+/8RwylIDxyGutwwCp0=
 github.com/intfoundation/go-common v1.0.0/go.mod h1:eet7FlvfDgNTxU8rp6DEUK3C3uIURtSi/bYuHGJINKU=
 github.com/intfoundation/go-common v1.0.1 h1:whupiKWOK+yiBOmYqY4hc+JpQKrl5HLioVZm/2/YZqM=
 github.com/intfoundation/go-common v1.0.1/go.mod h1:eet7FlvfDgNTxU8rp6DEUK3C3uIURtSi/bYuHGJINKU=
@@ -179,6 +181,8 @@ github.com/intfoundation/go-config v1.0.1/go.mod h1:2ikWHeIdKfYw9U5K61290fBJZHAz
 github.com/intfoundation/go-crypto v1.0.2/go.mod h1:IsSN5zlK6Q9ZFmzqhbsWibUDs5zN56pgCpvz5see/Nc=
 github.com/intfoundation/go-crypto v1.0.3 h1:L667T1acEpwfmbKwZqXN+UfcL9LsP2czLgMWAcD4e5M=
 github.com/intfoundation/go-crypto v1.0.3/go.mod h1:IsSN5zlK6Q9ZFmzqhbsWibUDs5zN56pgCpvz5see/Nc=
+github.com/intfoundation/go-crypto v1.0.5 h1:8TKroz0DlTDAXvBFTxSLPyr4uhfkfxCREZ8FdGx3abY=
+github.com/intfoundation/go-crypto v1.0.5/go.mod h1:IsSN5zlK6Q9ZFmzqhbsWibUDs5zN56pgCpvz5see/Nc=
 github.com/intfoundation/go-data v1.0.0/go.mod h1:dbk2TkRjMe1D3g3CNbyNnpVaP8v9rZ17JIf83MFxO0o=
 github.com/intfoundation/go-data v1.0.1 h1:bBzhvzrsImRDrFifauOVyZL7tRNbvATm6WKn8xxf8kg=
 github.com/intfoundation/go-data v1.0.1/go.mod h1:dbk2TkRjMe1D3g3CNbyNnpVaP8v9rZ17JIf83MFxO0o=

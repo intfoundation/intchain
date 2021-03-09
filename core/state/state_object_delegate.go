@@ -407,65 +407,65 @@ func (self *stateObject) setCommission(commission uint8) {
 	}
 }
 
-func (self *stateObject) IsForbidden() bool {
-	return self.data.IsForbidden
-}
+//func (self *stateObject) IsForbidden() bool {
+//	return self.data.IsForbidden
+//}
+//
+//func (self *stateObject) SetForbidden(forbidden bool) {
+//	self.db.journal = append(self.db.journal, forbiddenChange{
+//		account: &self.address,
+//		prev:    self.data.IsForbidden,
+//	})
+//	self.setForbidden(forbidden)
+//}
+//
+//func (self *stateObject) setForbidden(forbidden bool) {
+//	self.data.IsForbidden = forbidden
+//
+//	if self.onDirty != nil {
+//		self.onDirty(self.Address())
+//		self.onDirty = nil
+//	}
+//}
 
-func (self *stateObject) SetForbidden(forbidden bool) {
-	self.db.journal = append(self.db.journal, forbiddenChange{
-		account: &self.address,
-		prev:    self.data.IsForbidden,
-	})
-	self.setForbidden(forbidden)
-}
+//func (self *stateObject) BlockTime() *big.Int {
+//	return self.data.BlockTime
+//}
+//
+//func (self *stateObject) SetBlockTime(blockTime *big.Int) {
+//	self.db.journal = append(self.db.journal, blockTimeChange{
+//		account: &self.address,
+//		prev:    self.data.BlockTime,
+//	})
+//	self.setBlockTime(blockTime)
+//}
+//
+//func (self *stateObject) setBlockTime(blockTime *big.Int) {
+//	self.data.BlockTime = blockTime
+//
+//	if self.onDirty != nil {
+//		self.onDirty(self.Address())
+//		self.onDirty = nil
+//	}
+//}
 
-func (self *stateObject) setForbidden(forbidden bool) {
-	self.data.IsForbidden = forbidden
-
-	if self.onDirty != nil {
-		self.onDirty(self.Address())
-		self.onDirty = nil
-	}
-}
-
-func (self *stateObject) BlockTime() *big.Int {
-	return self.data.BlockTime
-}
-
-func (self *stateObject) SetBlockTime(blockTime *big.Int) {
-	self.db.journal = append(self.db.journal, blockTimeChange{
-		account: &self.address,
-		prev:    self.data.BlockTime,
-	})
-	self.setBlockTime(blockTime)
-}
-
-func (self *stateObject) setBlockTime(blockTime *big.Int) {
-	self.data.BlockTime = blockTime
-
-	if self.onDirty != nil {
-		self.onDirty(self.Address())
-		self.onDirty = nil
-	}
-}
-
-func (self *stateObject) ForbiddenTime() *big.Int {
-	return self.data.ForbiddenTime
-}
-
-func (self *stateObject) SetForbiddenTime(forbiddenTime *big.Int) {
-	self.db.journal = append(self.db.journal, forbiddenTimeChange{
-		account: &self.address,
-		prev:    self.data.ForbiddenTime,
-	})
-	self.setForbiddenTime(forbiddenTime)
-}
-
-func (self *stateObject) setForbiddenTime(forbiddenTime *big.Int) {
-	self.data.ForbiddenTime = forbiddenTime
-
-	if self.onDirty != nil {
-		self.onDirty(self.Address())
-		self.onDirty = nil
-	}
-}
+//func (self *stateObject) ForbiddenTime() *big.Int {
+//	return self.data.ForbiddenTime
+//}
+//
+//func (self *stateObject) SetForbiddenTime(forbiddenTime *big.Int) {
+//	self.db.journal = append(self.db.journal, forbiddenTimeChange{
+//		account: &self.address,
+//		prev:    self.data.ForbiddenTime,
+//	})
+//	self.setForbiddenTime(forbiddenTime)
+//}
+//
+//func (self *stateObject) setForbiddenTime(forbiddenTime *big.Int) {
+//	self.data.ForbiddenTime = forbiddenTime
+//
+//	if self.onDirty != nil {
+//		self.onDirty(self.Address())
+//		self.onDirty = nil
+//	}
+//}
