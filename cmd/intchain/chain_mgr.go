@@ -131,7 +131,7 @@ func (cm *ChainManager) LoadChains(childIds []string) error {
 
 func (cm *ChainManager) InitCrossChainHelper() {
 	cm.cch.chainInfoDB = dbm.NewDB("chaininfo",
-		cm.mainChain.Config.GetString("db_backend"),
+		cm.mainChain.Config.GetString("leveldb"),
 		cm.ctx.GlobalString(utils.DataDirFlag.Name))
 	cm.cch.localTX3CacheDB, _ = rawdb.NewLevelDBDatabase(path.Join(cm.ctx.GlobalString(utils.DataDirFlag.Name), "tx3cache"), 0, 0, "intchain/db/tx3/")
 
