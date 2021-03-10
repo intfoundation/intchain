@@ -16,6 +16,7 @@ require (
 	github.com/golang/protobuf v1.3.3
 	github.com/golang/snappy v0.0.1
 	github.com/hashicorp/golang-lru v0.5.1
+	github.com/holiman/uint256 v1.1.1
 	github.com/huin/goupnp v1.0.0
 	github.com/influxdata/influxdb v1.2.3
 	github.com/intfoundation/bls v1.0.6
