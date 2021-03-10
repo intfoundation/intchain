@@ -498,7 +498,9 @@ func (cs *ConsensusState) proposersByVRF() (lastProposer int, curProposer int) {
 
 	chainReader := cs.backend.ChainReader()
 	header := chainReader.CurrentHeader()
-	headerHash := header.Hash()
+	// use hash without time instead of hash
+	//headerHash := header.Hash()
+	headerHash := header.HashWithoutTime()
 
 	curProposer = cs.proposerByVRF(headerHash, cs.Validators.Validators)
 
