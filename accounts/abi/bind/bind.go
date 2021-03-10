@@ -22,6 +22,7 @@ package bind
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"go/format"
 	"regexp"
