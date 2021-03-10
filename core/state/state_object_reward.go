@@ -3,6 +3,7 @@ package state
 import (
 	"fmt"
 	"github.com/intfoundation/intchain/common"
+	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/rlp"
 	"math/big"
 )
@@ -52,6 +53,11 @@ func (c *stateObject) SubRewardBalance(amount *big.Int) {
 }
 
 func (self *stateObject) SetRewardBalance(amount *big.Int) {
+	if amount.Sign() < 0 {
+		log.Infof("!!!amount is negative, not support yet, make it 0 by force")
+		amount = big.NewInt(0)
+	}
+
 	self.db.journal = append(self.db.journal, rewardBalanceChange{
 		account: &self.address,
 		prev:    new(big.Int).Set(self.data.RewardBalance),
