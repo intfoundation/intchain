@@ -223,7 +223,7 @@ func (self *StateDB) AddPendingRefundBalanceByUser(addr, user common.Address, am
 		dirtyApb.PendingRefundBalance = new(big.Int).Add(dirtyApb.PendingRefundBalance, amount)
 		stateObject.SetAccountProxiedBalance(self.db, user, dirtyApb)
 
-		// Add amount to Total Proxied Balance
+		// Add amount to Total pending refund Balance
 		stateObject.AddPendingRefundBalance(amount)
 	}
 }
@@ -243,7 +243,7 @@ func (self *StateDB) SubPendingRefundBalanceByUser(addr, user common.Address, am
 		dirtyApb.PendingRefundBalance = new(big.Int).Sub(dirtyApb.PendingRefundBalance, amount)
 		stateObject.SetAccountProxiedBalance(self.db, user, dirtyApb)
 
-		// Sub amount from Total Proxied Balance
+		// Sub amount from Total pending refund Balance
 		stateObject.SubPendingRefundBalance(amount)
 	}
 }
