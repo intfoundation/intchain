@@ -1,15 +1,15 @@
 package ipbft
 
 import (
+	cmn "github.com/intfoundation/go-common"
+	cfg "github.com/intfoundation/go-config"
+	dbm "github.com/intfoundation/go-db"
 	"github.com/intfoundation/intchain/consensus/ipbft/consensus"
 	"github.com/intfoundation/intchain/consensus/ipbft/epoch"
 	"github.com/intfoundation/intchain/consensus/ipbft/types"
 	"github.com/intfoundation/intchain/core"
 	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/params"
-	cmn "github.com/intfoundation/go-common"
-	cfg "github.com/intfoundation/go-config"
-	dbm "github.com/intfoundation/go-db"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -110,11 +110,10 @@ func (n *Node) OnStart() error {
 	// Start the Consensus Reactor for this Chain
 	_, err = n.consensusReactor.Start()
 	if err != nil {
+		n.evsw.Stop()
 		n.logger.Errorf("Failed to start Consensus Reactor. Error: %v", err)
 		return err
 	}
-
-	n.consensusReactor.AfterStart()
 
 	return nil
 }

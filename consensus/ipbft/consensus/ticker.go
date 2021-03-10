@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"github.com/intfoundation/intchain/log"
+	"sync"
 	"time"
 
 	. "github.com/intfoundation/go-common"
@@ -34,6 +35,7 @@ type timeoutTicker struct {
 	tockChan chan timeoutInfo
 
 	logger log.Logger
+	wg     sync.WaitGroup
 }
 
 func NewTimeoutTicker(logger log.Logger) TimeoutTicker {
@@ -49,6 +51,8 @@ func NewTimeoutTicker(logger log.Logger) TimeoutTicker {
 }
 
 func (t *timeoutTicker) OnStart() error {
+	t.tickChan = make(chan timeoutInfo, tickTockBufferSize)
+	t.tockChan = make(chan timeoutInfo, tickTockBufferSize)
 
 	go t.timeoutRoutine()
 
@@ -56,8 +60,14 @@ func (t *timeoutTicker) OnStart() error {
 }
 
 func (t *timeoutTicker) OnStop() {
-	t.BaseService.OnStop()
+	close(t.tickChan)
+	close(t.tockChan)
+
 	t.stopTimer()
+
+	t.logger.Infof("timeoutTicker wait")
+	t.wg.Wait()
+	t.logger.Infof("timeoutTicker wait over")
 }
 
 func (t *timeoutTicker) Chan() <-chan timeoutInfo {
@@ -89,6 +99,13 @@ func (t *timeoutTicker) stopTimer() {
 // timeouts of 0 on the tickChan will be immediately relayed to the tockChan
 func (t *timeoutTicker) timeoutRoutine() {
 	t.logger.Info("Starting timeout routine")
+
+	t.wg.Add(1)
+	defer func() {
+		t.wg.Done()
+		t.logger.Infof("timeoutTicker done one routine")
+	}()
+
 	var ti timeoutInfo
 	for {
 		select {
@@ -118,14 +135,16 @@ func (t *timeoutTicker) timeoutRoutine() {
 			t.timer.Reset(ti.Duration)
 			t.logger.Infof("Scheduled timeout. dur: %v, height: %v, round: %v, step: %v", ti.Duration, ti.Height, ti.Round, ti.Step)
 		case <-t.timer.C:
+			if !t.IsRunning() {
+				t.logger.Infof("timeoutTimer tickChan, but need stop or not running, just return")
+				return
+			}
 			t.logger.Infof("Timed out. dur: %v, height: %v, round: %v, step: %v", ti.Duration, ti.Height, ti.Round, ti.Step)
 			// go routine here gaurantees timeoutRoutine doesn't block.
 			// Determinism comes from playback in the receiveRoutine.
 			// We can eliminate it by merging the timeoutRoutine into receiveRoutine
 			//  and managing the timeouts ourselves with a millisecond ticker
 			go func(toi timeoutInfo) { t.tockChan <- toi }(ti)
-		case <-t.Quit:
-			return
 		}
 	}
 }

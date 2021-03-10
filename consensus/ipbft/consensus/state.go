@@ -326,7 +326,7 @@ type ConsensusState struct {
 	doPrevote      func(height uint64, round int)
 	setProposal    func(proposal *types.Proposal) error
 
-	done chan struct{}
+	wg sync.WaitGroup
 
 	blockFromMiner *ethTypes.Block
 	backend        Backend
@@ -338,13 +338,11 @@ type ConsensusState struct {
 
 func NewConsensusState(backend Backend, config cfg.Config, chainConfig *params.ChainConfig, cch core.CrossChainHelper, epoch *ep.Epoch) *ConsensusState {
 	cs := &ConsensusState{
-		chainConfig:      chainConfig,
-		cch:              cch,
-		Epoch:            epoch,
-		peerMsgQueue:     make(chan msgInfo, msgQueueSize),
-		internalMsgQueue: make(chan msgInfo, msgQueueSize),
-		timeoutTicker:    NewTimeoutTicker(backend.GetLogger()),
-		timeoutParams:    InitTimeoutParamsFromConfig(config),
+		chainConfig:   chainConfig,
+		cch:           cch,
+		Epoch:         epoch,
+		timeoutTicker: NewTimeoutTicker(backend.GetLogger()),
+		timeoutParams: InitTimeoutParamsFromConfig(config),
 		//done:             make(chan struct{}),
 		blockFromMiner: nil,
 		backend:        backend,
@@ -584,7 +582,8 @@ func (cs *ConsensusState) LoadCommit(height uint64) *types.Commit {
 
 func (cs *ConsensusState) OnStart() error {
 
-	cs.done = make(chan struct{})
+	cs.peerMsgQueue = make(chan msgInfo, msgQueueSize)
+	cs.internalMsgQueue = make(chan msgInfo, msgQueueSize)
 
 	// NOTE: we will get a build up of garbage go routines
 	//  firing on the tockChan until the receiveRoutine is started
@@ -603,14 +602,14 @@ func (cs *ConsensusState) OnStart() error {
 
 func (cs *ConsensusState) OnStop() {
 
-	cs.BaseService.OnStop()
 	cs.timeoutTicker.Stop()
-}
 
-// NOTE: be sure to Stop() the event switch and drain
-// any event channels or this may deadlock
-func (cs *ConsensusState) Wait() {
-	<-cs.done
+	close(cs.peerMsgQueue)
+	close(cs.internalMsgQueue)
+
+	cs.logger.Infof("ConsensusState wait")
+	cs.wg.Wait()
+	cs.logger.Infof("ConsensusState wait over")
 }
 
 //------------------------------------------------------------
@@ -728,6 +727,12 @@ func (cs *ConsensusState) newStep() {
 // It keeps the RoundState and is the only thing that updates it.
 // Updates (state transitions) happen on timeouts, complete proposals, and 2/3 majorities
 func (cs *ConsensusState) receiveRoutine(maxSteps int) {
+	cs.wg.Add(1)
+	defer func() {
+		cs.wg.Done()
+		cs.logger.Infof("ConsensusState done one routine")
+	}()
+
 	for {
 		if maxSteps > 0 {
 			if cs.nSteps >= maxSteps {
@@ -741,22 +746,31 @@ func (cs *ConsensusState) receiveRoutine(maxSteps int) {
 
 		select {
 		case mi = <-cs.peerMsgQueue:
+			if !cs.IsRunning() {
+				cs.logger.Infof("ConsensusState peerMsgQueue, but need stop or not running, just return")
+				return
+			}
 			// handles proposals, block parts, votes
 			// may generate internal events (votes, complete proposals, 2/3 majorities)
 			rs := cs.RoundState
 			cs.handleMsg(mi, rs)
 		case mi = <-cs.internalMsgQueue:
+			if !cs.IsRunning() {
+				cs.logger.Infof("ConsensusState internalMsgQueue, but need stop or not running, just return")
+				return
+			}
 			// handles proposals, block parts, votes
 			rs := cs.RoundState
 			cs.handleMsg(mi, rs)
 		case ti := <-cs.timeoutTicker.Chan(): // tockChan:
+			if !cs.IsRunning() {
+				cs.logger.Infof("ConsensusState timeoutTicker.Chan(), but need stop or not running, just return")
+				return
+			}
 			// if the timeout is relevant to the rs
 			// go to the next step
 			rs := cs.RoundState
 			cs.handleTimeout(ti, rs)
-		case <-cs.Quit:
-			close(cs.done)
-			return
 		}
 	}
 }
@@ -848,7 +862,7 @@ func (cs *ConsensusState) handleTimeout(ti timeoutInfo, rs RoundState) {
 		types.FireEventTimeoutWait(cs.evsw, cs.RoundStateEvent())
 		cs.enterNewRound(ti.Height, ti.Round+1)
 	default:
-		panic(Fmt("Invalid timeout step: %v", ti.Step))
+		cs.logger.Errorf("Invalid timeout step: %v", ti.Step)
 	}
 }
 

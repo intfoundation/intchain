@@ -709,8 +709,10 @@ func prepareExtra(header *types.Header, vals []common.Address) ([]byte, error) {
 func writeSeal(h *types.Header, seal []byte) error {
 
 	//logger.Info("IPBFT backend write seal")
-	payload := types.MagicExtra
-	h.Extra = payload
+	if h.Extra == nil {
+		payload := types.MagicExtra
+		h.Extra = payload
+	}
 	return nil
 }
 
