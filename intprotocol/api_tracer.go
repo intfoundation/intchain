@@ -616,7 +616,7 @@ func (api *PrivateDebugAPI) computeStateDB(block *types.Block, reexec uint64) (*
 	if err != nil {
 		switch err.(type) {
 		case *trie.MissingNodeError:
-			return nil, fmt.Errorf("required historical state unavailable")
+			return nil, fmt.Errorf("required historical state unavailable (reexec=%d)", reexec)
 		default:
 			return nil, err
 		}
