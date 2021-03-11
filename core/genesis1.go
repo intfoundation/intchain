@@ -219,7 +219,7 @@ var DefaultTestnetGenesisJSON = `{
 		"chainId": 2,
 		"homesteadBlock": 0,
 		"eip150Block": 0,
-		"eip150Hash": "0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0",
+		"eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
 		"eip155Block": 0,
 		"eip158Block": 0,
 		"byzantiumBlock": 0,
@@ -228,15 +228,15 @@ var DefaultTestnetGenesisJSON = `{
 			"policy": 0
 		}
 	},
-	"nonce": "0xdeadbeefdeadbeef",
-	"timestamp": "0x5fa278cc",
+	"nonce": "0x0",
+	"timestamp": "0x60497e98",
 	"extraData": "0x",
-	"gasLimit": "0x7270e00",
+	"gasLimit": "0xe0000000",
 	"difficulty": "0x1",
 	"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
-	"coinbase": "INT3AAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+	"coinbase": "0x0000000000000000000000000000000000000000",
 	"alloc": {
-		"INT3GYS19y2AGxiNptdQSQ1tQLogXAtd": {
+		"26ee0906f135303a0ab66b3196efabd0853c481b": {
 			"balance": "0x29569e2db20e16b46000000",
 			"amount": "0x54b40b1f852bda000000"
 		}
