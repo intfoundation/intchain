@@ -14,7 +14,7 @@ type EpochApi struct {
 	StartBlock     hexutil.Uint64    `json:"startBlock"`
 	EndBlock       hexutil.Uint64    `json:"endBlock"`
 	StartTime      time.Time         `json:"startTime"`
-	EndTime        time.Time         `json:"endEime"`
+	EndTime        time.Time         `json:"endTime"`
 	Validators     []*EpochValidator `json:"validators"`
 }
 
