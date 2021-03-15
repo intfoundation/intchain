@@ -1905,7 +1905,7 @@ func (cs *ConsensusState) addVote(vote *types.Vote, peerKey string) (added bool,
 	cs.logger.Info("addVote", "voteHeight", vote.Height, "voteType", vote.Type, "csHeight", cs.Height)
 
 	if !cs.IsProposer() {
-		cs.logger.Warn("addVode should only happen if this node is proposer")
+		cs.logger.Warn("addVote should only happen if this node is proposer")
 		return
 	}
 
