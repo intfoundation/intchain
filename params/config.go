@@ -34,7 +34,7 @@ var (
 	// MainnetChainConfig is the chain parameters to run a node on the main network.
 	MainnetChainConfig = &ChainConfig{
 		IntChainId:          "intchain",
-		ChainId:             big.NewInt(1),
+		ChainId:             big.NewInt(1024),
 		HomesteadBlock:      big.NewInt(0),
 		EIP150Block:         big.NewInt(0),
 		EIP150Hash:          common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),
@@ -51,7 +51,7 @@ var (
 	// TestnetChainConfig contains the chain parameters to run a node on the test network.
 	TestnetChainConfig = &ChainConfig{
 		IntChainId:          "testnet",
-		ChainId:             big.NewInt(2),
+		ChainId:             big.NewInt(2048),
 		HomesteadBlock:      big.NewInt(0),
 		EIP150Block:         big.NewInt(0),
 		EIP150Hash:          common.HexToHash("0x0000000000000000000000000000000000000000000000000000000000000000"),

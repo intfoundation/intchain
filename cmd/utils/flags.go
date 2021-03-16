@@ -122,7 +122,7 @@ var (
 	}
 	NetworkIdFlag = cli.Uint64Flag{
 		Name:  "networkid",
-		Usage: "Network identifier (integer, mainnet=1, testnet=2)",
+		Usage: "Network identifier (integer, mainnet=1024, testnet=2048)",
 		Value: intprotocol.DefaultConfig.NetworkId,
 	}
 	TestnetFlag = cli.BoolFlag{
@@ -1060,7 +1060,7 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *intprotocol.Config) {
 	switch {
 	case ctx.GlobalBool(TestnetFlag.Name):
 		if !ctx.GlobalIsSet(NetworkIdFlag.Name) {
-			cfg.NetworkId = 8551
+			cfg.NetworkId = 2048
 		}
 		//
 		//cfg.Genesis = core.DefaultTestnetGenesisBlock()

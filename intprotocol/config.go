@@ -37,7 +37,7 @@ import (
 var DefaultConfig = Config{
 	//SyncMode: downloader.FastSync,
 	SyncMode:       downloader.FullSync,
-	NetworkId:      1,
+	NetworkId:      1024,
 	DatabaseCache:  768,
 	TrieCleanCache: 256,
 	TrieDirtyCache: 256,

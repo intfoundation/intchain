@@ -183,7 +183,7 @@ func DefaultGenesisBlockFromJson(genesisJson string) *Genesis {
 var DefaultMainnetGenesisJSON = `{
 	"config": {
 		"intChainId": "intchain",
-		"chainId": 1,
+		"chainId": 1024,
 		"homesteadBlock": 0,
 		"eip150Block": 0,
 		"eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -196,14 +196,14 @@ var DefaultMainnetGenesisJSON = `{
 		}
 	},
 	"nonce": "0x0",
-	"timestamp": "0x60419730",
+	"timestamp": "0x60505e44",
 	"extraData": "0x",
 	"gasLimit": "0xe0000000",
 	"difficulty": "0x1",
 	"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
 	"coinbase": "0x0000000000000000000000000000000000000000",
 	"alloc": {
-		"facc7c65218081ad4742fd64710b8a6879dd6b6e": {
+		"9d667a75456cf68c5b2b91d66a0cd134a57370d1": {
 			"balance": "0x29569e2db20e16b46000000",
 			"amount": "0x54b40b1f852bda000000"
 		}
