@@ -536,6 +536,12 @@ func (s *PublicBlockChainAPI) GetBalance(ctx context.Context, address common.Add
 //	return candidateList, nil
 //}
 
+type ProxiedDetail struct {
+	ProxiedBalance        *hexutil.Big `json:"proxiedBalance"`
+	DepositProxiedBalance *hexutil.Big `json:"depositProxiedBalance"`
+	PendingRefundBalance  *hexutil.Big `json:"pendingRefundBalance"`
+}
+
 // GetBalanceDetail returns the amount of wei for the given address in the state of the
 // given block number. The rpc.LatestBlockNumber and rpc.PendingBlockNumber meta
 // block numbers are also allowed.
@@ -556,17 +562,9 @@ func (s *PublicBlockChainAPI) GetBalanceDetail(ctx context.Context, address comm
 	}
 
 	if fullDetail {
-		proxied_detail := make(map[common.Address]struct {
-			ProxiedBalance        *hexutil.Big
-			DepositProxiedBalance *hexutil.Big
-			PendingRefundBalance  *hexutil.Big
-		})
+		proxiedDetail := make(map[common.Address]ProxiedDetail)
 		state.ForEachProxied(address, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
-			proxied_detail[key] = struct {
-				ProxiedBalance        *hexutil.Big
-				DepositProxiedBalance *hexutil.Big
-				PendingRefundBalance  *hexutil.Big
-			}{
+			proxiedDetail[key] = ProxiedDetail{
 				ProxiedBalance:        (*hexutil.Big)(proxiedBalance),
 				DepositProxiedBalance: (*hexutil.Big)(depositProxiedBalance),
 				PendingRefundBalance:  (*hexutil.Big)(pendingRefundBalance),
@@ -574,15 +572,15 @@ func (s *PublicBlockChainAPI) GetBalanceDetail(ctx context.Context, address comm
 			return true
 		})
 
-		fields["proxiedDetail"] = proxied_detail
+		fields["proxiedDetail"] = proxiedDetail
 
-		reward_detail := make(map[common.Address]*hexutil.Big)
+		rewardDetail := make(map[common.Address]*hexutil.Big)
 		state.ForEachReward(address, func(key common.Address, rewardBalance *big.Int) bool {
-			reward_detail[key] = (*hexutil.Big)(rewardBalance)
+			rewardDetail[key] = (*hexutil.Big)(rewardBalance)
 			return true
 		})
 
-		fields["rewardDetail"] = reward_detail
+		fields["rewardDetail"] = rewardDetail
 	}
 	return fields, state.Error()
 }
