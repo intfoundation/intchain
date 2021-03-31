@@ -77,6 +77,8 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 	currentEpoch := eng.GetEpoch()
 
 	if epochInBlock != nil {
+		fmt.Printf("update local epoch: epochInBlock %v\n", epochInBlock)
+		fmt.Printf("update local epoch: tdmExtra %v\n", tdmExtra)
 		if epochInBlock.Number == currentEpoch.Number+1 {
 			//fmt.Printf("update local epoch 1\n")
 			// Save the next epoch
@@ -90,21 +92,20 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 			} else if block.NumberU64() == currentEpoch.EndBlock {
 				//fmt.Printf("update local epoch 2\n")
 				// Finalize next epoch
-				// Validator set in next epoch will not finalize and send to mainchain
+				// Validator set in next epoch will not finalize and send to main chain
 				nextEp := currentEpoch.GetNextEpoch()
 				nextEp.Validators = epochInBlock.Validators
 				nextEp.Status = ep.EPOCH_VOTED_NOT_SAVED
 			}
 			currentEpoch.Save()
 		} else if epochInBlock.Number == currentEpoch.Number {
-			//fmt.Printf("update local epoch 3\n")
+			fmt.Printf("update local epoch: epochInBlock.Number %v, currentEpoch.Number %v, epochInBlock.StartTime %v\n", epochInBlock.Number, currentEpoch.Number, epochInBlock.StartTime)
 			// Update the current epoch Start Time from proposer
 			currentEpoch.StartTime = epochInBlock.StartTime
 			currentEpoch.Save()
 
 			// Update the previous epoch End Time
 			if currentEpoch.Number > 0 {
-				currentEpoch.GetPreviousEpoch().EndTime = epochInBlock.StartTime // update previous epoch end time to the state to avoid different node epoch end time mismatch
 				ep.UpdateEpochEndTime(currentEpoch.GetDB(), currentEpoch.Number-1, epochInBlock.StartTime)
 			}
 		}

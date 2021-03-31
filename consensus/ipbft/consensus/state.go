@@ -1127,8 +1127,8 @@ func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet
 			epochBytes = cs.Epoch.Bytes()
 		} else {
 			shouldProposeEpoch := cs.Epoch.ShouldProposeNextEpoch(cs.Height)
-			fmt.Printf("createProposalBlock should propose next epoch %v, height %v\n", shouldProposeEpoch, cs.Height)
 			if shouldProposeEpoch {
+				fmt.Printf("createProposalBlock should propose next epoch %v, height %v\n", shouldProposeEpoch, cs.Height)
 				lastHeight := cs.backend.ChainReader().CurrentBlock().Number().Uint64()
 				lastBlockTime := time.Unix(int64(cs.backend.ChainReader().CurrentBlock().Time()), 0)
 				epochBytes = cs.Epoch.ProposeNextEpoch(lastHeight, lastBlockTime).Bytes()

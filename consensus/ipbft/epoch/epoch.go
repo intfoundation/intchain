@@ -181,7 +181,6 @@ func (epoch *Epoch) SetRewardScheme(rs *RewardScheme) {
 func (epoch *Epoch) Save() {
 	epoch.mtx.Lock()
 	defer epoch.mtx.Unlock()
-	//fmt.Printf("(epoch *Epoch) Save(), (EPOCH, ts.Bytes()) are: (%s,%v\n", calcEpochKeyWithHeight(epoch.Number), epoch.Bytes())
 	epoch.db.SetSync(calcEpochKeyWithHeight(epoch.Number), epoch.Bytes())
 	epoch.db.SetSync([]byte(latestEpochKey), []byte(strconv.FormatUint(epoch.Number, 10)))
 

@@ -26,6 +26,9 @@ func TestEstimateEpoch(t *testing.T) {
 	timeC := time.Now().UnixNano()
 	t.Logf("time c %v", timeC)
 	t.Logf("time c %v", timeC)
+
+	var timeD time.Time
+	t.Logf("t %v", timeD) // 0001-01-01 00:00:00 +0000 UTC
 }
 
 func TestVoteSetCompare(t *testing.T) {
