@@ -2461,7 +2461,7 @@ func updateValidation(bc *core.BlockChain) error {
 
 	currHeight := bc.CurrentBlock().NumberU64()
 
-	if currHeight == 1 || currHeight == ep.StartBlock || currHeight == ep.StartBlock+1 || currHeight == ep.EndBlock {
+	if currHeight <= ep.StartBlock+2 || currHeight == ep.EndBlock {
 		return errors.New("incorrect block height, please retry later")
 	}
 

@@ -233,12 +233,11 @@ func (epoch *Epoch) ShouldProposeNextEpoch(curBlockHeight uint64) bool {
 	// If next epoch already proposed, then no need propose again
 	//fmt.Printf("should propose next epoch %v\n", epoch.nextEpoch)
 	if epoch.nextEpoch != nil {
-		//fmt.Printf("should propose next epoch")
 		return false
 	}
 
-	// current block height bigger than epoch start block and not equal to 1
-	shouldPropose := curBlockHeight > epoch.StartBlock && curBlockHeight != 1 && curBlockHeight != epoch.EndBlock
+	// current block height bigger than epoch start block + 1 and not equal to epoch end block
+	shouldPropose := curBlockHeight > (epoch.StartBlock+1) && curBlockHeight != epoch.EndBlock
 	return shouldPropose
 }
 
@@ -537,9 +536,10 @@ func (epoch *Epoch) EnterNewEpoch(newValidators *tmTypes.ValidatorSet) (*Epoch, 
 		// Now move to Next Epoch
 		nextEpoch := epoch.nextEpoch
 		// Store the Previous Epoch Validators only
-		//nextEpoch.previousEpoch = &Epoch{Validators: epoch.Validators}
+		nextEpoch.previousEpoch = &Epoch{Validators: epoch.Validators}
 		// Store the Previous Epoch all
-		nextEpoch.previousEpoch = epoch.Copy() // if directly use epoch, it will falat error stack overflow (goroutine stack exceeds 1000000000-byte limit)
+		//nextEpoch.previousEpoch = epoch.Copy() // if directly use epoch, it will falat error stack overflow (goroutine stack exceeds 1000000000-byte limit)
+
 		nextEpoch.StartTime = now
 		nextEpoch.Validators = newValidators
 
@@ -727,11 +727,11 @@ func (epoch *Epoch) copy(copyPrevNext bool) *Epoch {
 func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime time.Time) (rewardPerBlock *big.Int, blocksOfNextEpoch uint64) {
 
 	var rewardFirstYear = epoch.rs.RewardFirstYear       //20000000e+18  every year
-	var epochNumberPerYear = epoch.rs.EpochNumberPerYear // 4380
+	var epochNumberPerYear = epoch.rs.EpochNumberPerYear //4380
 	var totalYear = epoch.rs.TotalYear                   //10
 	var timePerBlockOfEpoch int64
 
-	const EMERGENCY_BLOCKS_OF_NEXT_EPOCH uint64 = 100 // al least 100 blocks per epoch
+	const EMERGENCY_BLOCKS_OF_NEXT_EPOCH uint64 = 1000 // al least 1000 blocks per epoch
 
 	zeroEpoch := loadOneEpoch(epoch.db, 0, epoch.logger)
 	initStartTime := zeroEpoch.StartTime
@@ -742,17 +742,18 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 
 	log.Infof("estimateForNextEpoch, previous epoch %v, current epoch %v, last block height %v, epoch start block %v", epoch.previousEpoch, epoch, lastBlockHeight, epoch.StartBlock)
 
-	if epoch.previousEpoch != nil {
-		log.Infof("estimateForNextEpoch previous epoch, start time %v, end time %v", epoch.previousEpoch.StartTime.UnixNano(), epoch.previousEpoch.EndTime.UnixNano())
-		prevEpoch := epoch.previousEpoch
-		timePerBlockOfEpoch = prevEpoch.EndTime.Sub(prevEpoch.StartTime).Nanoseconds() / int64(prevEpoch.EndBlock-prevEpoch.StartBlock)
-	} else {
-		timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
-	}
+	// only use the current epoch to calculate the block time
+	//if epoch.previousEpoch != nil {
+	//	log.Infof("estimateForNextEpoch previous epoch, start time %v, end time %v", epoch.previousEpoch.StartTime.UnixNano(), epoch.previousEpoch.EndTime.UnixNano())
+	//	prevEpoch := epoch.previousEpoch
+	//	timePerBlockOfEpoch = prevEpoch.EndTime.Sub(prevEpoch.StartTime).Nanoseconds() / int64(prevEpoch.EndBlock-prevEpoch.StartBlock)
+	//} else {
+	timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
+	//}
 
 	if timePerBlockOfEpoch == 0 {
 		log.Debugf("estimateForNextEpoch, timePerBlockOfEpoch is %v", timePerBlockOfEpoch)
-		timePerBlockOfEpoch = 1000000000
+		timePerBlockOfEpoch = 3000000000 //  3s
 	}
 
 	epochLeftThisYear := epochNumberPerYear - epoch.Number%epochNumberPerYear - 1

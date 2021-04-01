@@ -82,7 +82,7 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 		if epochInBlock.Number == currentEpoch.Number+1 {
 			//fmt.Printf("update local epoch 1\n")
 			// Save the next epoch
-			if block.NumberU64() == currentEpoch.StartBlock+1 || block.NumberU64() == 2 {
+			if block.NumberU64() == currentEpoch.StartBlock+2 {
 				//fmt.Printf("update local epoch block number %v, current epoch start block %v\n", block.NumberU64(), currentEpoch.StartBlock)
 				// Propose next epoch
 				//epochInBlock.SetEpochValidatorVoteSet(ep.NewEpochValidatorVoteSet())

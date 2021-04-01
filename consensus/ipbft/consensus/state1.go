@@ -1,13 +1,13 @@
 package consensus
 
 import (
+	cmn "github.com/intfoundation/go-common"
 	consss "github.com/intfoundation/intchain/consensus"
 	ep "github.com/intfoundation/intchain/consensus/ipbft/epoch"
 	sm "github.com/intfoundation/intchain/consensus/ipbft/state"
 	"github.com/intfoundation/intchain/consensus/ipbft/types"
 	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/params"
-	cmn "github.com/intfoundation/go-common"
 	"time"
 )
 
@@ -44,7 +44,7 @@ func (cs *ConsensusState) InitState(epoch *ep.Epoch) *sm.State {
 	state := sm.NewState(cs.logger)
 
 	state.TdmExtra, _ = cs.LoadLastTendermintExtra()
-	if state.TdmExtra == nil { //means it it the first block
+	if state.TdmExtra == nil { //means it is the first block
 
 		state = sm.MakeGenesisState( /*stateDB, */ cs.chainConfig.IntChainId, cs.logger)
 		//state.Save()
