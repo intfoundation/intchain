@@ -216,7 +216,7 @@ var DefaultMainnetGenesisJSON = `{
 var DefaultTestnetGenesisJSON = `{
 	"config": {
 		"intChainId": "testnet",
-		"chainId": 2,
+		"chainId": 2048,
 		"homesteadBlock": 0,
 		"eip150Block": 0,
 		"eip150Hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
@@ -229,14 +229,14 @@ var DefaultTestnetGenesisJSON = `{
 		}
 	},
 	"nonce": "0x0",
-	"timestamp": "0x60497e98",
+	"timestamp": "0x6066ded9",
 	"extraData": "0x",
 	"gasLimit": "0xe0000000",
 	"difficulty": "0x1",
 	"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
 	"coinbase": "0x0000000000000000000000000000000000000000",
 	"alloc": {
-		"26ee0906f135303a0ab66b3196efabd0853c481b": {
+		"2aaa667c417ddc2c107f9e220bb6a4bb5d0f245b": {
 			"balance": "0x29569e2db20e16b46000000",
 			"amount": "0x54b40b1f852bda000000"
 		}
