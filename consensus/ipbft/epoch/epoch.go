@@ -732,6 +732,7 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 	var timePerBlockOfEpoch int64
 
 	const EMERGENCY_BLOCKS_OF_NEXT_EPOCH uint64 = 1000 // al least 1000 blocks per epoch
+	const DefaultTimePerBlock int64 = 3000000000       // 3s
 
 	zeroEpoch := loadOneEpoch(epoch.db, 0, epoch.logger)
 	initStartTime := zeroEpoch.StartTime
@@ -751,9 +752,9 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 	timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
 	//}
 
-	if timePerBlockOfEpoch == 0 {
+	if timePerBlockOfEpoch <= 0 {
 		log.Debugf("estimateForNextEpoch, timePerBlockOfEpoch is %v", timePerBlockOfEpoch)
-		timePerBlockOfEpoch = 3000000000 //  3s
+		timePerBlockOfEpoch = DefaultTimePerBlock
 	}
 
 	epochLeftThisYear := epochNumberPerYear - epoch.Number%epochNumberPerYear - 1

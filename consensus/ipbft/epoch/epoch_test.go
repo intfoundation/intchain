@@ -13,7 +13,7 @@ func TestEstimateEpoch(t *testing.T) {
 	timeA := time.Now()
 	timeB := timeA.Unix()
 	timeStr := timeA.String()
-	t.Logf("now: %v, %v", timeB, timeStr)
+	t.Logf("\ntimeA now: %v\n, timeA unix: %v\n, timeA String: %v\n, timeA second %v\n", timeA, timeB, timeStr, timeA.Second())
 
 	formatTimeStr := "2020-06-23 09:51:38.397502 +0800 CST m=+10323.270024761"
 	parse, e := time.Parse("", formatTimeStr)
