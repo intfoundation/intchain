@@ -741,7 +741,16 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 	thisYear := epoch.Number / epochNumberPerYear
 	nextYear := thisYear + 1
 
-	log.Infof("estimateForNextEpoch, previous epoch %v, current epoch %v, last block height %v, epoch start block %v", epoch.previousEpoch, epoch, lastBlockHeight, epoch.StartBlock)
+	log.Info("estimateForNextEpoch",
+		"current epoch", epoch.Number,
+		"epoch start block", epoch.StartBlock,
+		"epoch end block", epoch.EndBlock,
+		"epoch start time", epoch.StartTime,
+		"epoch end time", epoch.EndTime,
+		"last block height", lastBlockHeight,
+		"rewardFirstYear", rewardFirstYear,
+		"epochNumberPerYear", epochNumberPerYear,
+		"totalYear", totalYear)
 
 	// only use the current epoch to calculate the block time
 	//if epoch.previousEpoch != nil {
