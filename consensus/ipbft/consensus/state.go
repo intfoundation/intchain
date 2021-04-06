@@ -1111,9 +1111,13 @@ func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet
 		var commit = &types.Commit{}
 		var epochBytes []byte
 
+		// next epoch validator will be updated at end of block insert at epoch end block height - 1,
 		// Only when height reach epoch end block, we should put the new epoch bytes into new block
 		if cs.Height == cs.Epoch.EndBlock {
-			fmt.Printf("createProposalBlock get next epoch\n")
+			fmt.Printf("createProposalBlock epoch end block, epoch:%v\n", cs.Epoch)
+			epochBytes = cs.blockFromMiner.Header().Extra
+		} else if cs.Height == cs.Epoch.EndBlock-1 {
+			fmt.Printf("createProposalBlock epoch end block - 1, epoch:%v\n", cs.Epoch)
 			// Save the next epoch data into block and tell the main chain
 			nextEp := cs.Epoch.GetNextEpoch()
 			if nextEp == nil {

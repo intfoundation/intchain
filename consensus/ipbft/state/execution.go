@@ -89,7 +89,7 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 				epochInBlock.Status = ep.EPOCH_VOTED_NOT_SAVED
 				epochInBlock.SetRewardScheme(currentEpoch.GetRewardScheme())
 				currentEpoch.SetNextEpoch(epochInBlock)
-			} else if block.NumberU64() == currentEpoch.EndBlock {
+			} else if block.NumberU64() == currentEpoch.EndBlock-1 {
 				//fmt.Printf("update local epoch 2\n")
 				// Finalize next epoch
 				// Validator set in next epoch will not finalize and send to main chain
