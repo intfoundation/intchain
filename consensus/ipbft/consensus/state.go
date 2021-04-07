@@ -1147,29 +1147,29 @@ func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet
 		// TODO: remove withdraw from main chain
 		// retrieve TX3ProofData for TX4
 		var tx3ProofData []*ethTypes.TX3ProofData
-		txs := intBlock.Transactions()
-		for _, tx := range txs {
-			if intAbi.IsIntChainContractAddr(tx.To()) {
-				data := tx.Data()
-				function, err := intAbi.FunctionTypeFromId(data[:4])
-				if err != nil {
-					continue
-				}
-
-				if function == intAbi.WithdrawFromMainChain {
-					var args intAbi.WithdrawFromMainChainArgs
-					data := tx.Data()
-					if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.WithdrawFromMainChain.String(), data[4:]); err != nil {
-						continue
-					}
-
-					proof := cs.cch.GetTX3ProofData(args.ChainId, args.TxHash)
-					if proof != nil {
-						tx3ProofData = append(tx3ProofData, proof)
-					}
-				}
-			}
-		}
+		//txs := intBlock.Transactions()
+		//for _, tx := range txs {
+		//	if intAbi.IsIntChainContractAddr(tx.To()) {
+		//		data := tx.Data()
+		//		function, err := intAbi.FunctionTypeFromId(data[:4])
+		//		if err != nil {
+		//			continue
+		//		}
+		//
+		//		if function == intAbi.WithdrawFromMainChain {
+		//			var args intAbi.WithdrawFromMainChainArgs
+		//			data := tx.Data()
+		//			if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.WithdrawFromMainChain.String(), data[4:]); err != nil {
+		//				continue
+		//			}
+		//
+		//			proof := cs.cch.GetTX3ProofData(args.ChainId, args.TxHash)
+		//			if proof != nil {
+		//				tx3ProofData = append(tx3ProofData, proof)
+		//			}
+		//		}
+		//	}
+		//}
 
 		return types.MakeBlock(cs.Height, cs.state.TdmExtra.ChainID, commit, intBlock,
 			val.Hash(), cs.Epoch.Number, epochBytes,
