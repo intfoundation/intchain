@@ -29,6 +29,10 @@ func TestEstimateEpoch(t *testing.T) {
 
 	var timeD time.Time
 	t.Logf("t %v", timeD) // 0001-01-01 00:00:00 +0000 UTC
+
+	fee := big.NewInt(30000000)
+	halfFee := big.NewInt(0).Div(fee, big.NewInt(2))
+	t.Logf("half fee %v, fee %v\n", halfFee, fee)
 }
 
 func TestVoteSetCompare(t *testing.T) {
