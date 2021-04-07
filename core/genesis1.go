@@ -223,20 +223,23 @@ var DefaultTestnetGenesisJSON = `{
 		"eip155Block": 0,
 		"eip158Block": 0,
 		"byzantiumBlock": 0,
+		"constantinopleBlock": 0,
+		"petersburgBlock": 0,
+		"istanbulBlock": 0,
 		"ipbft": {
 			"epoch": 30000,
 			"policy": 0
 		}
 	},
 	"nonce": "0x0",
-	"timestamp": "0x6066ded9",
+	"timestamp": "0x606d79fd",
 	"extraData": "0x",
 	"gasLimit": "0xe0000000",
 	"difficulty": "0x1",
 	"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
 	"coinbase": "0x0000000000000000000000000000000000000000",
 	"alloc": {
-		"2aaa667c417ddc2c107f9e220bb6a4bb5d0f245b": {
+		"2b14a6b2649a28b5fc90c42bf90f5242ea82f66a": {
 			"balance": "0x29569e2db20e16b46000000",
 			"amount": "0x54b40b1f852bda000000"
 		}
