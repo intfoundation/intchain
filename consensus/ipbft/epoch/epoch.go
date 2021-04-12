@@ -625,7 +625,7 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 	}
 
 	// Determine the Validator Size
-	valSize := oldValSize + newValSize/2
+	valSize := oldValSize + newValSize
 	if valSize > MaximumValidatorsSize {
 		valSize = MaximumValidatorsSize
 	} else if valSize < MinimumValidatorsSize {
