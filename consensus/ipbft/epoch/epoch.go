@@ -458,7 +458,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			//}
 
 			// Update Validators with vote
-			refundsUpdate, err := updateEpochValidatorSet(newValidators, epoch.nextEpoch.validatorVoteSet)
+			refundsUpdate, err := updateEpochValidatorSet(newValidators, epoch.nextEpoch.validatorVoteSet, height)
 			//refundsUpdate, err := updateEpochValidatorSet(newValidators, nextEpochVoteSet)
 			if err != nil {
 				epoch.logger.Warn("Error changing validator set", "error", err)
@@ -571,13 +571,13 @@ func DryRunUpdateEpochValidatorSet(state *state.StateDB, validators *tmTypes.Val
 		}
 	}
 
-	_, err := updateEpochValidatorSet(validators, voteSet)
+	_, err := updateEpochValidatorSet(validators, voteSet, 0)
 	return err
 }
 
 // updateEpochValidatorSet Update the Current Epoch Validator by vote
 //
-func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet) ([]*tmTypes.RefundValidatorAmount, error) {
+func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet, height uint64) ([]*tmTypes.RefundValidatorAmount, error) {
 
 	// Refund List will be vaildators contain from Vote (exit validator or less amount than previous amount) and Knockout after sort by amount
 	var refund []*tmTypes.RefundValidatorAmount
@@ -625,7 +625,14 @@ func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochVal
 	}
 
 	// Determine the Validator Size
-	valSize := oldValSize + newValSize
+	//valSize := oldValSize + newValSize
+	var valSize int
+	if height < 73888 {
+		valSize = oldValSize + newValSize/2
+	} else {
+		valSize = oldValSize + newValSize
+	}
+
 	if valSize > MaximumValidatorsSize {
 		valSize = MaximumValidatorsSize
 	} else if valSize < MinimumValidatorsSize {
