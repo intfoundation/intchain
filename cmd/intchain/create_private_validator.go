@@ -25,7 +25,6 @@ type PrivValidatorForConsole struct {
 }
 
 func CreatePrivateValidatorCmd(ctx *cli.Context) error {
-	var consolePrivVal *PrivValidatorForConsole
 	address := ctx.Args().First()
 
 	if address == "" {
@@ -52,15 +51,9 @@ func CreatePrivateValidatorCmd(ctx *cli.Context) error {
 		panic(err)
 	}
 
-	validator := types.GenPrivValidatorKey(common.StringToAddress(address))
+	validator := types.GenPrivValidatorKey(common.HexToAddress(address))
 
-	consolePrivVal = &PrivValidatorForConsole{
-		Address: validator.Address.String(),
-		PubKey:  validator.PubKey,
-		PrivKey: validator.PrivKey,
-	}
-
-	fmt.Printf(string(wire.JSONBytesPretty(consolePrivVal)))
+	fmt.Printf(string(wire.JSONBytesPretty(validator)))
 	validator.SetFile(privValFile)
 	validator.Save()
 
