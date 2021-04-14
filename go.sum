@@ -104,6 +104,8 @@ github.com/intfoundation/go-data v1.0.1 h1:bBzhvzrsImRDrFifauOVyZL7tRNbvATm6WKn8
 github.com/intfoundation/go-data v1.0.1/go.mod h1:dbk2TkRjMe1D3g3CNbyNnpVaP8v9rZ17JIf83MFxO0o=
 github.com/intfoundation/go-db v1.0.2 h1:a/vGvnrPdRnuwqe1Bs7ku3zpnV77njJj7IfHfLNxxtA=
 github.com/intfoundation/go-db v1.0.2/go.mod h1:83o05ZsRg1gb0tYW0VENQZsAwPq5Ei9eSzZCm/Yrh7I=
+github.com/intfoundation/go-db v1.0.3 h1:9BeP8Gzn1mZKykB9m/cXEWvDGnHKzil3N4pPJya46gw=
+github.com/intfoundation/go-db v1.0.3/go.mod h1:83o05ZsRg1gb0tYW0VENQZsAwPq5Ei9eSzZCm/Yrh7I=
 github.com/intfoundation/go-events v1.0.1 h1:gjZ9bMAGzasfi8WyeUgVic+CbCTN3PCLBffksnIKJCk=
 github.com/intfoundation/go-events v1.0.1/go.mod h1:eKwM61HpnXbxiJrJSBFJWpnGebr5KkIQwnj0mLsIZt8=
 github.com/intfoundation/go-logger v1.0.1 h1:MTwxvB+90ab03FypHwWADXxDj2Ida2/et2y+6I1XvgQ=
