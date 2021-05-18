@@ -286,8 +286,8 @@ func (tx *Transaction) String() string {
 	return fmt.Sprintf(`
 	TX(%x)
 	Contract: %v
-	From:     %s
-	To:       %s
+	From:     %x
+	To:       %x
 	Nonce:    %v
 	GasPrice: %#x
 	GasLimit  %#x
