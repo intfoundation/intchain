@@ -137,11 +137,11 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidator, error) {
 	}
 }
 
-// CreateValidator
-func (api *API) CreateValidator(from common.Address) (*tdmTypes.PrivValidator, error) {
-	validator := tdmTypes.GenPrivValidatorKey(from)
-	return validator, nil
-}
+// CreateValidator no longer support
+//func (api *API) CreateValidator(from common.Address) (*tdmTypes.PrivValidator, error) {
+//	validator := tdmTypes.GenPrivValidatorKey(from)
+//	return validator, nil
+//}
 
 // decode extra data
 func (api *API) DecodeExtraData(extra string) (extraApi *tdmTypes.TendermintExtraApi, err error) {
