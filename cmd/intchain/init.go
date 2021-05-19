@@ -96,7 +96,7 @@ func init_int_genesis(config cfg.Config, balanceStr string, isMainnet bool) erro
 		Timestamp:  uint64(time.Now().Unix()),
 		ParentHash: common.Hash{},
 		ExtraData:  extraData,
-		GasLimit:   0x55d4a80, // 9000 W
+		GasLimit:   0x5f5e100, // 100 M
 		Difficulty: new(big.Int).SetUint64(0x01),
 		Mixhash:    common.Hash{},
 		Coinbase:   common.Address{},
