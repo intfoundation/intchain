@@ -526,7 +526,7 @@ web3._extend({
 			name: 'withdrawReward',
 			call: 'int_withdrawReward',
 			params: 3,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null]
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null, null]
 		}),
 		new web3._extend.Method({
 			name: 'voteNextEpoch',
