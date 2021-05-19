@@ -247,6 +247,7 @@ type EditValidatorArgs struct {
 
 type WithdrawRewardArgs struct {
 	DelegateAddress common.Address
+	Amount          *big.Int
 }
 
 type UnForbiddenArgs struct {
@@ -502,6 +503,10 @@ const jsonChainABI = `
 			{
 				"name": "delegateAddress",
 				"type": "address"
+			},
+			{
+				"name": "amount",
+				"type": "uint256"
 			}
 		]
 	},

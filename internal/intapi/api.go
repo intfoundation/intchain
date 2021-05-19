@@ -1668,8 +1668,8 @@ func (s *PublicINTAPI) SignAddress(from common.Address, consensusPrivateKey hexu
 	return blsSign, nil
 }
 
-func (api *PublicINTAPI) WithdrawReward(ctx context.Context, from common.Address, delegateAddress common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
-	input, err := intAbi.ChainABI.Pack(intAbi.WithdrawReward.String(), delegateAddress)
+func (api *PublicINTAPI) WithdrawReward(ctx context.Context, from common.Address, delegateAddress common.Address, amount *hexutil.Big, gasPrice *hexutil.Big) (common.Hash, error) {
+	input, err := intAbi.ChainABI.Pack(intAbi.WithdrawReward.String(), delegateAddress, amount)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -1915,9 +1915,9 @@ func withdrawRewardApplyCb(tx *types.Transaction, state *state.StateDB, bc *core
 		return err
 	}
 
-	reward := state.GetRewardBalanceByDelegateAddress(from, args.DelegateAddress)
-	state.SubRewardBalanceByDelegateAddress(from, args.DelegateAddress, reward)
-	state.AddBalance(from, reward)
+	//reward := state.GetRewardBalanceByDelegateAddress(from, args.DelegateAddress)
+	state.SubRewardBalanceByDelegateAddress(from, args.DelegateAddress, args.Amount)
+	state.AddBalance(from, args.Amount)
 
 	return nil
 }
@@ -1936,9 +1936,9 @@ func withDrawRewardValidation(from common.Address, tx *types.Transaction, state 
 		return nil, fmt.Errorf("have no reward to withdraw")
 	}
 
-	//if args.Amount.Cmp(reward) == 1 {
-	//	return nil, fmt.Errorf("reward balance not enough, withdraw amount %v, but balance %v, delegate address %v", args.Amount, reward, args.DelegateAddress)
-	//}
+	if args.Amount.Cmp(reward) == 1 {
+		return nil, fmt.Errorf("reward balance not enough, withdraw amount %v, but balance %v, delegate address %v", args.Amount, reward, args.DelegateAddress)
+	}
 	return &args, nil
 }
 
