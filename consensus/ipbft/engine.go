@@ -784,7 +784,7 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		// selfPercent = selfDeposit / totalDeposit
 		selfPercent := new(big.Float).Quo(new(big.Float).SetInt(selfDeposit), new(big.Float).SetInt(totalDeposit))
 
-		// selftReward = coinbaseReward * selfPercent
+		// selfReward = coinbaseReward * selfPercent
 		new(big.Float).Mul(new(big.Float).SetInt(coinbaseReward), selfPercent).Int(selfReward)
 
 		// delegateReward = coinbaseReward - selfReward
