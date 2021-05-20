@@ -3,6 +3,7 @@ package ipbft
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/hashicorp/golang-lru"
 	"github.com/intfoundation/go-wire"
 	"github.com/intfoundation/intchain/common"
@@ -836,6 +837,11 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 			//state.SubRewardBalanceByEpochNumber(header.Coinbase, ep.Number, diff)
 			state.SubRewardBalanceByDelegateAddress(header.Coinbase, header.Coinbase, diff)
 		}
+	}
+
+	err := state.MarkProposedInEpoch(header.Coinbase, ep.Number)
+	if err != nil {
+		fmt.Printf("Mark validator proposed failed, error: %v\n", err)
 	}
 }
 

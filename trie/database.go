@@ -872,3 +872,29 @@ func (db *Database) accumulate(hash common.Hash, reachable map[common.Hash]struc
 		db.accumulate(child, reachable)
 	}
 }
+
+var proposedInEpochPrefix = []byte("proposed-in-epoch-")
+
+func encodeUint64(number uint64) []byte {
+	enc := make([]byte, 8)
+	binary.BigEndian.PutUint64(enc, number)
+	return enc
+}
+
+func decodeUint64(raw []byte) uint64 {
+	return binary.BigEndian.Uint64(raw)
+}
+
+func (db *Database) MarkProposedInEpoch(address common.Address, epoch uint64) error {
+	return db.diskdb.Put(append(
+		append(proposedInEpochPrefix, address.Bytes()...), encodeUint64(epoch)...),
+		encodeUint64(1))
+}
+
+func (db *Database) CheckProposedInEpoch(address common.Address, epoch uint64) bool {
+	_, err := db.diskdb.Get(append(append(proposedInEpochPrefix, address.Bytes()...), encodeUint64(epoch)...))
+	if err != nil {
+		return false
+	}
+	return true
+}
