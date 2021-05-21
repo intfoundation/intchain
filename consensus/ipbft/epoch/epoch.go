@@ -579,7 +579,7 @@ func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validat
 //
 func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet) ([]*tmTypes.RefundValidatorAmount, error) {
 
-	// Refund List will be vaildators contain from Vote (exit validator or less amount than previous amount) and Knockout after sort by amount
+	// Refund List will be validators contain from Vote (exit validator or less amount than previous amount) and Knockout after sort by amount
 	var refund []*tmTypes.RefundValidatorAmount
 	oldValSize, newValSize := validators.Size(), 0
 
@@ -614,6 +614,8 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 						return nil, fmt.Errorf("Failed to remove validator %x", validator.Address)
 					}
 				} else if v.Amount.Sign() == 0 {
+					// TODO: whether or not
+					fmt.Printf("updateEpochValidatorSet amount is zero\n")
 					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: validator.VotingPower, Voteout: false})
 					// Remove the Validator
 					_, removed := validators.Remove(validator.Address)
@@ -623,6 +625,8 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 				} else {
 					//refund if new amount less than the voting power
 					if v.Amount.Cmp(validator.VotingPower) == -1 {
+						// TODO: whether or not
+						fmt.Printf("updateEpochValidatorSet amount less than the voting power, amount: %v, votingPower: %v\n", v.Amount, validator.VotingPower)
 						refundAmount := new(big.Int).Sub(validator.VotingPower, v.Amount)
 						refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: refundAmount, Voteout: false})
 					}
