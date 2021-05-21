@@ -2485,9 +2485,9 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 		return errors.New("validator voting power can not be negative")
 	}
 
-	fmt.Printf("update next epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
+	//fmt.Printf("update next epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
 	currentEpochVoteSet := ep.GetEpochValidatorVoteSet()
-	fmt.Printf("update next epoch current epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
+	//fmt.Printf("update next epoch current epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
 
 	// whether update next epoch vote set
 	if currentEpochVoteSet == nil {

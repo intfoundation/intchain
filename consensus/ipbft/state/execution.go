@@ -77,8 +77,8 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 	currentEpoch := eng.GetEpoch()
 
 	if epochInBlock != nil {
-		fmt.Printf("update local epoch: epochInBlock %v\n", epochInBlock)
-		fmt.Printf("update local epoch: tdmExtra %v\n", tdmExtra)
+		//fmt.Printf("update local epoch: epochInBlock %v\n", epochInBlock)
+		//fmt.Printf("update local epoch: tdmExtra %v\n", tdmExtra)
 		if epochInBlock.Number == currentEpoch.Number+1 {
 			//fmt.Printf("update local epoch 1\n")
 			// Save the next epoch
@@ -99,7 +99,7 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 			}
 			currentEpoch.Save()
 		} else if epochInBlock.Number == currentEpoch.Number {
-			fmt.Printf("update local epoch: epochInBlock.Number %v, currentEpoch.Number %v, epochInBlock.StartTime %v\n", epochInBlock.Number, currentEpoch.Number, epochInBlock.StartTime)
+			//fmt.Printf("update local epoch: epochInBlock.Number %v, currentEpoch.Number %v, epochInBlock.StartTime %v\n", epochInBlock.Number, currentEpoch.Number, epochInBlock.StartTime)
 			// Update the current epoch Start Time from proposer
 			currentEpoch.StartTime = epochInBlock.StartTime
 			currentEpoch.Save()

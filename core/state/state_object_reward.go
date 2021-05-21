@@ -19,11 +19,11 @@ func (p Reward) String() (str string) {
 }
 
 func (p Reward) Copy() Reward {
-	fmt.Printf("state objetct reward reward:%v\n", p)
-	fmt.Printf("state objetct reward reward:%v\n", p.String())
+	//fmt.Printf("state objetct reward reward:%v\n", p)
+	//fmt.Printf("state objetct reward reward:%v\n", p.String())
 	cpy := make(Reward)
 	for key, value := range p {
-		fmt.Printf("state objetct reward k:%v, v:%v\n", key, value)
+		//fmt.Printf("state objetct reward k:%v, v:%v\n", key, value)
 		cpy[key] = new(big.Int).Set(value)
 	}
 	return cpy

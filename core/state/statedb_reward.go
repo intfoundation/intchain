@@ -33,7 +33,7 @@ func (self *StateDB) AddRewardBalance(addr common.Address, amount *big.Int) {
 func (self *StateDB) SubRewardBalance(addr common.Address, amount *big.Int) {
 	stateObject := self.GetOrNewStateObject(addr)
 	if stateObject != nil {
-		// Add amount to Total Reward Balance
+		// Sub amount to Total Reward Balance
 		stateObject.SubRewardBalance(amount)
 	}
 }
