@@ -603,8 +603,9 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 			} else {
 				//if this validator did not proposed one block in this epoch, it will lose vote priority for next epoch
 				//treat it as a knock-out one
+				fmt.Printf("updateEpochValidatorSet validators 1 %v\n", validators)
 				shouldVoteOut := !state.CheckProposedInEpoch(v.Address, epochNo)
-
+				fmt.Printf("updateEpochValidatorSet should vote out %v, address %v\n", shouldVoteOut, v.Address)
 				if shouldVoteOut {
 					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: nil, Voteout: true})
 
@@ -638,6 +639,7 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 						return nil, fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
 					}
 				}
+				fmt.Printf("updateEpochValidatorSet validators 2 %v\n", validators)
 			}
 		}
 	}
