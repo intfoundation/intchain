@@ -1787,20 +1787,6 @@ func (api *PublicINTAPI) CheckCandidate(ctx context.Context, address common.Addr
 	return fields, state.Error()
 }
 
-//func (api *PublicINTAPI) GetForbiddenStatus(ctx context.Context, address common.Address, blockNr rpc.BlockNumber) (map[string]interface{}, error) {
-//	state, _, err := api.b.StateAndHeaderByNumber(ctx, blockNr)
-//	if state == nil || err != nil {
-//		return nil, err
-//	}
-//
-//	fields := map[string]interface{}{
-//		"forbidden":      state.GetForbidden(address),
-//		"forbiddenEpoch": state.GetForbiddenTime(address),
-//		"blocks":         state.GetMinedBlocks(address),
-//	}
-//	return fields, state.Error()
-//}
-
 func (api *PublicINTAPI) SetCommission(ctx context.Context, from common.Address, commission uint8, gasPrice *hexutil.Big) (common.Hash, error) {
 	input, err := intAbi.ChainABI.Pack(intAbi.SetCommission.String(), commission)
 	if err != nil {
@@ -2077,13 +2063,6 @@ func unRegisterApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Blo
 
 	state.CancelCandidate(from, allRefund)
 
-	//fmt.Printf("candidate set bug, unregiser clear candidate before\n")
-	//fmt.Printf("candidate set bug, unregiser clear candidate before %v\n", state.GetCandidateSet())
-	//// remove address form candidate set
-	//state.ClearCandidateSetByAddress(from)
-	//fmt.Printf("candidate set bug, unregiser clear candidate after\n")
-	//fmt.Printf("candidate set bug, unregiser clear candidate after %v\n", state.GetCandidateSet())
-
 	return nil
 }
 
@@ -2147,13 +2126,10 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	// Add Balance to Candidate's Proxied Balance
 	state.AddProxiedBalanceByUser(args.Candidate, from, amount)
 
-	// if forbidden, don't add to next epoch validator vote set
-	//if !state.GetForbidden(from) {
 	verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate, ops)
 	if verror != nil {
 		return verror
 	}
-	//}
 
 	return nil
 }
@@ -2364,62 +2340,6 @@ func editValidatorValidateCb(tx *types.Transaction, state *state.StateDB, bc *co
 
 	return nil
 }
-
-//func unForbiddenValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-//	from := derivedAddressFromTx(tx)
-//
-//	err := unForbiddenValidation(from, state, bc)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
-
-//func unForbiddenApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-//	from := derivedAddressFromTx(tx)
-//	err := unForbiddenValidation(from, state, bc)
-//	if err != nil {
-//		return err
-//	}
-//
-//	state.SetForbidden(from, false)
-//
-//	// remove address from forbidden set
-//	state.ClearForbiddenSetByAddress(from)
-//
-//	return nil
-//}
-
-//func unForbiddenValidation(from common.Address, state *state.StateDB, bc *core.BlockChain) error {
-//	if !state.IsCandidate(from) {
-//		return core.ErrNotCandidate
-//	}
-//
-//	//ep, err := getEpoch(bc)
-//	//if err != nil {
-//	//	return err
-//	//}
-//
-//	// block height validation
-//	verror := updateValidation(bc)
-//	if verror != nil {
-//		return verror
-//	}
-//
-//	if !state.GetForbidden(from) {
-//		return fmt.Errorf("should not unforbidden")
-//	}
-//
-//	forbiddenEpoch := state.GetForbiddenTime(from)
-//	fmt.Printf("Unforbiddenden validation, forbidden epoch %v\n", forbiddenEpoch)
-//
-//	if forbiddenEpoch.Cmp(common.Big0) == 1 {
-//		return fmt.Errorf("please unforbidden %v epoch later", forbiddenEpoch)
-//	}
-//
-//	return nil
-//}
 
 func concatCopyPreAllocate(slices [][]byte) []byte {
 	var totalLen int

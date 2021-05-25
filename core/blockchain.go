@@ -63,9 +63,6 @@ const (
 
 	// BlockChainVersion ensures that an incompatible database forces a resync from scratch.
 	BlockChainVersion = 3
-
-	TimeForForbidden  = 4 * time.Hour
-	ForbiddenDuration = 24 * time.Hour
 )
 
 // CacheConfig contains the configuration values for the trie caching/pruning
@@ -1805,59 +1802,3 @@ func (bc *BlockChain) SubscribeStartMiningEvent(ch chan<- StartMiningEvent) even
 func (bc *BlockChain) SubscribeStopMiningEvent(ch chan<- StopMiningEvent) event.Subscription {
 	return bc.scope.Track(bc.stopMiningFeed.Subscribe(ch))
 }
-
-//func (bc *BlockChain) GetForbiddenDuration() time.Duration {
-//	return ForbiddenDuration
-//}
-//
-//// Update validator block time and set forbidden if this validator did not participate in consensus more than 4 Hours
-//func (bc *BlockChain) UpdateForbiddenState(header *types.Header, state *state.StateDB) error {
-//	bc.wg.Add(1)
-//	defer bc.wg.Done()
-//
-//	ep := bc.engine.(consensus.Tendermint).GetEpoch()
-//	validators := ep.Validators.Validators
-//	height := header.Number.Uint64()
-//	blockTime := header.Time
-//
-//	bc.logger.Infof("update validator status height %v", height)
-//
-//	if height <= 1 {
-//		return nil
-//	}
-//
-//	extra, err := tdmTypes.ExtractTendermintExtra(header)
-//	if err != nil {
-//		bc.logger.Debugf("update validator status decode extra data error %v", err)
-//		return err
-//	}
-//
-//	if extra.SeenCommit == nil || extra.SeenCommit.BitArray == nil {
-//		bc.logger.Debugf("update validator status seenCommit %v", extra.SeenCommit)
-//		return fmt.Errorf("seen commit is nil")
-//	}
-//
-//	bitMap := extra.SeenCommit.BitArray
-//	for i := uint64(0); i < bitMap.Size(); i++ {
-//		addr := common.BytesToAddress(validators[i].Address)
-//		vObj := state.GetOrNewStateObject(addr)
-//		if bitMap.GetIndex(i) {
-//			vObj.SetBlockTime(blockTime)
-//
-//			bc.logger.Debugf("Update validator status, block time %v, current height %v", blockTime, height)
-//		} else {
-//			lastBlockTime := vObj.BlockTime()
-//			durationTime := new(big.Int).Sub(blockTime, lastBlockTime)
-//			bc.logger.Debugf("Update validator last block time, duration time %v, default forbidden time %v", durationTime, TimeForForbidden)
-//			if durationTime.Cmp(big.NewInt(int64(TimeForForbidden.Seconds()))) >= 0 {
-//				bc.logger.Debugf("update validator status forbidden true")
-//				vObj.SetForbidden(true)
-//				vObj.SetBlockTime(big.NewInt(time.Now().Unix()))
-//				state.MarkAddressForbidden(addr)
-//			}
-//		}
-//	}
-//
-//	return nil
-//
-//}
