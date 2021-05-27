@@ -336,7 +336,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				//treat it as a knock-out one
 
 				shouldVoteOut := !state.CheckProposedInEpoch(vAddr, epoch.Number)
-				fmt.Printf("updateEpochValidatorSet should vote out %v, address %x\n", shouldVoteOut, v.Address)
+				fmt.Printf("ShouldEnterNewEpoch should vote out %v, address %x\n", shouldVoteOut, common.BytesToAddress(v.Address))
 				if shouldVoteOut {
 					refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: nil, Voteout: true})
 
@@ -479,11 +479,9 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 		// Process the Votes and merge into the Validator Set
 		for _, v := range voteSet.Votes {
 			// If vote not reveal or should vote out, bypass this vote
-			shouldVoteOut := !state.CheckProposedInEpoch(v.Address, epochNo)
-			if v.Amount == nil || v.Salt == "" || v.PubKey == nil || shouldVoteOut {
+			if v.Amount == nil || v.Salt == "" || v.PubKey == nil {
 				continue
 			}
-
 			_, validator := validators.GetByAddress(v.Address[:])
 			if validator == nil {
 				// Add the new validator
@@ -492,29 +490,37 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 					return nil, fmt.Errorf("Failed to add new validator %v with voting power %d", v.Address, v.Amount)
 				}
 				newValSize++
-			} else if v.Amount.Sign() == 0 {
-				// TODO: whether or not
-				fmt.Printf("updateEpochValidatorSet amount is zero\n")
-				refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: validator.VotingPower, Voteout: false})
-				// Remove the Validator
-				_, removed := validators.Remove(validator.Address)
-				if !removed {
-					return nil, fmt.Errorf("Failed to remove validator %v", validator.Address)
-				}
 			} else {
-				//refund if new amount less than the voting power
-				if v.Amount.Cmp(validator.VotingPower) == -1 {
-					// TODO: whether or not
-					fmt.Printf("updateEpochValidatorSet amount less than the voting power, amount: %v, votingPower: %v\n", v.Amount, validator.VotingPower)
-					refundAmount := new(big.Int).Sub(validator.VotingPower, v.Amount)
-					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: refundAmount, Voteout: false})
+				// If should vote out, bypass this vote
+				shouldVoteOut := !state.CheckProposedInEpoch(v.Address, epochNo)
+				fmt.Printf("updateEpochValidatorSet should vote out %v, address %x\n", shouldVoteOut, v.Address)
+				if shouldVoteOut {
+					continue
 				}
+				fmt.Printf("updateEpochValidatorSet after should vote out %v, address %x\n", shouldVoteOut, v.Address)
 
-				// Update the Validator Amount
-				validator.VotingPower = v.Amount
-				updated := validators.Update(validator)
-				if !updated {
-					return nil, fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
+				if v.Amount.Sign() == 0 {
+					fmt.Printf("updateEpochValidatorSet amount is zero\n")
+					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: validator.VotingPower, Voteout: false})
+					// Remove the Validator
+					_, removed := validators.Remove(validator.Address)
+					if !removed {
+						return nil, fmt.Errorf("Failed to remove validator %v", validator.Address)
+					}
+				} else {
+					//refund if new amount less than the voting power
+					if v.Amount.Cmp(validator.VotingPower) == -1 {
+						fmt.Printf("updateEpochValidatorSet amount less than the voting power, amount: %v, votingPower: %v\n", v.Amount, validator.VotingPower)
+						refundAmount := new(big.Int).Sub(validator.VotingPower, v.Amount)
+						refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: refundAmount, Voteout: false})
+					}
+
+					// Update the Validator Amount
+					validator.VotingPower = v.Amount
+					updated := validators.Update(validator)
+					if !updated {
+						return nil, fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
+					}
 				}
 			}
 		}
