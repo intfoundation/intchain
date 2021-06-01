@@ -315,7 +315,8 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			// Step 2.1: Update deposit amount base on the vote (Add/Subtract deposit amount base on vote)
 			// Step 2.2: Sort the address with deposit + deposit proxied amount
 			var (
-				refunds []*tmTypes.RefundValidatorAmount
+				refunds    []*tmTypes.RefundValidatorAmount
+				hasVoteOut bool
 			)
 
 			newValidators := epoch.Validators.Copy()
@@ -338,18 +339,19 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				shouldVoteOut := !state.CheckProposedInEpoch(vAddr, epoch.Number)
 				fmt.Printf("ShouldEnterNewEpoch should vote out %v, address %x\n", shouldVoteOut, common.BytesToAddress(v.Address))
 				if shouldVoteOut {
-					refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: nil, Voteout: true})
-
-					_, removed := newValidators.Remove(v.Address)
-
-					if !removed {
-						return false, nil, fmt.Errorf("Failed to remove validator %x", v.Address)
-					}
+					//refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: nil, Voteout: true})
+					//
+					//_, removed := newValidators.Remove(v.Address)
+					//
+					//if !removed {
+					//	return false, nil, fmt.Errorf("Failed to remove validator %x", v.Address)
+					//}
+					hasVoteOut = true
 				}
 			}
 
 			// Update Validators with vote
-			refundsUpdate, err := updateEpochValidatorSet(state, epoch.Number, newValidators, epoch.nextEpoch.validatorVoteSet)
+			refundsUpdate, err := updateEpochValidatorSet(state, epoch.Number, newValidators, epoch.nextEpoch.validatorVoteSet, hasVoteOut)
 
 			if err != nil {
 				epoch.logger.Warn("Error changing validator set", "error", err)
@@ -462,13 +464,13 @@ func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validat
 		}
 	}
 
-	_, err := updateEpochValidatorSet(state, epochNo, validators, voteSet)
+	_, err := updateEpochValidatorSet(state, epochNo, validators, voteSet, false)
 	return err
 }
 
 // updateEpochValidatorSet Update the Current Epoch Validator by vote
 //
-func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet) ([]*tmTypes.RefundValidatorAmount, error) {
+func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet, hasVoteOut bool) ([]*tmTypes.RefundValidatorAmount, error) {
 
 	// Refund List will be validators contain from Vote (exit validator or less amount than previous amount) and Knockout after sort by amount
 	var refund []*tmTypes.RefundValidatorAmount
@@ -493,36 +495,60 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 			} else {
 				// If should vote out, bypass this vote
 				shouldVoteOut := !state.CheckProposedInEpoch(v.Address, epochNo)
-				fmt.Printf("updateEpochValidatorSet should vote out %v, address %x\n", shouldVoteOut, v.Address)
+				fmt.Printf("updateEpochValidatorSet vote set not empty,  should vote out %v, address %x\n", shouldVoteOut, v.Address)
 				if shouldVoteOut {
-					continue
-				}
-				fmt.Printf("updateEpochValidatorSet after should vote out %v, address %x\n", shouldVoteOut, v.Address)
+					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: nil, Voteout: true})
 
-				if v.Amount.Sign() == 0 {
-					fmt.Printf("updateEpochValidatorSet amount is zero\n")
-					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: validator.VotingPower, Voteout: false})
-					// Remove the Validator
 					_, removed := validators.Remove(validator.Address)
+
 					if !removed {
-						return nil, fmt.Errorf("Failed to remove validator %v", validator.Address)
+						return nil, fmt.Errorf("Failed to remove validator %x", validator.Address)
 					}
 				} else {
-					//refund if new amount less than the voting power
-					if v.Amount.Cmp(validator.VotingPower) == -1 {
-						fmt.Printf("updateEpochValidatorSet amount less than the voting power, amount: %v, votingPower: %v\n", v.Amount, validator.VotingPower)
-						refundAmount := new(big.Int).Sub(validator.VotingPower, v.Amount)
-						refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: refundAmount, Voteout: false})
-					}
+					if v.Amount.Sign() == 0 {
+						fmt.Printf("updateEpochValidatorSet amount is zero\n")
+						refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: validator.VotingPower, Voteout: false})
+						// Remove the Validator
+						_, removed := validators.Remove(validator.Address)
+						if !removed {
+							return nil, fmt.Errorf("Failed to remove validator %v", validator.Address)
+						}
+					} else {
+						//refund if new amount less than the voting power
+						if v.Amount.Cmp(validator.VotingPower) == -1 {
+							fmt.Printf("updateEpochValidatorSet amount less than the voting power, amount: %v, votingPower: %v\n", v.Amount, validator.VotingPower)
+							refundAmount := new(big.Int).Sub(validator.VotingPower, v.Amount)
+							refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: refundAmount, Voteout: false})
+						}
 
-					// Update the Validator Amount
-					validator.VotingPower = v.Amount
-					updated := validators.Update(validator)
-					if !updated {
-						return nil, fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
+						// Update the Validator Amount
+						validator.VotingPower = v.Amount
+						updated := validators.Update(validator)
+						if !updated {
+							return nil, fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
+						}
 					}
 				}
 			}
+		}
+	}
+
+	// if there is no vote set, but should vote out validator
+	if voteSet.IsEmpty() && hasVoteOut {
+		for _, v := range validators.Validators {
+			vAddr := common.BytesToAddress(v.Address)
+			shouldVoteOut := !state.CheckProposedInEpoch(vAddr, epochNo)
+			fmt.Printf("updateEpochValidatorSet empty, should vote out %v, address %x\n", shouldVoteOut, v.Address)
+			if shouldVoteOut {
+				refund = append(refund, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: nil, Voteout: true})
+
+				_, removed := validators.Remove(v.Address)
+
+				if !removed {
+					return nil, fmt.Errorf("Failed to remove validator %x", vAddr)
+				}
+			}
+			fmt.Printf("updateEpochValidatorSet empty, after should vote out %v, address %x\n", shouldVoteOut, v.Address)
 		}
 	}
 
