@@ -735,7 +735,7 @@ func writeCommittedSeals(h *types.Header, tdmExtra *tdmTypes.TendermintExtra) er
 func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, ep *epoch.Epoch, totalGasFee *big.Int) {
 	// 50% gas fee is burnt
 	halfGasFee := big.NewInt(0).Div(totalGasFee, big.NewInt(2))
-	state.AddBalance(common.HexToAddress("0x0000000000000000000000000000000000000000"), halfGasFee)
+	state.AddBalance(common.HexToAddress("0x0000000000000000000000000000000000000001"), halfGasFee)
 
 	// Total Reward = Block Reward + Total Gas Fee * 50%
 	var coinbaseReward *big.Int
