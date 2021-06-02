@@ -504,29 +504,27 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 					if !removed {
 						return nil, fmt.Errorf("Failed to remove validator %x", validator.Address)
 					}
+				} else if v.Amount.Sign() == 0 {
+					fmt.Printf("updateEpochValidatorSet amount is zero\n")
+					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: validator.VotingPower, Voteout: false})
+					// Remove the Validator
+					_, removed := validators.Remove(validator.Address)
+					if !removed {
+						return nil, fmt.Errorf("Failed to remove validator %v", validator.Address)
+					}
 				} else {
-					if v.Amount.Sign() == 0 {
-						fmt.Printf("updateEpochValidatorSet amount is zero\n")
-						refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: validator.VotingPower, Voteout: false})
-						// Remove the Validator
-						_, removed := validators.Remove(validator.Address)
-						if !removed {
-							return nil, fmt.Errorf("Failed to remove validator %v", validator.Address)
-						}
-					} else {
-						//refund if new amount less than the voting power
-						if v.Amount.Cmp(validator.VotingPower) == -1 {
-							fmt.Printf("updateEpochValidatorSet amount less than the voting power, amount: %v, votingPower: %v\n", v.Amount, validator.VotingPower)
-							refundAmount := new(big.Int).Sub(validator.VotingPower, v.Amount)
-							refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: refundAmount, Voteout: false})
-						}
+					//refund if new amount less than the voting power
+					if v.Amount.Cmp(validator.VotingPower) == -1 {
+						fmt.Printf("updateEpochValidatorSet amount less than the voting power, amount: %v, votingPower: %v\n", v.Amount, validator.VotingPower)
+						refundAmount := new(big.Int).Sub(validator.VotingPower, v.Amount)
+						refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: refundAmount, Voteout: false})
+					}
 
-						// Update the Validator Amount
-						validator.VotingPower = v.Amount
-						updated := validators.Update(validator)
-						if !updated {
-							return nil, fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
-						}
+					// Update the Validator Amount
+					validator.VotingPower = v.Amount
+					updated := validators.Update(validator)
+					if !updated {
+						return nil, fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
 					}
 				}
 			}
