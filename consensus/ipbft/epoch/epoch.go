@@ -198,6 +198,7 @@ func FromBytes(buf []byte) *Epoch {
 	} else {
 		ep := &Epoch{}
 		err := wire.ReadBinaryBytes(buf, ep)
+		fmt.Printf("epoch from bytes ep: %v\n", ep)
 		if err != nil {
 			log.Errorf("Load Epoch from Bytes Failed, error: %v", err)
 			return nil
