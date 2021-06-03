@@ -46,6 +46,7 @@ type Epoch struct {
 	BlockGenerated int       //agreed in which block
 	Status         int       //checked if this epoch has been saved
 	Validators     *tmTypes.ValidatorSet
+	Candidates     *tmTypes.CandidateSet
 
 	// The VoteSet will be used just before Epoch Start
 	validatorVoteSet *EpochValidatorVoteSet // VoteSet store with key prefix EpochValidatorVote_
@@ -133,6 +134,14 @@ func MakeOneEpoch(db dbm.DB, oneEpoch *tmTypes.OneEpochDoc, logger log.Logger) *
 		}
 	}
 
+	candidates := make([]*tmTypes.Candidate, len(oneEpoch.Candidates))
+	for i, val := range oneEpoch.Candidates {
+		// Make validator
+		candidates[i] = &tmTypes.Candidate{
+			Address: val.EthAccount.Bytes(),
+		}
+	}
+
 	te := &Epoch{
 		db: db,
 
@@ -144,6 +153,7 @@ func MakeOneEpoch(db dbm.DB, oneEpoch *tmTypes.OneEpochDoc, logger log.Logger) *
 		EndTime:        time.Unix(0, 0), //not accurate for current epoch
 		Status:         oneEpoch.Status,
 		Validators:     tmTypes.NewValidatorSet(validators),
+		Candidates:     tmTypes.NewCandidateSet(candidates),
 
 		logger: logger,
 	}
@@ -322,6 +332,8 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			newValidators := epoch.Validators.Copy()
 
+			newCandidates := epoch.Candidates.Copy()
+
 			for _, v := range newValidators.Validators {
 				vAddr := common.BytesToAddress(v.Address)
 
@@ -330,6 +342,11 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
 				if newVotingPower.Sign() == 0 {
 					newValidators.Remove(v.Address)
+
+					// if candidate, remove
+					if newCandidates.HasAddress(v.Address) {
+						newCandidates.Remove(v.Address)
+					}
 				} else {
 					v.VotingPower = newVotingPower
 				}
@@ -352,7 +369,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 			}
 
 			// Update Validators with vote
-			refundsUpdate, err := updateEpochValidatorSet(state, epoch.Number, newValidators, epoch.nextEpoch.validatorVoteSet, hasVoteOut)
+			refundsUpdate, err := updateEpochValidatorSet(state, epoch.Number, newValidators, newCandidates, epoch.nextEpoch.validatorVoteSet, hasVoteOut)
 
 			if err != nil {
 				epoch.logger.Warn("Error changing validator set", "error", err)
@@ -447,7 +464,7 @@ func (epoch *Epoch) EnterNewEpoch(newValidators *tmTypes.ValidatorSet) (*Epoch, 
 }
 
 // DryRunUpdateEpochValidatorSet Re-calculate the New Validator Set base on the current state db and vote set
-func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet) error {
+func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, candidates *tmTypes.CandidateSet, voteSet *EpochValidatorVoteSet) error {
 
 	for _, v := range validators.Validators {
 		vAddr := common.BytesToAddress(v.Address)
@@ -465,13 +482,13 @@ func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validat
 		}
 	}
 
-	_, err := updateEpochValidatorSet(state, epochNo, validators, voteSet, false)
+	_, err := updateEpochValidatorSet(state, epochNo, validators, candidates, voteSet, false)
 	return err
 }
 
 // updateEpochValidatorSet Update the Current Epoch Validator by vote
 //
-func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet, hasVoteOut bool) ([]*tmTypes.RefundValidatorAmount, error) {
+func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, candidates *tmTypes.CandidateSet, voteSet *EpochValidatorVoteSet, hasVoteOut bool) ([]*tmTypes.RefundValidatorAmount, error) {
 
 	// Refund List will be validators contain from Vote (exit validator or less amount than previous amount) and Knockout after sort by amount
 	var refund []*tmTypes.RefundValidatorAmount
@@ -586,6 +603,12 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 		}
 
 		validators.Validators = validators.Validators[:valSize]
+	}
+
+	for _, r := range refund {
+		if !candidates.HasAddress(r.Address.Bytes()) {
+			candidates.Add(tmTypes.NewCandidate(r.Address.Bytes()))
+		}
 	}
 
 	return refund, nil

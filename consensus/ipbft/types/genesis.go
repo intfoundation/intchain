@@ -31,6 +31,11 @@ type GenesisValidator struct {
 	RemainingEpoch uint64         `json:"epoch"`
 }
 
+type GenesisCandidate struct {
+	EthAccount common.Address `json:"address"`
+	PubKey     crypto.PubKey  `json:"pub_key"`
+}
+
 type OneEpochDoc struct {
 	Number         uint64             `json:"number"`
 	RewardPerBlock *big.Int           `json:"reward_per_block"`
@@ -38,6 +43,7 @@ type OneEpochDoc struct {
 	EndBlock       uint64             `json:"end_block"`
 	Status         int                `json:"status"`
 	Validators     []GenesisValidator `json:"validators"`
+	Candidates     []GenesisCandidate `json:"candidates"`
 }
 
 type RewardSchemeDoc struct {

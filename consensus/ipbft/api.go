@@ -114,7 +114,8 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidator, error) {
 		}
 
 		nextValidators := ep.Validators.Copy()
-		err = epoch.DryRunUpdateEpochValidatorSet(state, ep.Number, nextValidators, nextEp.GetEpochValidatorVoteSet())
+		nextCandidates := ep.Candidates.Copy()
+		err = epoch.DryRunUpdateEpochValidatorSet(state, ep.Number, nextValidators, nextCandidates, nextEp.GetEpochValidatorVoteSet())
 		if err != nil {
 			return nil, err
 		}
@@ -135,6 +136,20 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidator, error) {
 
 		return validators, nil
 	}
+}
+
+func (api *API) GetEpochCandidates() ([]*tdmTypes.EpochCandidate, error) {
+	ep := api.tendermint.core.consensusState.Epoch
+	cansCopy := ep.Candidates.Copy()
+
+	candidates := make([]*tdmTypes.EpochCandidate, len(cansCopy.Candidates))
+	for _, can := range cansCopy.Candidates {
+		candidates = append(candidates, &tdmTypes.EpochCandidate{
+			Address: common.BytesToAddress(can.Address),
+		})
+	}
+
+	return candidates, nil
 }
 
 // CreateValidator no longer support

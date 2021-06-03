@@ -39,6 +39,10 @@ type EpochValidator struct {
 	RemainingEpoch hexutil.Uint64 `json:"remainEpoch"`
 }
 
+type EpochCandidate struct {
+	Address common.Address `json:"address"`
+}
+
 type TendermintExtraApi struct {
 	ChainID         string         `json:"chainId"`
 	Height          hexutil.Uint64 `json:"height"`
