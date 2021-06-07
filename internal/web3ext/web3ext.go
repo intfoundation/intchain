@@ -556,8 +556,13 @@ web3._extend({
 			call: 'int_getNextEpochValidators'
 		}),
 		new web3._extend.Method({
+			name: 'getNextEpochCandidates',
+			call: 'int_getNextEpochCandidates'
+		}),
+		new web3._extend.Method({
 			name: 'getEpochCandidates',
-			call: 'int_getEpochCandidates'
+			call: 'int_getEpochCandidates',
+			params: 1
 		}),
 		new web3._extend.Method({
 			name: 'getValidatorStatus',

@@ -297,7 +297,7 @@ func (epoch *Epoch) GetPreviousEpoch() *Epoch {
 	return epoch.previousEpoch
 }
 
-func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bool, *tmTypes.ValidatorSet, error) {
+func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bool, *tmTypes.ValidatorSet, *tmTypes.CandidateSet, error) {
 
 	if height == epoch.EndBlock {
 		epoch.nextEpoch = epoch.GetNextEpoch()
@@ -373,7 +373,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			if err != nil {
 				epoch.logger.Warn("Error changing validator set", "error", err)
-				return false, nil, err
+				return false, nil, nil, err
 			}
 			refunds = append(refunds, refundsUpdate...)
 
@@ -417,12 +417,19 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				}
 			}
 
-			return true, newValidators, nil
+			// remove from validators
+			for _, val := range newValidators.Validators {
+				if newCandidates.HasAddress(val.Address) {
+					newCandidates.Remove(val.Address)
+				}
+			}
+
+			return true, newValidators, newCandidates, nil
 		} else {
-			return false, nil, NextEpochNotExist
+			return false, nil, nil, NextEpochNotExist
 		}
 	}
-	return false, nil, nil
+	return false, nil, nil, nil
 }
 
 func compareAddress(addrA, addrB []byte) bool {
@@ -434,7 +441,7 @@ func compareAddress(addrA, addrB []byte) bool {
 }
 
 // Move to New Epoch
-func (epoch *Epoch) EnterNewEpoch(newValidators *tmTypes.ValidatorSet) (*Epoch, error) {
+func (epoch *Epoch) EnterNewEpoch(newValidators *tmTypes.ValidatorSet, newCandidates *tmTypes.CandidateSet) (*Epoch, error) {
 	if epoch.nextEpoch != nil {
 		now := time.Now()
 
@@ -453,6 +460,7 @@ func (epoch *Epoch) EnterNewEpoch(newValidators *tmTypes.ValidatorSet) (*Epoch, 
 
 		nextEpoch.StartTime = now
 		nextEpoch.Validators = newValidators
+		nextEpoch.Candidates = newCandidates
 
 		nextEpoch.nextEpoch = nil //suppose we will not generate a more epoch after next-epoch
 		nextEpoch.Save()

@@ -138,11 +138,55 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidator, error) {
 	}
 }
 
-func (api *API) GetEpochCandidates() ([]*tdmTypes.EpochCandidate, error) {
-	ep := api.tendermint.core.consensusState.Epoch
-	cansCopy := ep.Candidates.Copy()
+func (api *API) GetNextEpochCandidates() ([]*tdmTypes.EpochCandidate, error) {
 
-	candidates := make([]*tdmTypes.EpochCandidate, len(cansCopy.Candidates))
+	//height := api.chain.CurrentBlock().NumberU64()
+
+	ep := api.tendermint.core.consensusState.Epoch
+	nextEp := ep.GetNextEpoch()
+	if nextEp == nil {
+		return nil, errors.New("voting for next epoch has not started yet")
+	} else {
+		state, err := api.chain.State()
+		if err != nil {
+			return nil, err
+		}
+
+		nextValidators := ep.Validators.Copy()
+		nextCandidates := ep.Candidates.Copy()
+		err = epoch.DryRunUpdateEpochValidatorSet(state, ep.Number, nextValidators, nextCandidates, nextEp.GetEpochValidatorVoteSet())
+		if err != nil {
+			return nil, err
+		}
+
+		candidates := make([]*tdmTypes.EpochCandidate, 0, len(nextCandidates.Candidates))
+		for _, val := range nextValidators.Validators {
+			candidates = append(candidates, &tdmTypes.EpochCandidate{
+				Address: common.BytesToAddress(val.Address),
+			})
+		}
+
+		return candidates, nil
+	}
+}
+
+func (api *API) GetEpochCandidates(num hexutil.Uint64) ([]*tdmTypes.EpochCandidate, error) {
+	number := uint64(num)
+	var resultEpoch *epoch.Epoch
+	curEpoch := api.tendermint.core.consensusState.Epoch
+	if number < 0 || number > curEpoch.Number {
+		return nil, errors.New("epoch number out of range")
+	}
+
+	if number == curEpoch.Number {
+		resultEpoch = curEpoch
+	} else {
+		resultEpoch = epoch.LoadOneEpoch(curEpoch.GetDB(), number, nil)
+	}
+
+	cansCopy := resultEpoch.Candidates.Copy()
+
+	candidates := make([]*tdmTypes.EpochCandidate, 0, len(cansCopy.Candidates))
 	for _, can := range cansCopy.Candidates {
 		candidates = append(candidates, &tdmTypes.EpochCandidate{
 			Address: common.BytesToAddress(can.Address),

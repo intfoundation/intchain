@@ -491,10 +491,11 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	//}
 
 	// Check the Epoch switch and update their account balance accordingly (Refund the Locked Balance)
-	if ok, newValidators, _ := epoch.ShouldEnterNewEpoch(header.Number.Uint64(), state); ok {
+	if ok, newValidators, newCandidates, _ := epoch.ShouldEnterNewEpoch(header.Number.Uint64(), state); ok {
 		ops.Append(&tdmTypes.SwitchEpochOp{
 			ChainId:       sb.chainConfig.IntChainId,
 			NewValidators: newValidators,
+			NewCandidates: newCandidates,
 		})
 
 	}
