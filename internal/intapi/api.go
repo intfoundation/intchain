@@ -2429,13 +2429,14 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 
 	// update is true and the address is candidate, then update next epoch validator vote set
 	if update && state.IsCandidate(candidate) {
+		// no need move
 		// Move delegate amount first if Candidate
-		state.ForEachProxied(candidate, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
-			// Move Proxied Amount to Deposit Proxied Amount
-			state.SubProxiedBalanceByUser(candidate, key, proxiedBalance)
-			state.AddDepositProxiedBalanceByUser(candidate, key, proxiedBalance)
-			return true
-		})
+		//state.ForEachProxied(candidate, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+		//	// Move Proxied Amount to Deposit Proxied Amount
+		//	state.SubProxiedBalanceByUser(candidate, key, proxiedBalance)
+		//	state.AddDepositProxiedBalanceByUser(candidate, key, proxiedBalance)
+		//	return true
+		//})
 
 		var pubkey string
 		pubkey = state.GetPubkey(candidate)
