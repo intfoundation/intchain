@@ -357,13 +357,6 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				shouldVoteOut := !state.CheckProposedInEpoch(vAddr, epoch.Number)
 				fmt.Printf("ShouldEnterNewEpoch should vote out %v, address %x\n", shouldVoteOut, common.BytesToAddress(v.Address))
 				if shouldVoteOut {
-					//refunds = append(refunds, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: nil, Voteout: true})
-					//
-					//_, removed := newValidators.Remove(v.Address)
-					//
-					//if !removed {
-					//	return false, nil, fmt.Errorf("Failed to remove validator %x", v.Address)
-					//}
 					hasVoteOut = true
 				}
 			}
