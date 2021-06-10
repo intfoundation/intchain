@@ -7,14 +7,14 @@ import (
 	"io"
 	"time"
 
-	"github.com/intfoundation/intchain/core/state"
-	"github.com/intfoundation/intchain/core/types"
-	"github.com/intfoundation/intchain/log"
-	"github.com/intfoundation/intchain/rlp"
 	. "github.com/intfoundation/go-common"
 	"github.com/intfoundation/go-crypto"
 	"github.com/intfoundation/go-merkle"
 	"github.com/intfoundation/go-wire"
+	"github.com/intfoundation/intchain/core/state"
+	"github.com/intfoundation/intchain/core/types"
+	"github.com/intfoundation/intchain/log"
+	"github.com/intfoundation/intchain/rlp"
 )
 
 const MaxBlockSize = 22020096 // 21MB TODO make it configurable
@@ -110,7 +110,6 @@ func (b *TdmBlock) ToBytes() []byte {
 		TdmExtra     *TendermintExtra
 		TX3ProofData []*types.TX3ProofData
 	}
-	//fmt.Printf("TdmBlock.toBytes 0 with block: %v\n", b)
 
 	bs, err := rlp.EncodeToBytes(b.Block)
 	if err != nil {
@@ -133,8 +132,6 @@ func (b *TdmBlock) FromBytes(reader io.Reader) (*TdmBlock, error) {
 		TdmExtra     *TendermintExtra
 		TX3ProofData []*types.TX3ProofData
 	}
-
-	//fmt.Printf("TdmBlock.FromBytes \n")
 
 	var n int
 	var err error
