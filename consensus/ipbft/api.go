@@ -305,7 +305,6 @@ func (api *API) GetVoteHash(from common.Address, pubkey crypto.BLSPubKey, amount
 //
 //	candidateList := make([]string, 0)
 //	candidateSet := state.GetCandidateSet()
-//	fmt.Printf("candidate set %v", candidateSet)
 //	for addr := range candidateSet {
 //		candidateList = append(candidateList, addr)
 //	}
