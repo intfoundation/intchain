@@ -77,10 +77,7 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 	currentEpoch := eng.GetEpoch()
 
 	if epochInBlock != nil {
-		//fmt.Printf("update local epoch: epochInBlock %v\n", epochInBlock)
-		//fmt.Printf("update local epoch: tdmExtra %v\n", tdmExtra)
 		if epochInBlock.Number == currentEpoch.Number+1 {
-			//fmt.Printf("update local epoch 1\n")
 			// Save the next epoch
 			if block.NumberU64() == currentEpoch.StartBlock+2 {
 				//fmt.Printf("update local epoch block number %v, current epoch start block %v\n", block.NumberU64(), currentEpoch.StartBlock)

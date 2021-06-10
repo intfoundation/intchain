@@ -209,7 +209,6 @@ func FromBytes(buf []byte) *Epoch {
 	} else {
 		ep := &Epoch{}
 		err := wire.ReadBinaryBytes(buf, ep)
-		fmt.Printf("epoch from bytes ep: %v\n", ep)
 		if err != nil {
 			log.Errorf("Load Epoch from Bytes Failed, error: %v", err)
 			return nil
@@ -237,7 +236,6 @@ func (epoch *Epoch) ValidateNextEpoch(next *Epoch, lastHeight uint64, lastBlockT
 //check if need propose next epoch
 func (epoch *Epoch) ShouldProposeNextEpoch(curBlockHeight uint64) bool {
 	// If next epoch already proposed, then no need propose again
-	//fmt.Printf("should propose next epoch %v\n", epoch.nextEpoch)
 	if epoch.nextEpoch != nil {
 		return false
 	}

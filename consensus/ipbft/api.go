@@ -242,7 +242,6 @@ func (api *API) GetConsensusPublicKey(extra string) ([]string, error) {
 		return nil, err
 	}
 
-	//fmt.Printf("GetConsensusPublicKey tdmExtra %v\n", tdmExtra)
 	number := uint64(tdmExtra.EpochNumber)
 	var resultEpoch *epoch.Epoch
 	curEpoch := api.tendermint.core.consensusState.Epoch
@@ -256,9 +255,7 @@ func (api *API) GetConsensusPublicKey(extra string) ([]string, error) {
 		resultEpoch = epoch.LoadOneEpoch(curEpoch.GetDB(), number, nil)
 	}
 
-	//fmt.Printf("GetConsensusPublicKey result epoch %v\n", resultEpoch)
 	validatorSet := resultEpoch.Validators
-	//fmt.Printf("GetConsensusPublicKey validatorset %v\n", validatorSet)
 
 	aggr, err := validatorSet.GetAggrPubKeyAndAddress(tdmExtra.SeenCommit.BitArray)
 	if err != nil {

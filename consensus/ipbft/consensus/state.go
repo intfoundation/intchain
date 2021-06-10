@@ -1107,7 +1107,6 @@ func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet
 		}
 
 		intBlock := cs.blockFromMiner
-		//fmt.Printf("consensus state createProposalBlock intBlock=%v\n", intBlock)
 		var commit = &types.Commit{}
 		var epochBytes []byte
 
