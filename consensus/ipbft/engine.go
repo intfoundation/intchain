@@ -745,8 +745,9 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 
 		rewardPerBlock := ep.RewardPerBlock
 		if rewardPerBlock != nil && rewardPerBlock.Sign() == 1 {
-			coinbaseReward = big.NewInt(0)
-			coinbaseReward.Add(rewardPerBlock, halfGasFee)
+			coinbaseReward = new(big.Int).Mul(rewardPerBlock, big.NewInt(8))
+			coinbaseReward.Quo(coinbaseReward, big.NewInt(10))
+			coinbaseReward.Add(coinbaseReward, halfGasFee)
 		} else {
 			coinbaseReward = halfGasFee
 		}
