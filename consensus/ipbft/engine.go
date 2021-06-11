@@ -75,6 +75,9 @@ var (
 
 	_ consensus.Engine = (*backend)(nil)
 
+	foundationAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
+	feeAddress        = common.HexToAddress("0x0000000000000000000000000000000000000001")
+
 	// Address for Child Chain Reward
 	childChainRewardAddress = common.StringToAddress("0x0000000000000000000000000000000000001003")
 )
@@ -734,25 +737,28 @@ func writeCommittedSeals(h *types.Header, tdmExtra *tdmTypes.TendermintExtra) er
 //
 // If the coinbase is Candidate, divide the rewards by weight
 func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, ep *epoch.Epoch, totalGasFee *big.Int) {
-	// 50% gas fee is burnt
 	halfGasFee := big.NewInt(0).Div(totalGasFee, big.NewInt(2))
-	state.AddBalance(common.HexToAddress("0x0000000000000000000000000000000000000001"), halfGasFee)
+	state.AddBalance(feeAddress, halfGasFee)
 
-	// Total Reward = Block Reward + Total Gas Fee * 50%
 	var coinbaseReward *big.Int
 	if config.IntChainId == params.MainnetChainConfig.IntChainId || config.IntChainId == params.TestnetChainConfig.IntChainId {
-		// Main Chain
-
 		rewardPerBlock := ep.RewardPerBlock
 		if rewardPerBlock != nil && rewardPerBlock.Sign() == 1 {
-			coinbaseReward = new(big.Int).Mul(rewardPerBlock, big.NewInt(8))
-			coinbaseReward.Quo(coinbaseReward, big.NewInt(10))
-			coinbaseReward.Add(coinbaseReward, halfGasFee)
+			zeroAddress := common.Address{}
+			if foundationAddress == zeroAddress {
+				coinbaseReward = big.NewInt(0)
+				coinbaseReward.Add(rewardPerBlock, halfGasFee)
+			} else {
+				coinbaseReward = new(big.Int).Mul(rewardPerBlock, big.NewInt(8))
+				coinbaseReward.Quo(coinbaseReward, big.NewInt(10))
+				foundationReward := new(big.Int).Sub(rewardPerBlock, coinbaseReward)
+				state.AddBalance(foundationAddress, foundationReward)
+				coinbaseReward.Add(coinbaseReward, halfGasFee)
+			}
 		} else {
 			coinbaseReward = halfGasFee
 		}
 	} else {
-		// Child Chain
 		rewardPerBlock := state.GetChildChainRewardPerBlock()
 		if rewardPerBlock != nil && rewardPerBlock.Sign() == 1 {
 			childChainRewardBalance := state.GetBalance(childChainRewardAddress)

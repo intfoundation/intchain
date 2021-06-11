@@ -103,7 +103,6 @@ func SetupGenesisBlockEx(db intdb.Database, genesis *Genesis) (*types.Block, err
 // The returned chain configuration is never nil.
 func SetupGenesisBlockWithDefault(db intdb.Database, genesis *Genesis, isMainChain, isTestnet bool) (*params.ChainConfig, common.Hash, error) {
 	if genesis != nil && genesis.Config == nil {
-		//fmt.Printf("core genesis1 SetupGenesisBlockWithDefault 1\n")
 		return nil, common.Hash{}, errGenesisNoConfig
 	}
 
@@ -121,7 +120,6 @@ func SetupGenesisBlockWithDefault(db intdb.Database, genesis *Genesis, isMainCha
 			log.Info("Writing custom genesis block")
 		}
 		block, err := genesis.Commit(db)
-		//fmt.Printf("core genesis1 SetupGenesisBlockWithDefault 2\n")
 		return genesis.Config, block.Hash(), err
 	}
 
@@ -129,7 +127,6 @@ func SetupGenesisBlockWithDefault(db intdb.Database, genesis *Genesis, isMainCha
 	if genesis != nil {
 		hash := genesis.ToBlock(nil).Hash()
 		if hash != stored {
-			//fmt.Printf("core genesis1 SetupGenesisBlockWithDefault 3\n")
 			return genesis.Config, hash, &GenesisMismatchError{stored, hash}
 		}
 	}
@@ -140,14 +137,12 @@ func SetupGenesisBlockWithDefault(db intdb.Database, genesis *Genesis, isMainCha
 	if storedcfg == nil {
 		log.Warn("Found genesis block without chain config")
 		rawdb.WriteChainConfig(db, stored, newcfg)
-		//fmt.Printf("core genesis1 SetupGenesisBlockWithDefault 4\n")
 		return newcfg, stored, nil
 	}
 	// Special case: don't change the existing config of a non-mainnet chain if no new
 	// config is supplied. These chains would get AllProtocolChanges (and a compat error)
 	// if we just continued here.
 	if genesis == nil && stored != params.MainnetGenesisHash {
-		//fmt.Printf("core genesis1 SetupGenesisBlockWithDefault 5\n")
 		return storedcfg, stored, nil
 	}
 
@@ -155,16 +150,13 @@ func SetupGenesisBlockWithDefault(db intdb.Database, genesis *Genesis, isMainCha
 	// are returned to the caller unless we're already at block zero.
 	height := rawdb.ReadHeaderNumber(db, rawdb.ReadHeadHeaderHash(db))
 	if height == nil {
-		//fmt.Printf("core genesis1 SetupGenesisBlockWithDefault 6\n")
 		return newcfg, stored, fmt.Errorf("missing block number for head header hash")
 	}
 	compatErr := storedcfg.CheckCompatible(newcfg, *height)
 	if compatErr != nil && *height != 0 && compatErr.RewindTo != 0 {
-		//fmt.Printf("core genesis1 SetupGenesisBlockWithDefault 7\n")
 		return newcfg, stored, compatErr
 	}
 	rawdb.WriteChainConfig(db, stored, newcfg)
-	//fmt.Printf("core genesis1 SetupGenesisBlockWithDefault 8\n")
 	return newcfg, stored, nil
 }
 
