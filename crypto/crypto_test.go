@@ -264,4 +264,14 @@ func TestEthAddress(t *testing.T) {
 	ethAddress := hexutil.Encode(Keccak256(publicKey[1:])[12:])
 
 	fmt.Printf("ethereum address %v\n", ethAddress)
+
+	addrHex := "0xc84e9eba34cfb0690ae607207a64d662686d17f7"
+
+	addrBytes := common.HexToAddress(addrHex).Big()
+
+	b, _ := new(big.Int).SetString("862381068151338842291839054294319045153034925969", 10)
+
+	addrBig := common.BigToAddress(b).String()
+
+	fmt.Printf("address bytes %v, address big %v\n", addrBytes, addrBig)
 }
