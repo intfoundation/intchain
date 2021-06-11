@@ -35,6 +35,7 @@ var (
 	WithdrawReward = FunctionType{17, false, true, true}
 	UnForbidden    = FunctionType{18, false, true, true}
 	SetCommission  = FunctionType{19, false, true, true}
+	SetAddress     = FunctionType{20, false, true, true}
 	// Unknown
 	Unknown = FunctionType{-1, false, false, false}
 )
@@ -83,6 +84,8 @@ func (t FunctionType) RequiredGas() uint64 {
 		return 21000
 	case SetCommission:
 		return 21000
+	case SetAddress:
+		return 21000
 	default:
 		return 0
 	}
@@ -126,6 +129,8 @@ func (t FunctionType) String() string {
 		return "UnForbidden"
 	case SetCommission:
 		return "SetCommission"
+	case SetAddress:
+		return "SetAddress"
 	default:
 		return "UnKnown"
 	}
@@ -169,6 +174,8 @@ func StringToFunctionType(s string) FunctionType {
 		return UnForbidden
 	case "SetCommission":
 		return SetCommission
+	case "SetAddress":
+		return SetAddress
 	default:
 		return Unknown
 	}
@@ -255,6 +262,10 @@ type UnForbiddenArgs struct {
 
 type SetCommissionArgs struct {
 	Commission uint8
+}
+
+type SetAddressArgs struct {
+	FAddress common.Address
 }
 
 const jsonChainABI = `
@@ -524,6 +535,17 @@ const jsonChainABI = `
 			{
 				"name": "commission",
 				"type": "uint8"
+			}
+		]
+	},
+	{
+		"type": "function",
+		"name": "SetAddress",
+		"constant": false,
+		"inputs": [
+			{
+				"name": "fAddress",
+				"type": "address"
 			}
 		]
 	}

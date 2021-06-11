@@ -1828,26 +1828,26 @@ func (api *PublicINTAPI) EditValidator(ctx context.Context, from common.Address,
 	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
 }
 
-//func (api *PublicINTAPI) UnForbidden(ctx context.Context, from common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
-//	input, err := intAbi.ChainABI.Pack(intAbi.UnForbidden.String())
-//	if err != nil {
-//		return common.Hash{}, err
-//	}
-//
-//	defaultGas := intAbi.UnForbidden.RequiredGas()
-//
-//	args := SendTxArgs{
-//		From:     from,
-//		To:       &intAbi.ChainContractMagicAddr,
-//		Gas:      (*hexutil.Uint64)(&defaultGas),
-//		GasPrice: gasPrice,
-//		Value:    nil,
-//		Input:    (*hexutil.Bytes)(&input),
-//		Nonce:    nil,
-//	}
-//
-//	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
-//}
+func (api *PublicINTAPI) SetAddress(ctx context.Context, from, fAddress common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
+	input, err := intAbi.ChainABI.Pack(intAbi.SetAddress.String())
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.SetAddress.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    nil,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
 
 func init() {
 	// Withdraw reward
@@ -1880,6 +1880,10 @@ func init() {
 	// UnForbidden
 	//core.RegisterValidateCb(intAbi.UnForbidden, unForbiddenValidateCb)
 	//core.RegisterApplyCb(intAbi.UnForbidden, unForbiddenApplyCb)
+
+	// Set Address
+	core.RegisterValidateCb(intAbi.SetAddress, setAddressValidateCb)
+	core.RegisterApplyCb(intAbi.SetAddress, setAddressApplyCb)
 }
 
 func withdrawRewardValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
@@ -2310,6 +2314,42 @@ func setCommissionValidation(from common.Address, tx *types.Transaction, state *
 
 	if args.Commission > 100 {
 		return nil, core.ErrCommission
+	}
+
+	return &args, nil
+}
+
+func setAddressValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, err := setAddressValidation(from, tx, state, bc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setAddressApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	from := derivedAddressFromTx(tx)
+	args, err := setAddressValidation(from, tx, state, bc)
+	if err != nil {
+		return err
+	}
+
+	state.SetAddress(from, args.FAddress)
+
+	return nil
+}
+
+func setAddressValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.SetAddressArgs, error) {
+	if !state.IsCandidate(from) {
+		return nil, core.ErrNotCandidate
+	}
+
+	var args intAbi.SetAddressArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.SetAddress.String(), data[4:]); err != nil {
+		return nil, err
 	}
 
 	return &args, nil

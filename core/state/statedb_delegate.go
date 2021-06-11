@@ -361,6 +361,13 @@ func (self *StateDB) CancelCandidate(addr common.Address, allRefund bool) {
 //	}
 //}
 
+func (self *StateDB) SetAddress(addr, fAddr common.Address) {
+	stateObject := self.GetOrNewStateObject(addr)
+	if stateObject != nil {
+		stateObject.SetAddress(fAddr)
+	}
+}
+
 // ClearCommission Set the Candidate commission to 0
 func (self *StateDB) ClearCommission(addr common.Address) {
 	stateObject := self.GetOrNewStateObject(addr)

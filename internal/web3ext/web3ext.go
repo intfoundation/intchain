@@ -645,6 +645,12 @@ web3._extend({
 			call: 'int_setCommission',
 			params: 3,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null]
+		}),
+		new web3._extend.Method({
+			name: 'setAddress',
+			call: 'int_setAddress',
+			params: 3,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null]
 		})
 	],
 	properties: [
