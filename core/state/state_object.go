@@ -136,7 +136,8 @@ type Account struct {
 	//BlockTime     *big.Int // number for mined blocks current epoch
 	//ForbiddenTime *big.Int // timestamp for last consensus block
 	//IsForbidden   bool     // candidate is forbidden or not
-	Pubkey string
+	Pubkey   string
+	FAddress common.Address
 
 	// Reward
 	RewardBalance          *big.Int    // the accumulative reward balance for this account
@@ -693,4 +694,25 @@ func (self *stateObject) Nonce() uint64 {
 // interface. Interfaces are awesome.
 func (self *stateObject) Value() *big.Int {
 	panic("Value on stateObject should never be called")
+}
+
+func (self *stateObject) SetAddress(address common.Address) {
+	self.db.journal = append(self.db.journal, fAddressChange{
+		account: &self.address,
+		prev:    self.data.FAddress,
+	})
+
+	self.setAddress(address)
+}
+
+func (self *stateObject) setAddress(address common.Address) {
+	self.data.FAddress = address
+	if self.onDirty != nil {
+		self.onDirty(self.Address())
+		self.onDirty = nil
+	}
+}
+
+func (self *stateObject) GetAddress() common.Address {
+	return self.data.FAddress
 }
