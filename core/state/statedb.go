@@ -720,7 +720,6 @@ func (self *StateDB) GetRefund() uint64 {
 // Finalise finalises the state by removing the self destructed objects
 // and clears the journal as well as the refunds.
 func (s *StateDB) Finalise(deleteEmptyObjects bool) {
-	//fmt.Printf("core state statedb.go Finalise s.journal.dirtied=%v\n", s.stateObjectsDirty)
 	for addr := range s.stateObjectsDirty {
 		stateObject := s.stateObjects[addr]
 		if stateObject.suicided || (deleteEmptyObjects && stateObject.empty()) {
@@ -768,7 +767,6 @@ func (s *StateDB) Finalise(deleteEmptyObjects bool) {
 // goes into transaction receipts.
 func (s *StateDB) IntermediateRoot(deleteEmptyObjects bool) common.Hash {
 	s.Finalise(deleteEmptyObjects)
-	//fmt.Printf("core state statedb.go IntermediateRoot hash=%v\n", s.trie.Hash().String())
 	return s.trie.Hash()
 }
 

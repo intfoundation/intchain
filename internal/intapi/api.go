@@ -773,7 +773,6 @@ func (s *PublicBlockChainAPI) Call(ctx context.Context, args CallArgs, blockNr r
 // EstimateGas returns an estimate of the amount of gas needed to execute the
 // given transaction against the current pending block.
 func (s *PublicBlockChainAPI) EstimateGas(ctx context.Context, args CallArgs) (hexutil.Uint64, error) {
-	fmt.Printf("+++++++++++++++++++++++++++++++++++++++++++++estimate gas %v\n", args)
 	// Binary search the gas requirement, as it may be higher than the amount used
 	var (
 		lo  uint64 = params.TxGas - 1
@@ -1961,11 +1960,9 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 
 	var blsPK goCrypto.BLSPubKey
 	copy(blsPK[:], args.Pubkey)
-	fmt.Printf("register pubkey unmarshal json start\n")
 	if verror != nil {
 		return verror
 	}
-	fmt.Printf("register pubkey %v\n", blsPK)
 	state.ApplyForCandidate(from, blsPK.KeyString(), args.Commission)
 
 	// mark address candidate
