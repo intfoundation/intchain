@@ -1829,7 +1829,7 @@ func (api *PublicINTAPI) EditValidator(ctx context.Context, from common.Address,
 }
 
 func (api *PublicINTAPI) SetAddress(ctx context.Context, from, fAddress common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
-	input, err := intAbi.ChainABI.Pack(intAbi.SetAddress.String())
+	input, err := intAbi.ChainABI.Pack(intAbi.SetAddress.String(), fAddress)
 	if err != nil {
 		return common.Hash{}, err
 	}

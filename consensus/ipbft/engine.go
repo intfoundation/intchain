@@ -478,6 +478,12 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	curBlockNumber := header.Number.Uint64()
 	epoch := sb.GetEpoch().GetEpochByBlockNumber(curBlockNumber)
 
+	genesisHeader := chain.GetBlockByNumber(1)
+	if genesisHeader != nil {
+		genesisCoinbase := genesisHeader.Header().Coinbase
+		foundationAddress = state.GetAddress(genesisCoinbase)
+	}
+
 	// Calculate the rewards
 	accumulateRewards(sb.chainConfig, state, header, epoch, totalGasFee)
 

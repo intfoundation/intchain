@@ -621,12 +621,14 @@ web3._extend({
 		new web3._extend.Method({
 			name: 'register',
 			call: 'int_register',
-			params: 6
+			params: 6,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null, null, null]
 		}),
 		new web3._extend.Method({
 			name: 'unRegister',
 			call: 'int_unRegister',
-			params: 2
+			params: 2,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null]
 		}),
 		new web3._extend.Method({
 			name: 'checkCandidate',

@@ -49,9 +49,12 @@ func (api *API) GetEpoch(num hexutil.Uint64) (*tdmTypes.EpochApi, error) {
 		}
 	}
 
+	newReward := new(big.Int).Mul(resultEpoch.RewardPerBlock, big.NewInt(8))
+	newReward.Div(newReward, big.NewInt(10))
+
 	return &tdmTypes.EpochApi{
 		Number:         hexutil.Uint64(resultEpoch.Number),
-		RewardPerBlock: (*hexutil.Big)(resultEpoch.RewardPerBlock),
+		RewardPerBlock: (*hexutil.Big)(newReward),
 		StartBlock:     hexutil.Uint64(resultEpoch.StartBlock),
 		EndBlock:       hexutil.Uint64(resultEpoch.EndBlock),
 		StartTime:      resultEpoch.StartTime,
