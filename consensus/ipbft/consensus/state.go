@@ -1107,7 +1107,6 @@ func (cs *ConsensusState) createProposalBlock() (*types.TdmBlock, *types.PartSet
 		}
 
 		intBlock := cs.blockFromMiner
-		//fmt.Printf("consensus state createProposalBlock intBlock=%v\n", intBlock)
 		var commit = &types.Commit{}
 		var epochBytes []byte
 
@@ -1612,12 +1611,6 @@ func (cs *ConsensusState) defaultSetProposal(proposal *types.Proposal) error {
 
 		// Verify signature
 		if !cs.GetProposer().PubKey.VerifyBytes(types.SignBytes(cs.chainConfig.IntChainId, proposal), proposal.Signature) {
-			fmt.Printf("default set proposal1, proposal.Round %v, cs.Round %v\n", proposal.Round, cs.Round)
-			fmt.Printf("default set proposal1, proposal %v, cs %v\n", proposal, cs)
-			fmt.Printf("default set proposal1, proposal.Signature %v\n", proposal.Signature.String())
-			fmt.Printf("default set proposal1, cs.GetProposer().PubKey %v\n", cs.GetProposer().PubKey.KeyString())
-			fmt.Printf("default set proposal1, cs.chainConfig.IntChainId %v\n", cs.chainConfig.IntChainId)
-			fmt.Printf("default set proposal1, verifyBytes(cs, proposal.Signature) %v, %v\n", types.SignBytes(cs.chainConfig.IntChainId, proposal), proposal.Signature.String())
 			return ErrInvalidProposalSignature
 		}
 
@@ -1625,12 +1618,6 @@ func (cs *ConsensusState) defaultSetProposal(proposal *types.Proposal) error {
 
 		// Verify signature
 		if !cs.proposerByRound(proposal.Round).Proposer.PubKey.VerifyBytes(types.SignBytes(cs.chainConfig.IntChainId, proposal), proposal.Signature) {
-			fmt.Printf("default set proposal2, proposal.Round %v, cs.Round %v\n", proposal.Round, cs.Round)
-			fmt.Printf("default set proposal2, proposal %v, cs %v\n", proposal, cs)
-			fmt.Printf("default set proposal2, proposal.Signature %v\n", proposal.Signature.String())
-			fmt.Printf("default set proposal2, cs.proposerByRound(proposal.Round).Proposer.PubKey %v\n", cs.proposerByRound(proposal.Round).Proposer.PubKey.KeyString())
-			fmt.Printf("default set proposal2, cs.chainConfig.IntChainId %v\n", cs.chainConfig.IntChainId)
-			fmt.Printf("default set proposal2, verifyBytes(cs, proposal.Signature) %v, %v\n", types.SignBytes(cs.chainConfig.IntChainId, proposal), proposal.Signature.String())
 			return ErrInvalidProposalSignature
 		}
 

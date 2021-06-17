@@ -3,6 +3,7 @@ package ipbft
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"github.com/hashicorp/golang-lru"
 	"github.com/intfoundation/go-wire"
 	"github.com/intfoundation/intchain/common"
@@ -73,6 +74,9 @@ var (
 	recentAddresses, _ = lru.NewARC(inmemoryAddresses)
 
 	_ consensus.Engine = (*backend)(nil)
+
+	foundationAddress = common.HexToAddress("0x0000000000000000000000000000000000000000")
+	feeAddress        = common.HexToAddress("0x0000000000000000000000000000000000000001")
 
 	// Address for Child Chain Reward
 	childChainRewardAddress = common.StringToAddress("0x0000000000000000000000000000000000001003")
@@ -474,6 +478,12 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	curBlockNumber := header.Number.Uint64()
 	epoch := sb.GetEpoch().GetEpochByBlockNumber(curBlockNumber)
 
+	genesisHeader := chain.GetBlockByNumber(1)
+	if genesisHeader != nil {
+		genesisCoinbase := genesisHeader.Header().Coinbase
+		foundationAddress = state.GetAddress(genesisCoinbase)
+	}
+
 	// Calculate the rewards
 	accumulateRewards(sb.chainConfig, state, header, epoch, totalGasFee)
 
@@ -490,10 +500,11 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	//}
 
 	// Check the Epoch switch and update their account balance accordingly (Refund the Locked Balance)
-	if ok, newValidators, _ := epoch.ShouldEnterNewEpoch(header.Number.Uint64(), state); ok {
+	if ok, newValidators, newCandidates, _ := epoch.ShouldEnterNewEpoch(header.Number.Uint64(), state); ok {
 		ops.Append(&tdmTypes.SwitchEpochOp{
 			ChainId:       sb.chainConfig.IntChainId,
 			NewValidators: newValidators,
+			NewCandidates: newCandidates,
 		})
 
 	}
@@ -732,24 +743,28 @@ func writeCommittedSeals(h *types.Header, tdmExtra *tdmTypes.TendermintExtra) er
 //
 // If the coinbase is Candidate, divide the rewards by weight
 func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, ep *epoch.Epoch, totalGasFee *big.Int) {
-	// 50% gas fee is burnt
 	halfGasFee := big.NewInt(0).Div(totalGasFee, big.NewInt(2))
-	state.AddBalance(common.HexToAddress("0x0000000000000000000000000000000000000000"), halfGasFee)
+	state.AddBalance(feeAddress, halfGasFee)
 
-	// Total Reward = Block Reward + Total Gas Fee * 50%
 	var coinbaseReward *big.Int
 	if config.IntChainId == params.MainnetChainConfig.IntChainId || config.IntChainId == params.TestnetChainConfig.IntChainId {
-		// Main Chain
-
 		rewardPerBlock := ep.RewardPerBlock
 		if rewardPerBlock != nil && rewardPerBlock.Sign() == 1 {
-			coinbaseReward = big.NewInt(0)
-			coinbaseReward.Add(rewardPerBlock, halfGasFee)
+			zeroAddress := common.Address{}
+			if foundationAddress == zeroAddress {
+				coinbaseReward = big.NewInt(0)
+				coinbaseReward.Add(rewardPerBlock, halfGasFee)
+			} else {
+				coinbaseReward = new(big.Int).Mul(rewardPerBlock, big.NewInt(8))
+				coinbaseReward.Quo(coinbaseReward, big.NewInt(10))
+				foundationReward := new(big.Int).Sub(rewardPerBlock, coinbaseReward)
+				state.AddBalance(foundationAddress, foundationReward)
+				coinbaseReward.Add(coinbaseReward, halfGasFee)
+			}
 		} else {
 			coinbaseReward = halfGasFee
 		}
 	} else {
-		// Child Chain
 		rewardPerBlock := state.GetChildChainRewardPerBlock()
 		if rewardPerBlock != nil && rewardPerBlock.Sign() == 1 {
 			childChainRewardBalance := state.GetBalance(childChainRewardAddress)
@@ -784,7 +799,7 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		// selfPercent = selfDeposit / totalDeposit
 		selfPercent := new(big.Float).Quo(new(big.Float).SetInt(selfDeposit), new(big.Float).SetInt(totalDeposit))
 
-		// selftReward = coinbaseReward * selfPercent
+		// selfReward = coinbaseReward * selfPercent
 		new(big.Float).Mul(new(big.Float).SetInt(coinbaseReward), selfPercent).Int(selfReward)
 
 		// delegateReward = coinbaseReward - selfReward
@@ -836,6 +851,11 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 			//state.SubRewardBalanceByEpochNumber(header.Coinbase, ep.Number, diff)
 			state.SubRewardBalanceByDelegateAddress(header.Coinbase, header.Coinbase, diff)
 		}
+	}
+
+	err := state.MarkProposedInEpoch(header.Coinbase, ep.Number)
+	if err != nil {
+		fmt.Printf("Mark validator proposed failed, error: %v\n", err)
 	}
 }
 

@@ -31,6 +31,11 @@ type GenesisValidator struct {
 	RemainingEpoch uint64         `json:"epoch"`
 }
 
+type GenesisCandidate struct {
+	EthAccount common.Address `json:"address"`
+	PubKey     crypto.PubKey  `json:"pub_key"`
+}
+
 type OneEpochDoc struct {
 	Number         uint64             `json:"number"`
 	RewardPerBlock *big.Int           `json:"reward_per_block"`
@@ -38,6 +43,7 @@ type OneEpochDoc struct {
 	EndBlock       uint64             `json:"end_block"`
 	Status         int                `json:"status"`
 	Validators     []GenesisValidator `json:"validators"`
+	Candidates     []GenesisCandidate `json:"candidates"`
 }
 
 type RewardSchemeDoc struct {
@@ -76,7 +82,7 @@ func GenesisDocFromJSON(jsonBlob []byte) (genDoc *GenesisDoc, err error) {
 var MainnetGenesisJSON string = `{
 	"chain_id": "intchain",
 	"consensus": "ipbft",
-	"genesis_time": "2021-03-16T15:29:08.121756+08:00",
+	"genesis_time": "2021-06-15T10:03:48.89357+08:00",
 	"reward_scheme": {
 		"total_reward": "0xa56fa5b99019a5c8000000",
 		"reward_first_year": "0x108b2a2c28029094000000",
@@ -90,8 +96,8 @@ var MainnetGenesisJSON string = `{
 		"end_block": "0x960",
 		"validators": [
 			{
-				"address": "0x9d667a75456cf68c5b2b91d66a0cd134a57370d1",
-				"pub_key": "0x1D8077B8AD2F8234AAC0945F253FCCDA7662092FCB5F388E5C60FD8628AB0E0950E9BEC5ABC32B427C4085676D39825B3196D0EABBF5903057C4CA442E4ECD25576B58F37C771946C59A7B7747BDB2EA9EB2709DEC44F4B6E7BB0D90B1A1626D4A39D0661B5645D49F6AF77215EB5286BC22867E5271EA89C64D492E992B1180",
+				"address": "0x9038d5c22f7be9a1447e92b3be2599facb690988",
+				"pub_key": "0x196A0CCFB2C205066F6C2373BB84A0C81AF4A22A8B6541172D79A236C572322871F851EE52B56B8FB0D7B9EC61B18E236C7E1A5D726AD4DC9617D4EFCADB152B481F2085038875F6C7505B7AD2DE0C2F03B219D0CC4688A8A9B28CA0A4E45C624195458FD750A0D02D9F6E544BB006883429DC61BA39035C10CD10467C828A1A",
 				"amount": "0x54b40b1f852bda000000",
 				"name": "",
 				"epoch": "0x0"

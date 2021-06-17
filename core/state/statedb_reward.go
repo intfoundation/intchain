@@ -33,7 +33,7 @@ func (self *StateDB) AddRewardBalance(addr common.Address, amount *big.Int) {
 func (self *StateDB) SubRewardBalance(addr common.Address, amount *big.Int) {
 	stateObject := self.GetOrNewStateObject(addr)
 	if stateObject != nil {
-		// Add amount to Total Reward Balance
+		// Sub amount to Total Reward Balance
 		stateObject.SubRewardBalance(amount)
 	}
 }
@@ -282,3 +282,13 @@ func (self *StateDB) commitChildChainRewardPerBlock() {
 // Child Chain Reward Per Block
 
 var childChainRewardPerBlockKey = []byte("RewardPerBlock")
+
+func (self *StateDB) MarkProposedInEpoch(address common.Address, epoch uint64) error {
+
+	return self.db.TrieDB().MarkProposedInEpoch(address, epoch)
+}
+
+func (self *StateDB) CheckProposedInEpoch(address common.Address, epoch uint64) bool {
+
+	return self.db.TrieDB().CheckProposedInEpoch(address, epoch)
+}

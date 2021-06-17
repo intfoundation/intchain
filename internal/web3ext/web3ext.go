@@ -526,7 +526,7 @@ web3._extend({
 			name: 'withdrawReward',
 			call: 'int_withdrawReward',
 			params: 3,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null]
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null, null]
 		}),
 		new web3._extend.Method({
 			name: 'voteNextEpoch',
@@ -554,6 +554,15 @@ web3._extend({
 		new web3._extend.Method({
 			name: 'getNextEpochValidators',
 			call: 'int_getNextEpochValidators'
+		}),
+		new web3._extend.Method({
+			name: 'getNextEpochCandidates',
+			call: 'int_getNextEpochCandidates'
+		}),
+		new web3._extend.Method({
+			name: 'getEpochCandidates',
+			call: 'int_getEpochCandidates',
+			params: 1
 		}),
 		new web3._extend.Method({
 			name: 'getValidatorStatus',
@@ -612,12 +621,14 @@ web3._extend({
 		new web3._extend.Method({
 			name: 'register',
 			call: 'int_register',
-			params: 6
+			params: 6,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null, null, null]
 		}),
 		new web3._extend.Method({
 			name: 'unRegister',
 			call: 'int_unRegister',
-			params: 2
+			params: 2,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null]
 		}),
 		new web3._extend.Method({
 			name: 'checkCandidate',
@@ -636,6 +647,12 @@ web3._extend({
 			call: 'int_setCommission',
 			params: 3,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null]
+		}),
+		new web3._extend.Method({
+			name: 'setAddress',
+			call: 'int_setAddress',
+			params: 3,
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null]
 		})
 	],
 	properties: [

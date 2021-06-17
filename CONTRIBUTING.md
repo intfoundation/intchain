@@ -1,3 +1,3 @@
 # Contribution  // TODO
 
-Thank you for considering making contribution to INTChain!
+Thank you for considering making contribution to INT Chain!

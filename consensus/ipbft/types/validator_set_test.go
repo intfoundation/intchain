@@ -124,7 +124,7 @@ func TestDecodeValidatorsHash(t *testing.T) {
 	fmt.Printf("validatorshash=%v\n", data)
 	fmt.Printf("validatorshashhex=%v\n", hexutil.Encode(data))
 
-	// 解不出来 validator
+	// can not decode validator
 	err = wire.ReadBinaryBytes(data, &validators)
 	if err != nil {
 		t.Error(err)

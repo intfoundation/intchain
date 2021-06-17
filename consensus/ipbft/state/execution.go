@@ -77,10 +77,7 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 	currentEpoch := eng.GetEpoch()
 
 	if epochInBlock != nil {
-		fmt.Printf("update local epoch: epochInBlock %v\n", epochInBlock)
-		fmt.Printf("update local epoch: tdmExtra %v\n", tdmExtra)
 		if epochInBlock.Number == currentEpoch.Number+1 {
-			//fmt.Printf("update local epoch 1\n")
 			// Save the next epoch
 			if block.NumberU64() == currentEpoch.StartBlock+2 {
 				//fmt.Printf("update local epoch block number %v, current epoch start block %v\n", block.NumberU64(), currentEpoch.StartBlock)
@@ -90,7 +87,6 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 				epochInBlock.SetRewardScheme(currentEpoch.GetRewardScheme())
 				currentEpoch.SetNextEpoch(epochInBlock)
 			} else if block.NumberU64() == currentEpoch.EndBlock-1 {
-				//fmt.Printf("update local epoch 2\n")
 				// Finalize next epoch
 				// Validator set in next epoch will not finalize and send to main chain
 				nextEp := currentEpoch.GetNextEpoch()
@@ -99,7 +95,7 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 			}
 			currentEpoch.Save()
 		} else if epochInBlock.Number == currentEpoch.Number {
-			fmt.Printf("update local epoch: epochInBlock.Number %v, currentEpoch.Number %v, epochInBlock.StartTime %v\n", epochInBlock.Number, currentEpoch.Number, epochInBlock.StartTime)
+			//fmt.Printf("update local epoch: epochInBlock.Number %v, currentEpoch.Number %v, epochInBlock.StartTime %v\n", epochInBlock.Number, currentEpoch.Number, epochInBlock.StartTime)
 			// Update the current epoch Start Time from proposer
 			currentEpoch.StartTime = epochInBlock.StartTime
 			currentEpoch.Save()
@@ -122,8 +118,10 @@ func autoStartMining(bc *core.BlockChain, block *ethTypes.Block) {
 		// Re-Calculate the next epoch validators
 		nextEp := currentEpoch.GetNextEpoch()
 		state, _ := bc.State()
+		epochNo := currentEpoch.Number
 		nextValidators := currentEpoch.Validators.Copy()
-		dryrunErr := ep.DryRunUpdateEpochValidatorSet(state, nextValidators, nextEp.GetEpochValidatorVoteSet())
+		nextCandidates := currentEpoch.Candidates.Copy()
+		dryrunErr := ep.DryRunUpdateEpochValidatorSet(state, epochNo, nextValidators, nextCandidates, nextEp.GetEpochValidatorVoteSet())
 		if dryrunErr != nil {
 			panic("can not update the validator set base on the vote, error: " + dryrunErr.Error())
 		}

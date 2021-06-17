@@ -302,9 +302,7 @@ func parseArgumentArray(dec *json.Decoder, types []reflect.Type) ([]reflect.Valu
 			return args, fmt.Errorf("too many arguments, want at most %d", len(types))
 		}
 		argval := reflect.New(types[i])
-		//fmt.Printf("json parseArgumentArray argval=%v\n", argval.Interface())
 		if err := dec.Decode(argval.Interface()); err != nil {
-			//fmt.Printf("json parseArgumentArray err=%v\n", err)
 			return args, fmt.Errorf("invalid argument %d: %v", i, err)
 		}
 		if argval.IsNil() && types[i].Kind() != reflect.Ptr {

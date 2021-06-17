@@ -487,7 +487,7 @@ func (cm *ChainManager) getNodeValidator(intNode *node.Node) (common.Address, bo
 	tdm := intchain.Engine()
 	epoch := tdm.GetEpoch()
 	coinbase = tdm.PrivateValidator()
-	log.Debugf("getNodeValidator() coinbase is :%v", coinbase)
+	log.Debugf("getNodeValidator() coinbase is :%x", coinbase)
 	return coinbase, epoch.Validators.HasAddress(coinbase[:])
 }
 

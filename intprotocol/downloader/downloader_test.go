@@ -627,30 +627,31 @@ func assertOwnForkedChain(t *testing.T, tester *downloadTester, common int, leng
 	switch tester.downloader.mode {
 	case FullSync:
 		receipts = 1
-	if hs := len(tester.ownHeaders); hs != headers {
-		t.Fatalf("synchronised headers mismatch: have %v, want %v", hs, headers)
-	}
-	if bs := len(tester.ownBlocks); bs != blocks {
-		t.Fatalf("synchronised blocks mismatch: have %v, want %v", bs, blocks)
-	}
-	if rs := len(tester.ownReceipts); rs != receipts {
-		t.Fatalf("synchronised receipts mismatch: have %v, want %v", rs, receipts)
-	}
-	// Verify the state trie too for fast syncs
-	/*if tester.downloader.mode == FastSync {
-		pivot := uint64(0)
-		var index int
-		if pivot := int(tester.downloader.queue.fastSyncPivot); pivot < common {
-			index = pivot
-		} else {
-			index = len(tester.ownHashes) - lengths[len(lengths)-1] + int(tester.downloader.queue.fastSyncPivot)
+		if hs := len(tester.ownHeaders); hs != headers {
+			t.Fatalf("synchronised headers mismatch: have %v, want %v", hs, headers)
 		}
-		if index > 0 {
-			if statedb, err := state.New(tester.ownHeaders[tester.ownHashes[index]].Root, state.NewDatabase(trie.NewDatabase(tester.stateDb))); statedb == nil || err != nil {
-				t.Fatalf("state reconstruction failed: %v", err)
+		if bs := len(tester.ownBlocks); bs != blocks {
+			t.Fatalf("synchronised blocks mismatch: have %v, want %v", bs, blocks)
+		}
+		if rs := len(tester.ownReceipts); rs != receipts {
+			t.Fatalf("synchronised receipts mismatch: have %v, want %v", rs, receipts)
+		}
+		// Verify the state trie too for fast syncs
+		/*if tester.downloader.mode == FastSync {
+			pivot := uint64(0)
+			var index int
+			if pivot := int(tester.downloader.queue.fastSyncPivot); pivot < common {
+				index = pivot
+			} else {
+				index = len(tester.ownHashes) - lengths[len(lengths)-1] + int(tester.downloader.queue.fastSyncPivot)
 			}
-		}
-	}*/
+			if index > 0 {
+				if statedb, err := state.New(tester.ownHeaders[tester.ownHashes[index]].Root, state.NewDatabase(trie.NewDatabase(tester.stateDb))); statedb == nil || err != nil {
+					t.Fatalf("state reconstruction failed: %v", err)
+				}
+			}
+		}*/
+	}
 }
 
 // Tests that simple synchronization against a canonical chain works correctly.

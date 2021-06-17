@@ -23,6 +23,11 @@ const (
 	Sticky
 )
 
+var (
+	BigStr1 = "362209239056230863865135"
+	BigStr2 = "816822002239807650213698"
+)
+
 type Config struct {
 	RequestTimeout uint64         `toml:",omitempty"` // The timeout for each Istanbul round in milliseconds.
 	BlockPeriod    uint64         `toml:",omitempty"` // Default minimum difference between two consecutive block's timestamps in second

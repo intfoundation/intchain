@@ -773,7 +773,6 @@ func (s *PublicBlockChainAPI) Call(ctx context.Context, args CallArgs, blockNr r
 // EstimateGas returns an estimate of the amount of gas needed to execute the
 // given transaction against the current pending block.
 func (s *PublicBlockChainAPI) EstimateGas(ctx context.Context, args CallArgs) (hexutil.Uint64, error) {
-	fmt.Printf("+++++++++++++++++++++++++++++++++++++++++++++estimate gas %v\n", args)
 	// Binary search the gas requirement, as it may be higher than the amount used
 	var (
 		lo  uint64 = params.TxGas - 1
@@ -1668,8 +1667,8 @@ func (s *PublicINTAPI) SignAddress(from common.Address, consensusPrivateKey hexu
 	return blsSign, nil
 }
 
-func (api *PublicINTAPI) WithdrawReward(ctx context.Context, from common.Address, delegateAddress common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
-	input, err := intAbi.ChainABI.Pack(intAbi.WithdrawReward.String(), delegateAddress)
+func (api *PublicINTAPI) WithdrawReward(ctx context.Context, from common.Address, delegateAddress common.Address, amount *hexutil.Big, gasPrice *hexutil.Big) (common.Hash, error) {
+	input, err := intAbi.ChainABI.Pack(intAbi.WithdrawReward.String(), delegateAddress, amount)
 	if err != nil {
 		return common.Hash{}, err
 	}
@@ -1787,20 +1786,6 @@ func (api *PublicINTAPI) CheckCandidate(ctx context.Context, address common.Addr
 	return fields, state.Error()
 }
 
-//func (api *PublicINTAPI) GetForbiddenStatus(ctx context.Context, address common.Address, blockNr rpc.BlockNumber) (map[string]interface{}, error) {
-//	state, _, err := api.b.StateAndHeaderByNumber(ctx, blockNr)
-//	if state == nil || err != nil {
-//		return nil, err
-//	}
-//
-//	fields := map[string]interface{}{
-//		"forbidden":      state.GetForbidden(address),
-//		"forbiddenEpoch": state.GetForbiddenTime(address),
-//		"blocks":         state.GetMinedBlocks(address),
-//	}
-//	return fields, state.Error()
-//}
-
 func (api *PublicINTAPI) SetCommission(ctx context.Context, from common.Address, commission uint8, gasPrice *hexutil.Big) (common.Hash, error) {
 	input, err := intAbi.ChainABI.Pack(intAbi.SetCommission.String(), commission)
 	if err != nil {
@@ -1843,26 +1828,26 @@ func (api *PublicINTAPI) EditValidator(ctx context.Context, from common.Address,
 	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
 }
 
-//func (api *PublicINTAPI) UnForbidden(ctx context.Context, from common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
-//	input, err := intAbi.ChainABI.Pack(intAbi.UnForbidden.String())
-//	if err != nil {
-//		return common.Hash{}, err
-//	}
-//
-//	defaultGas := intAbi.UnForbidden.RequiredGas()
-//
-//	args := SendTxArgs{
-//		From:     from,
-//		To:       &intAbi.ChainContractMagicAddr,
-//		Gas:      (*hexutil.Uint64)(&defaultGas),
-//		GasPrice: gasPrice,
-//		Value:    nil,
-//		Input:    (*hexutil.Bytes)(&input),
-//		Nonce:    nil,
-//	}
-//
-//	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
-//}
+func (api *PublicINTAPI) SetAddress(ctx context.Context, from, fAddress common.Address, gasPrice *hexutil.Big) (common.Hash, error) {
+	input, err := intAbi.ChainABI.Pack(intAbi.SetAddress.String(), fAddress)
+	if err != nil {
+		return common.Hash{}, err
+	}
+
+	defaultGas := intAbi.SetAddress.RequiredGas()
+
+	args := SendTxArgs{
+		From:     from,
+		To:       &intAbi.ChainContractMagicAddr,
+		Gas:      (*hexutil.Uint64)(&defaultGas),
+		GasPrice: gasPrice,
+		Value:    nil,
+		Input:    (*hexutil.Bytes)(&input),
+		Nonce:    nil,
+	}
+
+	return SendTransaction(ctx, args, api.am, api.b, api.nonceLock)
+}
 
 func init() {
 	// Withdraw reward
@@ -1895,6 +1880,10 @@ func init() {
 	// UnForbidden
 	//core.RegisterValidateCb(intAbi.UnForbidden, unForbiddenValidateCb)
 	//core.RegisterApplyCb(intAbi.UnForbidden, unForbiddenApplyCb)
+
+	// Set Address
+	core.RegisterValidateCb(intAbi.SetAddress, setAddressValidateCb)
+	core.RegisterApplyCb(intAbi.SetAddress, setAddressApplyCb)
 }
 
 func withdrawRewardValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
@@ -1915,9 +1904,9 @@ func withdrawRewardApplyCb(tx *types.Transaction, state *state.StateDB, bc *core
 		return err
 	}
 
-	reward := state.GetRewardBalanceByDelegateAddress(from, args.DelegateAddress)
-	state.SubRewardBalanceByDelegateAddress(from, args.DelegateAddress, reward)
-	state.AddBalance(from, reward)
+	//reward := state.GetRewardBalanceByDelegateAddress(from, args.DelegateAddress)
+	state.SubRewardBalanceByDelegateAddress(from, args.DelegateAddress, args.Amount)
+	state.AddBalance(from, args.Amount)
 
 	return nil
 }
@@ -1936,9 +1925,9 @@ func withDrawRewardValidation(from common.Address, tx *types.Transaction, state 
 		return nil, fmt.Errorf("have no reward to withdraw")
 	}
 
-	//if args.Amount.Cmp(reward) == 1 {
-	//	return nil, fmt.Errorf("reward balance not enough, withdraw amount %v, but balance %v, delegate address %v", args.Amount, reward, args.DelegateAddress)
-	//}
+	if args.Amount.Cmp(reward) == 1 {
+		return nil, fmt.Errorf("reward balance not enough, withdraw amount %v, but balance %v, delegate address %v", args.Amount, reward, args.DelegateAddress)
+	}
 	return &args, nil
 }
 
@@ -1975,11 +1964,9 @@ func registerApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 
 	var blsPK goCrypto.BLSPubKey
 	copy(blsPK[:], args.Pubkey)
-	fmt.Printf("register pubkey unmarshal json start\n")
 	if verror != nil {
 		return verror
 	}
-	fmt.Printf("register pubkey %v\n", blsPK)
 	state.ApplyForCandidate(from, blsPK.KeyString(), args.Commission)
 
 	// mark address candidate
@@ -2077,13 +2064,6 @@ func unRegisterApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Blo
 
 	state.CancelCandidate(from, allRefund)
 
-	//fmt.Printf("candidate set bug, unregiser clear candidate before\n")
-	//fmt.Printf("candidate set bug, unregiser clear candidate before %v\n", state.GetCandidateSet())
-	//// remove address form candidate set
-	//state.ClearCandidateSetByAddress(from)
-	//fmt.Printf("candidate set bug, unregiser clear candidate after\n")
-	//fmt.Printf("candidate set bug, unregiser clear candidate after %v\n", state.GetCandidateSet())
-
 	return nil
 }
 
@@ -2147,13 +2127,10 @@ func delegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Block
 	// Add Balance to Candidate's Proxied Balance
 	state.AddProxiedBalanceByUser(args.Candidate, from, amount)
 
-	// if forbidden, don't add to next epoch validator vote set
-	//if !state.GetForbidden(from) {
 	verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate, ops)
 	if verror != nil {
 		return verror
 	}
-	//}
 
 	return nil
 }
@@ -2342,6 +2319,42 @@ func setCommissionValidation(from common.Address, tx *types.Transaction, state *
 	return &args, nil
 }
 
+func setAddressValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
+	from := derivedAddressFromTx(tx)
+	_, err := setAddressValidation(from, tx, state, bc)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func setAddressApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
+	from := derivedAddressFromTx(tx)
+	args, err := setAddressValidation(from, tx, state, bc)
+	if err != nil {
+		return err
+	}
+
+	state.SetAddress(from, args.FAddress)
+
+	return nil
+}
+
+func setAddressValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.SetAddressArgs, error) {
+	if !state.IsCandidate(from) {
+		return nil, core.ErrNotCandidate
+	}
+
+	var args intAbi.SetAddressArgs
+	data := tx.Data()
+	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.SetAddress.String(), data[4:]); err != nil {
+		return nil, err
+	}
+
+	return &args, nil
+}
+
 func editValidatorValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
 	from := derivedAddressFromTx(tx)
 	if !state.IsCandidate(from) {
@@ -2364,62 +2377,6 @@ func editValidatorValidateCb(tx *types.Transaction, state *state.StateDB, bc *co
 
 	return nil
 }
-
-//func unForbiddenValidateCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) error {
-//	from := derivedAddressFromTx(tx)
-//
-//	err := unForbiddenValidation(from, state, bc)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
-
-//func unForbiddenApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.BlockChain, ops *types.PendingOps) error {
-//	from := derivedAddressFromTx(tx)
-//	err := unForbiddenValidation(from, state, bc)
-//	if err != nil {
-//		return err
-//	}
-//
-//	state.SetForbidden(from, false)
-//
-//	// remove address from forbidden set
-//	state.ClearForbiddenSetByAddress(from)
-//
-//	return nil
-//}
-
-//func unForbiddenValidation(from common.Address, state *state.StateDB, bc *core.BlockChain) error {
-//	if !state.IsCandidate(from) {
-//		return core.ErrNotCandidate
-//	}
-//
-//	//ep, err := getEpoch(bc)
-//	//if err != nil {
-//	//	return err
-//	//}
-//
-//	// block height validation
-//	verror := updateValidation(bc)
-//	if verror != nil {
-//		return verror
-//	}
-//
-//	if !state.GetForbidden(from) {
-//		return fmt.Errorf("should not unforbidden")
-//	}
-//
-//	forbiddenEpoch := state.GetForbiddenTime(from)
-//	fmt.Printf("Unforbiddenden validation, forbidden epoch %v\n", forbiddenEpoch)
-//
-//	if forbiddenEpoch.Cmp(common.Big0) == 1 {
-//		return fmt.Errorf("please unforbidden %v epoch later", forbiddenEpoch)
-//	}
-//
-//	return nil
-//}
 
 func concatCopyPreAllocate(slices [][]byte) []byte {
 	var totalLen int
@@ -2485,9 +2442,9 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 		return errors.New("validator voting power can not be negative")
 	}
 
-	fmt.Printf("update next epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
+	//fmt.Printf("update next epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
 	currentEpochVoteSet := ep.GetEpochValidatorVoteSet()
-	fmt.Printf("update next epoch current epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
+	//fmt.Printf("update next epoch current epoch voteset %v\n", ep.GetEpochValidatorVoteSet())
 
 	// whether update next epoch vote set
 	if currentEpochVoteSet == nil {
@@ -2509,13 +2466,14 @@ func updateNextEpochValidatorVoteSet(tx *types.Transaction, state *state.StateDB
 
 	// update is true and the address is candidate, then update next epoch validator vote set
 	if update && state.IsCandidate(candidate) {
+		// no need move
 		// Move delegate amount first if Candidate
-		state.ForEachProxied(candidate, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
-			// Move Proxied Amount to Deposit Proxied Amount
-			state.SubProxiedBalanceByUser(candidate, key, proxiedBalance)
-			state.AddDepositProxiedBalanceByUser(candidate, key, proxiedBalance)
-			return true
-		})
+		//state.ForEachProxied(candidate, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
+		//	// Move Proxied Amount to Deposit Proxied Amount
+		//	state.SubProxiedBalanceByUser(candidate, key, proxiedBalance)
+		//	state.AddDepositProxiedBalanceByUser(candidate, key, proxiedBalance)
+		//	return true
+		//})
 
 		var pubkey string
 		pubkey = state.GetPubkey(candidate)

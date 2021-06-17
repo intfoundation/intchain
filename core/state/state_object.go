@@ -54,7 +54,7 @@ func (self Storage) Copy() Storage {
 	return cpy
 }
 
-// stateObject represents an Ethereum account which is being modified.
+// stateObject represents an INT Chain account which is being modified.
 //
 // The usage pattern is as follows:
 // First you need to obtain a state object.
@@ -62,7 +62,7 @@ func (self Storage) Copy() Storage {
 // Finally, call CommitTrie to write the modified storage trie into a database.
 type stateObject struct {
 	address  common.Address
-	addrHash common.Hash // hash of ethereum address of the account
+	addrHash common.Hash // hash of intchain address of the account
 	data     Account
 	db       *StateDB
 
@@ -111,7 +111,7 @@ func (s *stateObject) empty() bool {
 	return s.data.Nonce == 0 && s.data.Balance.Sign() == 0 && bytes.Equal(s.data.CodeHash, emptyCodeHash) && s.data.DepositBalance.Sign() == 0 && len(s.data.ChildChainDepositBalance) == 0 && s.data.ChainBalance.Sign() == 0 && s.data.DelegateBalance.Sign() == 0 && s.data.ProxiedBalance.Sign() == 0 && s.data.DepositProxiedBalance.Sign() == 0 && s.data.PendingRefundBalance.Sign() == 0 && s.data.AvailableRewardBalance.Sign() == 0
 }
 
-// Account is the Ethereum consensus representation of accounts.
+// Account is the INT Chain consensus representation of accounts.
 // These objects are stored in the main account trie.
 type Account struct {
 	Nonce                    uint64
@@ -131,12 +131,13 @@ type Account struct {
 	PendingRefundBalance  *big.Int    // the accumulative balance which other user try to cancel their delegate balance (this balance will be refund to user's address after epoch end)
 	ProxiedRoot           common.Hash // merkle root of the Proxied trie
 	// Candidate
-	Candidate     bool     // flag for Account, true indicate the account has been applied for the Delegation Candidate
-	Commission    uint8    // commission percentage of Delegation Candidate (0-100)
-	BlockTime     *big.Int // number for mined blocks current epoch
-	ForbiddenTime *big.Int // timestamp for last consensus block
-	IsForbidden   bool     // candidate is forbidden or not
-	Pubkey        string
+	Candidate  bool  // flag for Account, true indicate the account has been applied for the Delegation Candidate
+	Commission uint8 // commission percentage of Delegation Candidate (0-100)
+	//BlockTime     *big.Int // number for mined blocks current epoch
+	//ForbiddenTime *big.Int // timestamp for last consensus block
+	//IsForbidden   bool     // candidate is forbidden or not
+	Pubkey   string
+	FAddress common.Address
 
 	// Reward
 	RewardBalance          *big.Int    // the accumulative reward balance for this account
@@ -178,13 +179,13 @@ func newObject(db *StateDB, address common.Address, data Account, onDirty func(a
 		data.AvailableRewardBalance = new(big.Int)
 	}
 
-	if data.BlockTime == nil {
-		data.BlockTime = new(big.Int)
-	}
-
-	if data.ForbiddenTime == nil {
-		data.ForbiddenTime = new(big.Int)
-	}
+	//if data.BlockTime == nil {
+	//	data.BlockTime = new(big.Int)
+	//}
+	//
+	//if data.ForbiddenTime == nil {
+	//	data.ForbiddenTime = new(big.Int)
+	//}
 
 	if data.CodeHash == nil {
 		data.CodeHash = emptyCodeHash
@@ -693,4 +694,25 @@ func (self *stateObject) Nonce() uint64 {
 // interface. Interfaces are awesome.
 func (self *stateObject) Value() *big.Int {
 	panic("Value on stateObject should never be called")
+}
+
+func (self *stateObject) SetAddress(address common.Address) {
+	self.db.journal = append(self.db.journal, fAddressChange{
+		account: &self.address,
+		prev:    self.data.FAddress,
+	})
+
+	self.setAddress(address)
+}
+
+func (self *stateObject) setAddress(address common.Address) {
+	self.data.FAddress = address
+	if self.onDirty != nil {
+		self.onDirty(self.Address())
+		self.onDirty = nil
+	}
+}
+
+func (self *stateObject) GetAddress() common.Address {
+	return self.data.FAddress
 }
