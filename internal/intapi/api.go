@@ -2342,10 +2342,6 @@ func setAddressApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Blo
 }
 
 func setAddressValidation(from common.Address, tx *types.Transaction, state *state.StateDB, bc *core.BlockChain) (*intAbi.SetAddressArgs, error) {
-	if !state.IsCandidate(from) {
-		return nil, core.ErrNotCandidate
-	}
-
 	var args intAbi.SetAddressArgs
 	data := tx.Data()
 	if err := intAbi.ChainABI.UnpackMethodInputs(&args, intAbi.SetAddress.String(), data[4:]); err != nil {
