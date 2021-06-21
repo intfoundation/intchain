@@ -2242,6 +2242,10 @@ func unDelegateValidation(from common.Address, tx *types.Transaction, state *sta
 		return nil, err
 	}
 
+	if args.Amount.Sign() == -1 {
+		return nil, fmt.Errorf("undelegate amount can not be negative")
+	}
+
 	// Check Self Address
 	if from == args.Candidate {
 		return nil, core.ErrCancelSelfDelegate
