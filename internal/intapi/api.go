@@ -1925,6 +1925,10 @@ func withDrawRewardValidation(from common.Address, tx *types.Transaction, state 
 		return nil, fmt.Errorf("have no reward to withdraw")
 	}
 
+	if args.Amount.Sign() == -1 {
+		return nil, fmt.Errorf("widthdraw amount can not be negative")
+	}
+
 	if args.Amount.Cmp(reward) == 1 {
 		return nil, fmt.Errorf("reward balance not enough, withdraw amount %v, but balance %v, delegate address %v", args.Amount, reward, args.DelegateAddress)
 	}
