@@ -525,7 +525,7 @@ web3._extend({
 		new web3._extend.Method({
 			name: 'withdrawReward',
 			call: 'int_withdrawReward',
-			params: 3,
+			params: 4,
 			inputFormatter: [web3._extend.formatters.inputAddressFormatter, web3._extend.formatters.inputAddressFormatter, null, null]
 		}),
 		new web3._extend.Method({
@@ -622,7 +622,7 @@ web3._extend({
 			name: 'register',
 			call: 'int_register',
 			params: 6,
-			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null, null, null]
+			inputFormatter: [web3._extend.formatters.inputAddressFormatter, null, null, null, null]
 		}),
 		new web3._extend.Method({
 			name: 'unRegister',

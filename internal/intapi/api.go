@@ -1668,7 +1668,7 @@ func (s *PublicINTAPI) SignAddress(from common.Address, consensusPrivateKey hexu
 }
 
 func (api *PublicINTAPI) WithdrawReward(ctx context.Context, from common.Address, delegateAddress common.Address, amount *hexutil.Big, gasPrice *hexutil.Big) (common.Hash, error) {
-	input, err := intAbi.ChainABI.Pack(intAbi.WithdrawReward.String(), delegateAddress, amount)
+	input, err := intAbi.ChainABI.Pack(intAbi.WithdrawReward.String(), delegateAddress, (*big.Int)(amount))
 	if err != nil {
 		return common.Hash{}, err
 	}
