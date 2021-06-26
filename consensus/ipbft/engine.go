@@ -476,6 +476,7 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	}
 
 	curBlockNumber := header.Number.Uint64()
+	fmt.Printf("IPBFT Finalize, curBlockNumber: %v, backend: %v, sb.GetEpoch: %v", curBlockNumber, sb, sb.GetEpoch())
 	epoch := sb.GetEpoch().GetEpochByBlockNumber(curBlockNumber)
 
 	genesisHeader := chain.GetBlockByNumber(1)

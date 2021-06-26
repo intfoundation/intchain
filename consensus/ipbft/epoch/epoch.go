@@ -697,7 +697,9 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 }
 
 func (epoch *Epoch) GetEpochByBlockNumber(blockNumber uint64) *Epoch {
-
+	fmt.Printf("GetEpochByBlockNumber, epoch: %v\n", epoch)
+	fmt.Printf("GetEpochByBlockNumber, epoch: %v\n", epoch.String())
+	fmt.Printf("GetEpochByBlockNumber, blockNumber: %v\n", blockNumber)
 	if blockNumber >= epoch.StartBlock && blockNumber <= epoch.EndBlock {
 		return epoch
 	}
