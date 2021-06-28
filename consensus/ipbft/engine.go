@@ -476,7 +476,6 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	}
 
 	curBlockNumber := header.Number.Uint64()
-	fmt.Printf("IPBFT Finalize, curBlockNumber: %v, backend: %v, sb.GetEpoch: %v", curBlockNumber, sb, sb.GetEpoch())
 	epoch := sb.GetEpoch().GetEpochByBlockNumber(curBlockNumber)
 
 	genesisHeader := chain.GetBlockByNumber(1)
@@ -744,7 +743,6 @@ func writeCommittedSeals(h *types.Header, tdmExtra *tdmTypes.TendermintExtra) er
 //
 // If the coinbase is Candidate, divide the rewards by weight
 func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, ep *epoch.Epoch, totalGasFee *big.Int) {
-	fmt.Printf("config: %v, state: %v, header: %v, ep: %v, totalGasFee: %v", config, state, header, ep, totalGasFee)
 	halfGasFee := big.NewInt(0).Div(totalGasFee, big.NewInt(2))
 	state.AddBalance(feeAddress, halfGasFee)
 

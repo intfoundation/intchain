@@ -334,14 +334,16 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			newCandidates := epoch.Candidates.Copy()
 
-			nextEpochVoteSet := epoch.GetNextEpoch().GetEpochValidatorVoteSet().Copy() // copy vote set
+			nextEpochVoteSet := epoch.nextEpoch.validatorVoteSet
 
 			if nextEpochVoteSet == nil {
 				nextEpochVoteSet = NewEpochValidatorVoteSet()
 				epoch.logger.Debugf("Should enter new epoch, next epoch vote set is nil, %v", nextEpochVoteSet)
 			}
 
-			for _, v := range newValidators.Validators {
+			// use newValidators copy instead of newValidators to avoid remove negative impact
+			newValidatorsCopy := newValidators.Copy()
+			for _, v := range newValidatorsCopy.Validators {
 				vAddr := common.BytesToAddress(v.Address)
 
 				totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
@@ -350,6 +352,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				if newVotingPower.Sign() == 0 {
 					newValidators.Remove(v.Address)
 
+					// TODO: it is impossible that the address was in the candidates list, so whether there is need to remove the address
 					// if candidate, remove
 					if newCandidates.HasAddress(v.Address) {
 						newCandidates.Remove(v.Address)
@@ -365,80 +368,6 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				fmt.Printf("ShouldEnterNewEpoch should vote out %v, address %x\n", shouldVoteOut, common.BytesToAddress(v.Address))
 				if shouldVoteOut {
 					hasVoteOut = true
-				}
-			}
-
-			//if has candidate and next epoch vote set not nil, add them to next epoch vote set
-			if len(newCandidates.Candidates) > 0 {
-				epoch.logger.Debugf("Add candidate to next epoch vote set before, candidate: %v", newCandidates.Candidates)
-
-				for _, v := range nextEpochVoteSet.Votes {
-					// first, delete from the candidates
-					if newCandidates.HasAddress(v.Address.Bytes()) {
-						newCandidates.Remove(v.Address.Bytes())
-					}
-				}
-
-				epoch.logger.Debugf("Add candidate to next epoch vote set after, candidate: %v", newCandidates.Candidates)
-
-				var voteArr []*EpochValidatorVote
-				for _, can := range newCandidates.Candidates {
-					addr := common.BytesToAddress(can.Address)
-					if state.IsCandidate(addr) {
-						// calculate the net proxied balance of this candidate
-						proxiedBalance := state.GetTotalProxiedBalance(addr)
-						// TODO if need add the deposit proxied balance
-						depositProxiedBalance := state.GetTotalDepositProxiedBalance(addr)
-						// TODO if need subtraction the pending refund balance
-						pendingRefundBalance := state.GetTotalPendingRefundBalance(addr)
-						netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
-
-						if netProxied.Sign() == -1 {
-							continue
-						}
-
-						// TODO whether need move the delegate amount now
-						// Move delegate amount first if Candidate
-						//state.ForEachProxied(addr, func(key common.Address, proxiedBalance, depositProxiedBalance, pendingRefundBalance *big.Int) bool {
-						//	// Move Proxied Amount to Deposit Proxied Amount
-						//	state.SubProxiedBalanceByUser(addr, key, proxiedBalance)
-						//	state.AddDepositProxiedBalanceByUser(addr, key, proxiedBalance)
-						//	return true
-						//})
-
-						pubkey := state.GetPubkey(addr)
-						pubkeyBytes := common.FromHex(pubkey)
-						if pubkey == "" || len(pubkeyBytes) != 128 {
-							continue
-						}
-						var blsPK goCrypto.BLSPubKey
-						copy(blsPK[:], pubkeyBytes)
-
-						vote := &EpochValidatorVote{
-							Address: addr,
-							Amount:  netProxied,
-							PubKey:  blsPK,
-							Salt:    "intchain",
-							TxHash:  common.Hash{},
-						}
-						voteArr = append(voteArr, vote)
-						fmt.Printf("vote %v\n", vote)
-					}
-				}
-
-				// Sort the vote by amount and address
-				sort.Slice(voteArr, func(i, j int) bool {
-					if voteArr[i].Amount.Cmp(voteArr[j].Amount) == 0 {
-						return compareAddress(voteArr[i].Address[:], voteArr[j].Address[:])
-					} else {
-						return voteArr[i].Amount.Cmp(voteArr[j].Amount) == 1
-					}
-				})
-
-				// Store the vote
-				for i := range voteArr {
-					epoch.logger.Debugf("address:%v, amount: %v\n", voteArr[i].Address, voteArr[i].Amount)
-					nextEpochVoteSet.StoreVote(voteArr[i])
 				}
 			}
 
@@ -491,7 +420,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				}
 			}
 
-			// remove from validators
+			// remove validators from candidates
 			for _, val := range newValidators.Validators {
 				if newCandidates.HasAddress(val.Address) {
 					newCandidates.Remove(val.Address)
@@ -548,7 +477,8 @@ func (epoch *Epoch) EnterNewEpoch(newValidators *tmTypes.ValidatorSet, newCandid
 // DryRunUpdateEpochValidatorSet Re-calculate the New Validator Set base on the current state db and vote set
 func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, candidates *tmTypes.CandidateSet, voteSet *EpochValidatorVoteSet) error {
 
-	for _, v := range validators.Validators {
+	validatorsCopy := validators.Copy()
+	for _, v := range validatorsCopy.Validators {
 		vAddr := common.BytesToAddress(v.Address)
 
 		// Deposit Proxied + Proxied - Pending Refund
@@ -564,7 +494,7 @@ func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validat
 		}
 	}
 
-	_, err := updateEpochValidatorSet(state, epochNo, validators, candidates, voteSet, false)
+	_, err := updateEpochValidatorSet(state, epochNo, validators, candidates, voteSet, true) // hasVoteOut always true
 	return err
 }
 
@@ -575,6 +505,72 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 	// Refund List will be validators contain from Vote (exit validator or less amount than previous amount) and Knockout after sort by amount
 	var refund []*tmTypes.RefundValidatorAmount
 	oldValSize, newValSize := validators.Size(), 0
+	fmt.Printf("updateEpochValidatorSet, validators: %v\n, candidates: %v\n, voteSet: %v", validators, candidates, voteSet)
+
+	//if has candidate and next epoch vote set not nil, add them to next epoch vote set
+	if len(candidates.Candidates) > 0 {
+		log.Debugf("Add candidate to next epoch vote set before, candidate: %v", candidates.Candidates)
+
+		for _, v := range voteSet.Votes {
+			// first, delete from the candidates
+			if candidates.HasAddress(v.Address.Bytes()) {
+				candidates.Remove(v.Address.Bytes())
+			}
+		}
+
+		log.Debugf("Add candidate to next epoch vote set after, candidate: %v", candidates.Candidates)
+
+		var voteArr []*EpochValidatorVote
+		for _, can := range candidates.Candidates {
+			addr := common.BytesToAddress(can.Address)
+			if state.IsCandidate(addr) {
+				// calculate the net proxied balance of this candidate
+				proxiedBalance := state.GetTotalProxiedBalance(addr)
+				// TODO if need add the deposit proxied balance
+				depositProxiedBalance := state.GetTotalDepositProxiedBalance(addr)
+				// TODO if need subtraction the pending refund balance
+				pendingRefundBalance := state.GetTotalPendingRefundBalance(addr)
+				netProxied := new(big.Int).Sub(new(big.Int).Add(proxiedBalance, depositProxiedBalance), pendingRefundBalance)
+
+				if netProxied.Sign() == -1 {
+					continue
+				}
+
+				pubkey := state.GetPubkey(addr)
+				pubkeyBytes := common.FromHex(pubkey)
+				if pubkey == "" || len(pubkeyBytes) != 128 {
+					continue
+				}
+				var blsPK goCrypto.BLSPubKey
+				copy(blsPK[:], pubkeyBytes)
+
+				vote := &EpochValidatorVote{
+					Address: addr,
+					Amount:  netProxied,
+					PubKey:  blsPK,
+					Salt:    "intchain",
+					TxHash:  common.Hash{},
+				}
+				voteArr = append(voteArr, vote)
+				fmt.Printf("vote %v\n", vote)
+			}
+		}
+
+		// Sort the vote by amount and address
+		sort.Slice(voteArr, func(i, j int) bool {
+			if voteArr[i].Amount.Cmp(voteArr[j].Amount) == 0 {
+				return compareAddress(voteArr[i].Address[:], voteArr[j].Address[:])
+			} else {
+				return voteArr[i].Amount.Cmp(voteArr[j].Amount) == 1
+			}
+		})
+
+		// Store the vote
+		for i := range voteArr {
+			log.Debugf("address:%v, amount: %v\n", voteArr[i].Address, voteArr[i].Amount)
+			voteSet.StoreVote(voteArr[i])
+		}
+	}
 
 	// Process the Vote if vote set not empty
 	if !voteSet.IsEmpty() {
@@ -589,28 +585,29 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 				// Add the new validator
 				added := validators.Add(tmTypes.NewValidator(v.Address[:], v.PubKey, v.Amount))
 				if !added {
-					return nil, fmt.Errorf("Failed to add new validator %v with voting power %d", v.Address, v.Amount)
+					fmt.Errorf("Failed to add new validator %v with voting power %d", v.Address, v.Amount)
+				} else {
+					newValSize++
 				}
-				newValSize++
 			} else {
 				// If should vote out, bypass this vote
 				shouldVoteOut := !state.CheckProposedInEpoch(v.Address, epochNo)
 				fmt.Printf("updateEpochValidatorSet vote set not empty,  should vote out %v, address %x\n", shouldVoteOut, v.Address)
 				if shouldVoteOut {
-					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: nil, Voteout: true})
-
 					_, removed := validators.Remove(validator.Address)
-
 					if !removed {
-						return nil, fmt.Errorf("Failed to remove validator %x", validator.Address)
+						fmt.Errorf("Failed to remove validator %x", validator.Address)
+					} else {
+						refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: nil, Voteout: true})
 					}
 				} else if v.Amount.Sign() == 0 {
 					fmt.Printf("updateEpochValidatorSet amount is zero\n")
-					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: validator.VotingPower, Voteout: false})
 					// Remove the Validator
 					_, removed := validators.Remove(validator.Address)
 					if !removed {
 						return nil, fmt.Errorf("Failed to remove validator %v", validator.Address)
+					} else {
+						refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: validator.VotingPower, Voteout: false})
 					}
 				} else {
 					//refund if new amount less than the voting power
@@ -624,26 +621,27 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 					validator.VotingPower = v.Amount
 					updated := validators.Update(validator)
 					if !updated {
-						return nil, fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
+						fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
 					}
 				}
 			}
 		}
 	}
 
+	// TODO: if need hasVoteOut
 	// if there is no vote set, but should vote out validator
-	if voteSet.IsEmpty() && hasVoteOut {
-		for _, v := range validators.Validators {
+	if hasVoteOut {
+		validatorsCopy := validators.Copy()
+		for _, v := range validatorsCopy.Validators {
 			vAddr := common.BytesToAddress(v.Address)
 			shouldVoteOut := !state.CheckProposedInEpoch(vAddr, epochNo)
 			fmt.Printf("updateEpochValidatorSet empty, should vote out %v, address %x\n", shouldVoteOut, v.Address)
 			if shouldVoteOut {
-				refund = append(refund, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: nil, Voteout: true})
-
 				_, removed := validators.Remove(v.Address)
-
 				if !removed {
-					return nil, fmt.Errorf("Failed to remove validator %x", vAddr)
+					fmt.Errorf("Failed to remove validator %x", vAddr)
+				} else {
+					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: nil, Voteout: true})
 				}
 			}
 			fmt.Printf("updateEpochValidatorSet empty, after should vote out %v, address %x\n", shouldVoteOut, v.Address)
@@ -697,9 +695,6 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 }
 
 func (epoch *Epoch) GetEpochByBlockNumber(blockNumber uint64) *Epoch {
-	fmt.Printf("GetEpochByBlockNumber, epoch: %v\n", epoch)
-	fmt.Printf("GetEpochByBlockNumber, epoch: %v\n", epoch.String())
-	fmt.Printf("GetEpochByBlockNumber, blockNumber: %v\n", blockNumber)
 	if blockNumber >= epoch.StartBlock && blockNumber <= epoch.EndBlock {
 		return epoch
 	}

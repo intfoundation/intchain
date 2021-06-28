@@ -163,7 +163,7 @@ func (api *API) GetNextEpochCandidates() ([]*tdmTypes.EpochCandidate, error) {
 		}
 
 		candidates := make([]*tdmTypes.EpochCandidate, 0, len(nextCandidates.Candidates))
-		for _, val := range nextValidators.Validators {
+		for _, val := range nextCandidates.Candidates {
 			candidates = append(candidates, &tdmTypes.EpochCandidate{
 				Address: common.BytesToAddress(val.Address),
 			})
