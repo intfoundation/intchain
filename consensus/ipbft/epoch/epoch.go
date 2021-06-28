@@ -334,7 +334,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			newCandidates := epoch.Candidates.Copy()
 
-			nextEpochVoteSet := epoch.nextEpoch.validatorVoteSet
+			nextEpochVoteSet := epoch.nextEpoch.validatorVoteSet.Copy()
 
 			if nextEpochVoteSet == nil {
 				nextEpochVoteSet = NewEpochValidatorVoteSet()
