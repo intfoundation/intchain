@@ -132,25 +132,34 @@ func TestVoteSetRemove(t *testing.T) {
 			Address:     common.HexToAddress("0x56db076b7d71d2b3a4fcabbe9df2d3a06e5611ec").Bytes(),
 			VotingPower: big.NewInt(1),
 		},
-		{
-			Address:     common.HexToAddress("0xe9e13d382f366692bedda1d18c000a18180d410c").Bytes(),
-			VotingPower: big.NewInt(1),
-		},
 	}
 
 	validatorSet := tmTypes.NewValidatorSet(validatorsArr)
 	fmt.Printf("validator set: %v\n", validatorSet)
-	for _, val := range validatorSet.Validators {
-		addr := common.BytesToAddress(val.Address)
-		t.Logf("address: %X", addr)
-		t.Logf("len 1: %v, %v", len(validatorSet.Validators), cap(validatorSet.Validators))
-		t.Logf("ten address: %X", common.BytesToAddress(validatorSet.Validators[10].Address))
+	//for _, val := range validatorSet.Validators {
+	//	addr := common.BytesToAddress(val.Address)
+	//	t.Logf("address: %X, %v", addr, len(validatorSet.Validators))
+	//	//t.Logf("len 1: %v, %v", len(validatorSet.Validators), cap(validatorSet.Validators))
+	//	if addr == common.HexToAddress("0x17d28a143d48f325e5375fe54e427178e0ae5945") ||
+	//		addr == common.HexToAddress("0x56db076b7d71d2b3a4fcabbe9df2d3a06e5611ec"){
+	//		validatorSet.Remove(val.Address)
+	//		//fmt.Printf("validator set: %v\n", validatorSet)
+	//	}
+	//	//t.Logf("len 2: %v, %v", len(validatorSet.Validators), cap(validatorSet.Validators))
+	//}
+	fmt.Printf("\n\n\n")
+	for i := 0; i < len(validatorSet.Validators); i++ {
+		fmt.Printf("validator set: %v\n", validatorSet)
+		addr := common.BytesToAddress(validatorSet.Validators[i].Address)
+		t.Logf("address: %X, %v", addr, len(validatorSet.Validators))
+		//t.Logf("len 1: %v, %v", len(validatorSet.Validators), cap(validatorSet.Validators))
 		if addr == common.HexToAddress("0x17d28a143d48f325e5375fe54e427178e0ae5945") ||
-			addr == common.HexToAddress("0x56db076b7d71d2b3a4fcabbe9df2d3a06e5611ec") ||
-			addr == common.HexToAddress("0xe9e13d382f366692bedda1d18c000a18180d410c") {
-			validatorSet.Remove(val.Address)
+			addr == common.HexToAddress("0x56db076b7d71d2b3a4fcabbe9df2d3a06e5611ec") {
+			validatorSet.Remove(validatorSet.Validators[i].Address)
 			//fmt.Printf("validator set: %v\n", validatorSet)
+			i--
 		}
-		t.Logf("len 2: %v, %v", len(validatorSet.Validators), cap(validatorSet.Validators))
+
+		fmt.Print(fmt.Errorf("error"))
 	}
 }

@@ -341,9 +341,9 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 				epoch.logger.Debugf("Should enter new epoch, next epoch vote set is nil, %v", nextEpochVoteSet)
 			}
 
-			// use newValidators copy instead of newValidators to avoid remove negative impact
-			newValidatorsCopy := newValidators.Copy()
-			for _, v := range newValidatorsCopy.Validators {
+			for i := 0; i < len(newValidators.Validators); i++ {
+				//for _, v := range newValidators.Validators {
+				v := newValidators.Validators[i]
 				vAddr := common.BytesToAddress(v.Address)
 
 				totalProxiedBalance := new(big.Int).Add(state.GetTotalProxiedBalance(vAddr), state.GetTotalDepositProxiedBalance(vAddr))
@@ -357,6 +357,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 					if newCandidates.HasAddress(v.Address) {
 						newCandidates.Remove(v.Address)
 					}
+					i--
 				} else {
 					v.VotingPower = newVotingPower
 				}
@@ -476,9 +477,9 @@ func (epoch *Epoch) EnterNewEpoch(newValidators *tmTypes.ValidatorSet, newCandid
 
 // DryRunUpdateEpochValidatorSet Re-calculate the New Validator Set base on the current state db and vote set
 func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, candidates *tmTypes.CandidateSet, voteSet *EpochValidatorVoteSet) error {
-
-	validatorsCopy := validators.Copy()
-	for _, v := range validatorsCopy.Validators {
+	for i := 0; i < len(validators.Validators); i++ {
+		//for _, v := range validators.Validators {
+		v := validators.Validators[i]
 		vAddr := common.BytesToAddress(v.Address)
 
 		// Deposit Proxied + Proxied - Pending Refund
@@ -489,6 +490,7 @@ func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validat
 		newVotingPower := new(big.Int).Add(totalProxiedBalance, state.GetDepositBalance(vAddr))
 		if newVotingPower.Sign() == 0 {
 			validators.Remove(v.Address)
+			i--
 		} else {
 			v.VotingPower = newVotingPower
 		}
@@ -506,6 +508,28 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 	var refund []*tmTypes.RefundValidatorAmount
 	oldValSize, newValSize := validators.Size(), 0
 	fmt.Printf("updateEpochValidatorSet, validators: %v\n, candidates: %v\n, voteSet: %v", validators, candidates, voteSet)
+
+	// TODO: if need hasVoteOut
+	// if there is no vote set, but should vote out validator
+	if hasVoteOut {
+		for i := 0; i < len(validators.Validators); i++ {
+			//for _, v := range validators.Validators {
+			v := validators.Validators[i]
+			vAddr := common.BytesToAddress(v.Address)
+			shouldVoteOut := !state.CheckProposedInEpoch(vAddr, epochNo)
+			fmt.Printf("updateEpochValidatorSet, should vote out %v, address %x\n", shouldVoteOut, v.Address)
+			if shouldVoteOut {
+				_, removed := validators.Remove(v.Address)
+				if !removed {
+					fmt.Print(fmt.Errorf("Failed to remove validator %x", vAddr))
+				} else {
+					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: nil, Voteout: true})
+					i--
+				}
+			}
+			fmt.Printf("updateEpochValidatorSet, after should vote out %v, address %x\n", shouldVoteOut, v.Address)
+		}
+	}
 
 	//if has candidate and next epoch vote set not nil, add them to next epoch vote set
 	if len(candidates.Candidates) > 0 {
@@ -585,7 +609,7 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 				// Add the new validator
 				added := validators.Add(tmTypes.NewValidator(v.Address[:], v.PubKey, v.Amount))
 				if !added {
-					fmt.Errorf("Failed to add new validator %v with voting power %d", v.Address, v.Amount)
+					fmt.Print(fmt.Errorf("Failed to add new validator %v with voting power %d", v.Address, v.Amount))
 				} else {
 					newValSize++
 				}
@@ -596,7 +620,7 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 				if shouldVoteOut {
 					_, removed := validators.Remove(validator.Address)
 					if !removed {
-						fmt.Errorf("Failed to remove validator %x", validator.Address)
+						fmt.Print(fmt.Errorf("Failed to remove validator %x", validator.Address))
 					} else {
 						refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: nil, Voteout: true})
 					}
@@ -605,7 +629,7 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 					// Remove the Validator
 					_, removed := validators.Remove(validator.Address)
 					if !removed {
-						return nil, fmt.Errorf("Failed to remove validator %v", validator.Address)
+						fmt.Print(fmt.Errorf("Failed to remove validator %v", validator.Address))
 					} else {
 						refund = append(refund, &tmTypes.RefundValidatorAmount{Address: v.Address, Amount: validator.VotingPower, Voteout: false})
 					}
@@ -621,30 +645,10 @@ func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *t
 					validator.VotingPower = v.Amount
 					updated := validators.Update(validator)
 					if !updated {
-						fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount)
+						fmt.Print(fmt.Errorf("Failed to update validator %v with voting power %d", validator.Address, v.Amount))
 					}
 				}
 			}
-		}
-	}
-
-	// TODO: if need hasVoteOut
-	// if there is no vote set, but should vote out validator
-	if hasVoteOut {
-		validatorsCopy := validators.Copy()
-		for _, v := range validatorsCopy.Validators {
-			vAddr := common.BytesToAddress(v.Address)
-			shouldVoteOut := !state.CheckProposedInEpoch(vAddr, epochNo)
-			fmt.Printf("updateEpochValidatorSet empty, should vote out %v, address %x\n", shouldVoteOut, v.Address)
-			if shouldVoteOut {
-				_, removed := validators.Remove(v.Address)
-				if !removed {
-					fmt.Errorf("Failed to remove validator %x", vAddr)
-				} else {
-					refund = append(refund, &tmTypes.RefundValidatorAmount{Address: vAddr, Amount: nil, Voteout: true})
-				}
-			}
-			fmt.Printf("updateEpochValidatorSet empty, after should vote out %v, address %x\n", shouldVoteOut, v.Address)
 		}
 	}
 
@@ -747,6 +751,7 @@ func (epoch *Epoch) copy(copyPrevNext bool) *Epoch {
 		BlockGenerated:   epoch.BlockGenerated,
 		Status:           epoch.Status,
 		Validators:       epoch.Validators.Copy(),
+		Candidates:       epoch.Candidates.Copy(),
 		validatorVoteSet: epoch.validatorVoteSet.Copy(),
 
 		previousEpoch: previousEpoch,
