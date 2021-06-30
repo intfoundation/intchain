@@ -496,6 +496,11 @@ func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validat
 		}
 	}
 
+	if voteSet == nil {
+		fmt.Printf("DryRunUpdateEpochValidatorSet, voteSet is nil %v\n", voteSet)
+		voteSet = NewEpochValidatorVoteSet()
+	}
+
 	_, err := updateEpochValidatorSet(state, epochNo, validators, candidates, voteSet, true) // hasVoteOut always true
 	return err
 }
