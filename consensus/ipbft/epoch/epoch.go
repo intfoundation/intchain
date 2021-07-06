@@ -373,7 +373,7 @@ func (epoch *Epoch) ShouldEnterNewEpoch(height uint64, state *state.StateDB) (bo
 
 			// Update Validators with vote
 			//refundsUpdate, err := updateEpochValidatorSet(state, epoch.Number, newValidators, newCandidates, nextEpochVoteSet, hasVoteOut)
-			refundsUpdate, err := updateEpochValidatorSet(state, epoch.Number, newValidators, nextEpochVoteSet)
+			refundsUpdate, err := updateEpochValidatorSet(newValidators, nextEpochVoteSet)
 
 			if err != nil {
 				epoch.logger.Warn("Error changing validator set", "error", err)
@@ -476,7 +476,7 @@ func (epoch *Epoch) EnterNewEpoch(newValidators *tmTypes.ValidatorSet) (*Epoch, 
 }
 
 // DryRunUpdateEpochValidatorSet Re-calculate the New Validator Set base on the current state db and vote set
-func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet) error {
+func DryRunUpdateEpochValidatorSet(state *state.StateDB, validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet) error {
 	for i := 0; i < len(validators.Validators); i++ {
 		//for _, v := range validators.Validators {
 		v := validators.Validators[i]
@@ -502,13 +502,13 @@ func DryRunUpdateEpochValidatorSet(state *state.StateDB, epochNo uint64, validat
 	}
 
 	//_, err := updateEpochValidatorSet(state, epochNo, validators, candidates, voteSet, true) // hasVoteOut always true
-	_, err := updateEpochValidatorSet(state, epochNo, validators, voteSet) // hasVoteOut always true
+	_, err := updateEpochValidatorSet(validators, voteSet) // hasVoteOut always true
 	return err
 }
 
 // updateEpochValidatorSet Update the Current Epoch Validator by vote
 //
-func updateEpochValidatorSet(state *state.StateDB, epochNo uint64, validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet) ([]*tmTypes.RefundValidatorAmount, error) {
+func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet) ([]*tmTypes.RefundValidatorAmount, error) {
 
 	// Refund List will be validators contain from Vote (exit validator or less amount than previous amount) and Knockout after sort by amount
 	var refund []*tmTypes.RefundValidatorAmount
