@@ -3,7 +3,6 @@ package ipbft
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"github.com/hashicorp/golang-lru"
 	"github.com/intfoundation/go-wire"
 	"github.com/intfoundation/intchain/common"
@@ -500,11 +499,11 @@ func (sb *backend) Finalize(chain consensus.ChainReader, header *types.Header, s
 	//}
 
 	// Check the Epoch switch and update their account balance accordingly (Refund the Locked Balance)
-	if ok, newValidators, newCandidates, _ := epoch.ShouldEnterNewEpoch(header.Number.Uint64(), state); ok {
+	if ok, newValidators, _ := epoch.ShouldEnterNewEpoch(header.Number.Uint64(), state); ok {
 		ops.Append(&tdmTypes.SwitchEpochOp{
 			ChainId:       sb.chainConfig.IntChainId,
 			NewValidators: newValidators,
-			NewCandidates: newCandidates,
+			//NewCandidates: newCandidates,
 		})
 
 	}
@@ -853,10 +852,10 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		}
 	}
 
-	err := state.MarkProposedInEpoch(header.Coinbase, ep.Number)
-	if err != nil {
-		fmt.Printf("Mark validator proposed failed, error: %v\n", err)
-	}
+	//err := state.MarkProposedInEpoch(header.Coinbase, ep.Number)
+	//if err != nil {
+	//	fmt.Printf("Mark validator proposed failed, error: %v\n", err)
+	//}
 }
 
 //func divideRewardByEpoch(state *state.StateDB, addr common.Address, epochNumber uint64, reward *big.Int) {

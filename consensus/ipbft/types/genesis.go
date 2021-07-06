@@ -43,7 +43,7 @@ type OneEpochDoc struct {
 	EndBlock       uint64             `json:"end_block"`
 	Status         int                `json:"status"`
 	Validators     []GenesisValidator `json:"validators"`
-	Candidates     []GenesisCandidate `json:"candidates"`
+	//Candidates     []GenesisCandidate `json:"candidates"`
 }
 
 type RewardSchemeDoc struct {

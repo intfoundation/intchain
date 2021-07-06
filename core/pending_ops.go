@@ -42,7 +42,7 @@ func ApplyOp(op types.PendingOp, bc *BlockChain, cch CrossChainHelper) error {
 		return cch.SaveChildChainProofDataToMainChain(op.Data)
 	case *tmTypes.SwitchEpochOp:
 		eng := bc.engine.(consensus.IPBFT)
-		nextEp, err := eng.GetEpoch().EnterNewEpoch(op.NewValidators, op.NewCandidates)
+		nextEp, err := eng.GetEpoch().EnterNewEpoch(op.NewValidators)
 		if err == nil {
 			// Stop the Engine if we are not in the new validators
 			if !op.NewValidators.HasAddress(eng.PrivateValidator().Bytes()) && eng.IsStarted() {

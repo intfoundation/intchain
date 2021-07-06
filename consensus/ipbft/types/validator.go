@@ -94,7 +94,7 @@ type RefundValidatorAmount struct {
 type SwitchEpochOp struct {
 	ChainId       string
 	NewValidators *ValidatorSet
-	NewCandidates *CandidateSet
+	//NewCandidates *CandidateSet
 }
 
 func (op *SwitchEpochOp) Conflict(op1 ethTypes.PendingOp) bool {

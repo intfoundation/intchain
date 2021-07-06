@@ -91,7 +91,7 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 				// Validator set in next epoch will not finalize and send to main chain
 				nextEp := currentEpoch.GetNextEpoch()
 				nextEp.Validators = epochInBlock.Validators
-				nextEp.Candidates = epochInBlock.Candidates // add at 2021.06.28 by like
+				//nextEp.Candidates = epochInBlock.Candidates // add at 2021.06.28 by like
 				nextEp.Status = ep.EPOCH_VOTED_NOT_SAVED
 			}
 			currentEpoch.Save()
@@ -121,13 +121,13 @@ func autoStartMining(bc *core.BlockChain, block *ethTypes.Block) {
 		state, _ := bc.State()
 		epochNo := currentEpoch.Number
 		nextValidators := currentEpoch.Validators.Copy()
-		nextCandidates := currentEpoch.Candidates.Copy()
-		dryrunErr := ep.DryRunUpdateEpochValidatorSet(state, epochNo, nextValidators, nextCandidates, nextEp.GetEpochValidatorVoteSet())
+		//nextCandidates := currentEpoch.Candidates.Copy()
+		dryrunErr := ep.DryRunUpdateEpochValidatorSet(state, epochNo, nextValidators, nextEp.GetEpochValidatorVoteSet())
 		if dryrunErr != nil {
 			panic("can not update the validator set base on the vote, error: " + dryrunErr.Error())
 		}
 		nextEp.Validators = nextValidators
-		nextEp.Candidates = nextCandidates
+		//nextEp.Candidates = nextCandidates
 
 		if nextValidators.HasAddress(eng.PrivateValidator().Bytes()) && !eng.IsStarted() {
 			fmt.Printf("auto start mining first, post start mining event")
