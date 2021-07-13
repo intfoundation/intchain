@@ -227,14 +227,14 @@ var DefaultTestnetGenesisJSON = `{
 		}
 	},
 	"nonce": "0x0",
-	"timestamp": "0x60e40779",
+	"timestamp": "0x60ecf254",
 	"extraData": "0x",
 	"gasLimit": "0x5f5e100",
 	"difficulty": "0x1",
 	"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
 	"coinbase": "0x0000000000000000000000000000000000000000",
 	"alloc": {
-		"71776d0f0a75cf2f05b35cc3308e265985618323": {
+		"9fe77cb625d2aa7a974b4ee88c9095893da8c1a0": {
 			"balance": "0x29569e2db20e16b46000000",
 			"amount": "0x54b40b1f852bda000000"
 		}
