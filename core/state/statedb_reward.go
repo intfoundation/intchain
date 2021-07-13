@@ -41,27 +41,27 @@ func (self *StateDB) SubRewardBalance(addr common.Address, amount *big.Int) {
 // ----- AvailableRewardBalance (Total)
 
 // GetTotalAvailableRewardBalance retrieve the available reward balance from the given address or 0 if object not found
-func (self *StateDB) GetTotalAvailableRewardBalance(addr common.Address) *big.Int {
-	stateObject := self.getStateObject(addr)
-	if stateObject != nil {
-		return stateObject.AvailableRewardBalance()
-	}
-	return common.Big0
-}
-
-func (self *StateDB) AddAvailableRewardBalance(addr common.Address, amount *big.Int) {
-	stateObject := self.getStateObject(addr)
-	if stateObject != nil {
-		stateObject.AddAvailableRewardBalance(amount)
-	}
-}
-
-func (self *StateDB) SubAvailableRewardBalance(addr common.Address, amount *big.Int) {
-	stateObject := self.getStateObject(addr)
-	if stateObject != nil {
-		stateObject.SubAvailableRewardBalance(amount)
-	}
-}
+//func (self *StateDB) GetTotalAvailableRewardBalance(addr common.Address) *big.Int {
+//	stateObject := self.getStateObject(addr)
+//	if stateObject != nil {
+//		return stateObject.AvailableRewardBalance()
+//	}
+//	return common.Big0
+//}
+//
+//func (self *StateDB) AddAvailableRewardBalance(addr common.Address, amount *big.Int) {
+//	stateObject := self.getStateObject(addr)
+//	if stateObject != nil {
+//		stateObject.AddAvailableRewardBalance(amount)
+//	}
+//}
+//
+//func (self *StateDB) SubAvailableRewardBalance(addr common.Address, amount *big.Int) {
+//	stateObject := self.getStateObject(addr)
+//	if stateObject != nil {
+//		stateObject.SubAvailableRewardBalance(amount)
+//	}
+//}
 
 // ----- Reward Trie
 

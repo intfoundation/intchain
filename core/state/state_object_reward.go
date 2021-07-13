@@ -77,43 +77,43 @@ func (self *stateObject) RewardBalance() *big.Int {
 
 //  AvailableRewardBalance
 
-func (self *stateObject) AddAvailableRewardBalance(amount *big.Int) {
-	if amount.Sign() == 0 {
-		if self.empty() {
-			self.touch()
-		}
-		return
-	}
-	self.SetAvailableRewardBalance(new(big.Int).Add(self.AvailableRewardBalance(), amount))
-}
-
-func (self *stateObject) SubAvailableRewardBalance(amount *big.Int) {
-	if amount.Sign() == 0 {
-		return
-	}
-	self.SetAvailableRewardBalance(new(big.Int).Sub(self.AvailableRewardBalance(), amount))
-}
-
-func (self *stateObject) SetAvailableRewardBalance(amount *big.Int) {
-	self.db.journal = append(self.db.journal, availableRewardBalanceChange{
-		account: &self.address,
-		prev:    new(big.Int).Set(self.data.AvailableRewardBalance),
-	})
-
-	self.setAvailableRewardBalance(amount)
-}
-
-func (self *stateObject) setAvailableRewardBalance(amount *big.Int) {
-	self.data.AvailableRewardBalance = amount
-	if self.onDirty != nil {
-		self.onDirty(self.Address())
-		self.onDirty = nil
-	}
-}
-
-func (self *stateObject) AvailableRewardBalance() *big.Int {
-	return self.data.AvailableRewardBalance
-}
+//func (self *stateObject) AddAvailableRewardBalance(amount *big.Int) {
+//	if amount.Sign() == 0 {
+//		if self.empty() {
+//			self.touch()
+//		}
+//		return
+//	}
+//	self.SetAvailableRewardBalance(new(big.Int).Add(self.AvailableRewardBalance(), amount))
+//}
+//
+//func (self *stateObject) SubAvailableRewardBalance(amount *big.Int) {
+//	if amount.Sign() == 0 {
+//		return
+//	}
+//	self.SetAvailableRewardBalance(new(big.Int).Sub(self.AvailableRewardBalance(), amount))
+//}
+//
+//func (self *stateObject) SetAvailableRewardBalance(amount *big.Int) {
+//	self.db.journal = append(self.db.journal, availableRewardBalanceChange{
+//		account: &self.address,
+//		prev:    new(big.Int).Set(self.data.AvailableRewardBalance),
+//	})
+//
+//	self.setAvailableRewardBalance(amount)
+//}
+//
+//func (self *stateObject) setAvailableRewardBalance(amount *big.Int) {
+//	self.data.AvailableRewardBalance = amount
+//	if self.onDirty != nil {
+//		self.onDirty(self.Address())
+//		self.onDirty = nil
+//	}
+//}
+//
+//func (self *stateObject) AvailableRewardBalance() *big.Int {
+//	return self.data.AvailableRewardBalance
+//}
 
 // ----- Reward Trie
 

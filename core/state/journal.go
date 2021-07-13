@@ -80,10 +80,10 @@ type (
 		account *common.Address
 		prev    *big.Int
 	}
-	availableRewardBalanceChange struct {
-		account *common.Address
-		prev    *big.Int
-	}
+	//availableRewardBalanceChange struct {
+	//	account *common.Address
+	//	prev    *big.Int
+	//}
 
 	nonceChange struct {
 		account *common.Address
@@ -250,9 +250,9 @@ func (ch rewardBalanceChange) undo(s *StateDB) {
 	s.getStateObject(*ch.account).setRewardBalance(ch.prev)
 }
 
-func (ch availableRewardBalanceChange) undo(s *StateDB) {
-	s.getStateObject(*ch.account).setAvailableRewardBalance(ch.prev)
-}
+//func (ch availableRewardBalanceChange) undo(s *StateDB) {
+//	s.getStateObject(*ch.account).setAvailableRewardBalance(ch.prev)
+//}
 
 func (ch nonceChange) undo(s *StateDB) {
 	s.getStateObject(*ch.account).setNonce(ch.prev)

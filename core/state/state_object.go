@@ -108,7 +108,7 @@ type stateObject struct {
 
 // empty returns whether the account is considered empty.
 func (s *stateObject) empty() bool {
-	return s.data.Nonce == 0 && s.data.Balance.Sign() == 0 && bytes.Equal(s.data.CodeHash, emptyCodeHash) && s.data.DepositBalance.Sign() == 0 && len(s.data.ChildChainDepositBalance) == 0 && s.data.ChainBalance.Sign() == 0 && s.data.DelegateBalance.Sign() == 0 && s.data.ProxiedBalance.Sign() == 0 && s.data.DepositProxiedBalance.Sign() == 0 && s.data.PendingRefundBalance.Sign() == 0 && s.data.AvailableRewardBalance.Sign() == 0
+	return s.data.Nonce == 0 && s.data.Balance.Sign() == 0 && bytes.Equal(s.data.CodeHash, emptyCodeHash) && s.data.DepositBalance.Sign() == 0 && len(s.data.ChildChainDepositBalance) == 0 && s.data.ChainBalance.Sign() == 0 && s.data.DelegateBalance.Sign() == 0 && s.data.ProxiedBalance.Sign() == 0 && s.data.DepositProxiedBalance.Sign() == 0 && s.data.PendingRefundBalance.Sign() == 0
 }
 
 // Account is the INT Chain consensus representation of accounts.
@@ -140,9 +140,9 @@ type Account struct {
 	FAddress common.Address
 
 	// Reward
-	RewardBalance          *big.Int    // the accumulative reward balance for this account
-	AvailableRewardBalance *big.Int    // the available reward balance for this account
-	RewardRoot             common.Hash // merkle root of the Reward trie
+	RewardBalance *big.Int // the accumulative reward balance for this account
+	//AvailableRewardBalance *big.Int    // the available reward balance for this account
+	RewardRoot common.Hash // merkle root of the Reward trie
 
 }
 
@@ -175,9 +175,9 @@ func newObject(db *StateDB, address common.Address, data Account, onDirty func(a
 		data.RewardBalance = new(big.Int)
 	}
 
-	if data.AvailableRewardBalance == nil {
-		data.AvailableRewardBalance = new(big.Int)
-	}
+	//if data.AvailableRewardBalance == nil {
+	//	data.AvailableRewardBalance = new(big.Int)
+	//}
 
 	//if data.BlockTime == nil {
 	//	data.BlockTime = new(big.Int)
