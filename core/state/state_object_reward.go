@@ -9,7 +9,7 @@ import (
 )
 
 // ----- Type
-type Reward map[common.Address]*big.Int // key = Delegate Address, value = Reward Amount   TODO: whether the key of reward need to be point
+type Reward map[common.Address]*big.Int // key = Delegate Address, value = Reward Amount
 
 func (p Reward) String() (str string) {
 	for key, value := range p {
