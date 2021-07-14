@@ -22,7 +22,8 @@ func (p Reward) Copy() Reward {
 	cpy := make(Reward)
 	for key, value := range p {
 
-		cpy[key] = new(big.Int).Set(value)
+		//cpy[key] = new(big.Int).Set(value)
+		cpy[key] = value
 	}
 	return cpy
 }
