@@ -502,12 +502,11 @@ func DryRunUpdateEpochValidatorSet(state *state.StateDB, validators *tmTypes.Val
 	}
 
 	//_, err := updateEpochValidatorSet(state, epochNo, validators, candidates, voteSet, true) // hasVoteOut always true
-	_, err := updateEpochValidatorSet(validators, voteSet) // hasVoteOut always true
+	_, err := updateEpochValidatorSet(validators, voteSet)
 	return err
 }
 
 // updateEpochValidatorSet Update the Current Epoch Validator by vote
-//
 func updateEpochValidatorSet(validators *tmTypes.ValidatorSet, voteSet *EpochValidatorVoteSet) ([]*tmTypes.RefundValidatorAmount, error) {
 
 	// Refund List will be validators contain from Vote (exit validator or less amount than previous amount) and Knockout after sort by amount
@@ -796,13 +795,7 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 		"totalYear", totalYear)
 
 	// only use the current epoch to calculate the block time
-	//if epoch.previousEpoch != nil {
-	//	log.Infof("estimateForNextEpoch previous epoch, start time %v, end time %v", epoch.previousEpoch.StartTime.UnixNano(), epoch.previousEpoch.EndTime.UnixNano())
-	//	prevEpoch := epoch.previousEpoch
-	//	timePerBlockOfEpoch = prevEpoch.EndTime.Sub(prevEpoch.StartTime).Nanoseconds() / int64(prevEpoch.EndBlock-prevEpoch.StartBlock)
-	//} else {
 	timePerBlockOfEpoch = lastBlockTime.Sub(epoch.StartTime).Nanoseconds() / int64(lastBlockHeight-epoch.StartBlock)
-	//}
 
 	if timePerBlockOfEpoch <= 0 {
 		log.Debugf("estimateForNextEpoch, timePerBlockOfEpoch is %v", timePerBlockOfEpoch)

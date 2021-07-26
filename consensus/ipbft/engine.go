@@ -742,8 +742,6 @@ func writeCommittedSeals(h *types.Header, tdmExtra *tdmTypes.TendermintExtra) er
 //
 // If the coinbase is Candidate, divide the rewards by weight
 func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, ep *epoch.Epoch, totalGasFee *big.Int) {
-	halfGasFee := big.NewInt(0).Div(totalGasFee, big.NewInt(2))
-	state.AddBalance(feeAddress, halfGasFee)
 
 	var coinbaseReward *big.Int
 	if config.IntChainId == params.MainnetChainConfig.IntChainId || config.IntChainId == params.TestnetChainConfig.IntChainId {
@@ -752,16 +750,16 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 			zeroAddress := common.Address{}
 			if foundationAddress == zeroAddress {
 				coinbaseReward = big.NewInt(0)
-				coinbaseReward.Add(rewardPerBlock, halfGasFee)
+				coinbaseReward.Add(rewardPerBlock, totalGasFee)
 			} else {
 				coinbaseReward = new(big.Int).Mul(rewardPerBlock, big.NewInt(8))
 				coinbaseReward.Quo(coinbaseReward, big.NewInt(10))
 				foundationReward := new(big.Int).Sub(rewardPerBlock, coinbaseReward)
 				state.AddBalance(foundationAddress, foundationReward)
-				coinbaseReward.Add(coinbaseReward, halfGasFee)
+				coinbaseReward.Add(coinbaseReward, totalGasFee)
 			}
 		} else {
-			coinbaseReward = halfGasFee
+			coinbaseReward = totalGasFee
 		}
 	} else {
 		rewardPerBlock := state.GetChildChainRewardPerBlock()
@@ -773,9 +771,9 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 			// sub balance from childChainRewardAddress, reward per blocks
 			state.SubBalance(childChainRewardAddress, rewardPerBlock)
 
-			coinbaseReward = new(big.Int).Add(rewardPerBlock, halfGasFee)
+			coinbaseReward = new(big.Int).Add(rewardPerBlock, totalGasFee)
 		} else {
-			coinbaseReward = halfGasFee
+			coinbaseReward = totalGasFee
 		}
 	}
 

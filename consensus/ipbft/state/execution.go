@@ -119,15 +119,12 @@ func autoStartMining(bc *core.BlockChain, block *ethTypes.Block) {
 		// Re-Calculate the next epoch validators
 		nextEp := currentEpoch.GetNextEpoch()
 		state, _ := bc.State()
-		//epochNo := currentEpoch.Number
 		nextValidators := currentEpoch.Validators.Copy()
-		//nextCandidates := currentEpoch.Candidates.Copy()
 		dryrunErr := ep.DryRunUpdateEpochValidatorSet(state, nextValidators, nextEp.GetEpochValidatorVoteSet())
 		if dryrunErr != nil {
 			panic("can not update the validator set base on the vote, error: " + dryrunErr.Error())
 		}
 		nextEp.Validators = nextValidators
-		//nextEp.Candidates = nextCandidates
 
 		if nextValidators.HasAddress(eng.PrivateValidator().Bytes()) && !eng.IsStarted() {
 			fmt.Printf("auto start mining first, post start mining event")
