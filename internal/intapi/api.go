@@ -2226,10 +2226,10 @@ func unDelegateApplyCb(tx *types.Transaction, state *state.StateDB, bc *core.Blo
 	state.SubDelegateBalance(from, immediatelyRefund)
 	state.AddBalance(from, immediatelyRefund)
 
-	//verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate)
-	//if verror != nil {
-	//	return verror
-	//}
+	verror = updateNextEpochValidatorVoteSet(tx, state, bc, args.Candidate, ops)
+	if verror != nil {
+		return verror
+	}
 
 	return nil
 }
