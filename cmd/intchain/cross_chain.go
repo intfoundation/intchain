@@ -97,12 +97,12 @@ func (cch *CrossChainHelper) CanCreateChildChain(from common.Address, chainId st
 	// Check the minimum deposit amount
 	officialMinimumDeposit := math.MustParseBig256(core.OFFICIAL_MINIMUM_DEPOSIT)
 	if minDepositAmount.Cmp(officialMinimumDeposit) == -1 {
-		return fmt.Errorf("Deposit amount is not meet the minimum official deposit amount (%v PI)", new(big.Int).Div(officialMinimumDeposit, big.NewInt(params.INT)))
+		return fmt.Errorf("Deposit amount is not meet the minimum official deposit amount (%v INT)", new(big.Int).Div(officialMinimumDeposit, big.NewInt(params.INT)))
 	}
 
 	// Check the startup cost
 	if startupCost.Cmp(officialMinimumDeposit) != 0 {
-		return fmt.Errorf("Startup cost is not meet the required amount (%v PI)", new(big.Int).Div(officialMinimumDeposit, big.NewInt(params.INT)))
+		return fmt.Errorf("Startup cost is not meet the required amount (%v INT)", new(big.Int).Div(officialMinimumDeposit, big.NewInt(params.INT)))
 	}
 
 	// Check start/end block

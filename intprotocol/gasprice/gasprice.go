@@ -29,7 +29,7 @@ import (
 	"github.com/intfoundation/intchain/rpc"
 )
 
-var maxPrice = big.NewInt(500 * params.GWei)
+var maxPrice = big.NewInt(50000 * params.GWei)
 
 type Config struct {
 	Blocks     int

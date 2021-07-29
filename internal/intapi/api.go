@@ -49,7 +49,7 @@ import (
 )
 
 const (
-	defaultGasPrice          = params.GWei
+	defaultGasPrice          = 5000 * params.GWei
 	updateValidatorThreshold = 25
 )
 
