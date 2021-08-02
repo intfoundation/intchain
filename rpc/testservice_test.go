@@ -63,6 +63,12 @@ type Result struct {
 	Args   *Args
 }
 
+type testError struct{}
+
+func (testError) Error() string          { return "testError" }
+func (testError) ErrorCode() int         { return 444 }
+func (testError) ErrorData() interface{} { return "testError data" }
+
 func (s *testService) NoArgsRets() {}
 
 func (s *testService) Echo(str string, i int, args *Args) Result {

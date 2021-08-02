@@ -307,8 +307,28 @@ func (b *bridge) Send(call otto.FunctionCall) (response otto.Value) {
 		resp.Set("id", req.Id)
 		var result json.RawMessage
 		err = b.client.Call(&result, req.Method, req.Params...)
-		switch err := err.(type) {
-		case nil:
+		//switch err := err.(type) {
+		//case nil:
+		//	if result == nil {
+		//		// Special case null because it is decoded as an empty
+		//		// raw message for some reason.
+		//		resp.Set("result", otto.NullValue())
+		//	} else {
+		//		resultVal, err := JSON.Call("parse", string(result))
+		//		if err != nil {
+		//			setError(resp, -32603, err.Error(), nil)
+		//		} else {
+		//			resp.Set("result", resultVal)
+		//		}
+		//	}
+		//case rpc.Error:
+		//	setError(resp, err.ErrorCode(), err.Error(), nil)
+		//case rpc.DataError:
+		//	setError(resp, err.ErrorCode(), err.Error(), nil)
+		//default:
+		//	setError(resp, -32603, err.Error())
+		//}
+		if err == nil {
 			if result == nil {
 				// Special case null because it is decoded as an empty
 				// raw message for some reason.
@@ -316,15 +336,23 @@ func (b *bridge) Send(call otto.FunctionCall) (response otto.Value) {
 			} else {
 				resultVal, err := JSON.Call("parse", string(result))
 				if err != nil {
-					setError(resp, -32603, err.Error())
+					setError(resp, -32603, err.Error(), nil)
 				} else {
 					resp.Set("result", resultVal)
 				}
 			}
-		case rpc.Error:
-			setError(resp, err.ErrorCode(), err.Error())
-		default:
-			setError(resp, -32603, err.Error())
+		} else {
+			code := -32603
+			var data interface{}
+			if err, ok := err.(rpc.Error); ok {
+				code = err.ErrorCode()
+			}
+
+			if err, ok := err.(rpc.DataError); ok {
+				data = err.ErrorData()
+			}
+
+			setError(resp, code, err.Error(), data)
 		}
 		resps.Call("push", resp)
 	}
@@ -343,8 +371,15 @@ func (b *bridge) Send(call otto.FunctionCall) (response otto.Value) {
 	return response
 }
 
-func setError(resp *otto.Object, code int, msg string) {
-	resp.Set("error", map[string]interface{}{"code": code, "message": msg})
+func setError(resp *otto.Object, code int, msg string, data interface{}) {
+	//resp.Set("error", map[string]interface{}{"code": code, "message": msg})
+	err := make(map[string]interface{})
+	err["code"] = code
+	err["message"] = msg
+	if data != nil {
+		err["data"] = data
+	}
+	resp.Set("error", err)
 }
 
 // throwJSException panics on an otto.Value. The Otto VM will recover from the

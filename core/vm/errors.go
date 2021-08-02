@@ -27,4 +27,10 @@ var (
 	ErrInsufficientBalance      = errors.New("insufficient balance for transfer")
 	ErrContractAddressCollision = errors.New("contract address collision")
 	ErrNoCompatibleInterpreter  = errors.New("no compatible interpreter")
+
+	ErrWriteProtection       = errors.New("write protection")
+	ErrReturnDataOutOfBounds = errors.New("return data out of bounds")
+	ErrExecutionReverted     = errors.New("execution reverted")
+	ErrMaxCodeSizeExceeded   = errors.New("max code size exceeded")
+	ErrInvalidJump           = errors.New("invalid jump destination")
 )

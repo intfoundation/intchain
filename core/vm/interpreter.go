@@ -221,7 +221,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 			// account to the others means the state is modified and should also
 			// return with an error.
 			if operation.writes || (op == CALL && stack.Back(2).Sign() != 0) {
-				return nil, errWriteProtection
+				return nil, ErrWriteProtection
 			}
 		}
 		// Static portion of gas
@@ -283,7 +283,7 @@ func (in *EVMInterpreter) Run(contract *Contract, input []byte, readOnly bool) (
 		case err != nil:
 			return nil, err
 		case operation.reverts:
-			return res, errExecutionReverted
+			return res, ErrExecutionReverted
 		case operation.halts:
 			return res, nil
 		case !operation.jumps:

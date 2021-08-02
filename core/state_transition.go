@@ -23,7 +23,6 @@ import (
 
 	"github.com/intfoundation/intchain/common"
 	"github.com/intfoundation/intchain/core/vm"
-	"github.com/intfoundation/intchain/log"
 	"github.com/intfoundation/intchain/params"
 )
 
@@ -73,6 +72,41 @@ type Message interface {
 	Nonce() uint64
 	CheckNonce() bool
 	Data() []byte
+}
+
+// ExecutionResult includes all output after executing given evm
+// message no matter the execution itself is successful or not.
+type ExecutionResult struct {
+	UsedGas    uint64 // Total used gas but include the refunded gas
+	Err        error  // Any error encountered during the execution(listed in core/vm/errors.go)
+	ReturnData []byte // Returned data from evm(function result or data supplied with revert opcode)
+}
+
+// Unwrap returns the internal evm error which allows us for further
+// analysis outside.
+func (result *ExecutionResult) Unwrap() error {
+	return result.Err
+}
+
+// Failed returns the indicator whether the execution is successful or not
+func (result *ExecutionResult) Failed() bool { return result.Err != nil }
+
+// Return is a helper function to help caller distinguish between revert reason
+// and function return. Return returns the data after execution if no error occurs.
+func (result *ExecutionResult) Return() []byte {
+	if result.Err != nil {
+		return nil
+	}
+	return common.CopyBytes(result.ReturnData)
+}
+
+// Revert returns the concrete revert reason if the execution is aborted by `REVERT`
+// opcode. Note the reason can be nil if no data supplied with revert opcode.
+func (result *ExecutionResult) Revert() []byte {
+	if result.Err != vm.ErrExecutionReverted {
+		return nil
+	}
+	return common.CopyBytes(result.ReturnData)
 }
 
 // IntrinsicGas computes the 'intrinsic gas' for a message with the given data.
@@ -129,7 +163,7 @@ func NewStateTransition(evm *vm.EVM, msg Message, gp *GasPool) *StateTransition 
 // the gas used (which includes gas refunds) and an error if it failed. An error always
 // indicates a core error meaning that the message would always fail for that particular
 // state and would never be accepted within a block.
-func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, bool, error) {
+func ApplyMessage(evm *vm.EVM, msg Message, gp *GasPool) (*ExecutionResult, error) {
 	return NewStateTransition(evm, msg, gp).TransitionDb()
 }
 
@@ -204,9 +238,9 @@ func (st *StateTransition) preCheck() error {
 // TransitionDb will transition the state by applying the current message and
 // returning the result including the the used gas. It returns an error if it
 // failed. An error indicates a consensus issue.
-func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bool, err error) {
-	if err = st.preCheck(); err != nil {
-		return
+func (st *StateTransition) TransitionDb() (*ExecutionResult, error) {
+	if err := st.preCheck(); err != nil {
+		return nil, err
 	}
 	msg := st.msg
 	sender := st.from() // err checked in preCheck
@@ -217,10 +251,10 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 	// Pay intrinsic gas
 	gas, err := IntrinsicGas(st.data, contractCreation, homestead)
 	if err != nil {
-		return nil, 0, false, err
+		return nil, err
 	}
 	if err = st.useGas(gas); err != nil {
-		return nil, 0, false, err
+		return nil, err
 	}
 
 	var (
@@ -229,6 +263,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		// not assigned to err, except for insufficient balance
 		// error.
 		vmerr error
+		ret   []byte
 	)
 	if contractCreation {
 		ret, _, st.gas, vmerr = evm.Create(sender, st.data, st.gas, st.value)
@@ -237,19 +272,23 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		st.state.SetNonce(sender.Address(), st.state.GetNonce(sender.Address())+1)
 		ret, st.gas, vmerr = evm.Call(sender, st.to().Address(), st.data, st.gas, st.value)
 	}
-	if vmerr != nil {
-		log.Debug("VM returned with error", "err", vmerr)
-		// The only possible consensus-error would be if there wasn't
-		// sufficient balance to make the transfer happen. The first
-		// balance transfer may never fail.
-		if vmerr == vm.ErrInsufficientBalance {
-			return nil, 0, false, vmerr
-		}
-	}
+	//if vmerr != nil {
+	//	log.Debug("VM returned with error", "err", vmerr)
+	//	// The only possible consensus-error would be if there wasn't
+	//	// sufficient balance to make the transfer happen. The first
+	//	// balance transfer may never fail.
+	//	if vmerr == vm.ErrInsufficientBalance {
+	//		return nil, 0, false, vmerr
+	//	}
+	//}
 	st.refundGas()
 	st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
 
-	return ret, st.gasUsed(), vmerr != nil, err
+	return &ExecutionResult{
+		UsedGas:    st.gasUsed(),
+		Err:        vmerr,
+		ReturnData: ret,
+	}, nil
 }
 
 func (st *StateTransition) refundGas() {
@@ -285,15 +324,15 @@ func (st *StateTransition) gasUsed() uint64 {
 // the gas used (which includes gas refunds) and an error if it failed. An error always
 // indicates a core error meaning that the message would always fail for that particular
 // state and would never be accepted within a block.
-func ApplyMessageEx(evm *vm.EVM, msg Message, gp *GasPool) ([]byte, uint64, *big.Int, bool, error) {
+func ApplyMessageEx(evm *vm.EVM, msg Message, gp *GasPool) (*ExecutionResult, *big.Int, error) {
 	return NewStateTransition(evm, msg, gp).TransitionDbEx()
 }
 
 // TransitionDbEx will move the state by applying the message against the given environment.
-func (st *StateTransition) TransitionDbEx() (ret []byte, usedGas uint64, usedMoney *big.Int, failed bool, err error) {
+func (st *StateTransition) TransitionDbEx() (*ExecutionResult, *big.Int, error) {
 
-	if err = st.preCheck(); err != nil {
-		return
+	if err := st.preCheck(); err != nil {
+		return nil, nil, err
 	}
 	msg := st.msg
 	sender := st.from() // err checked in preCheck
@@ -304,10 +343,10 @@ func (st *StateTransition) TransitionDbEx() (ret []byte, usedGas uint64, usedMon
 	// Pay intrinsic gas
 	gas, err := IntrinsicGas(st.data, contractCreation, homestead)
 	if err != nil {
-		return nil, 0, nil, false, err
+		return nil, nil, err
 	}
 	if err = st.useGas(gas); err != nil {
-		return nil, 0, nil, false, err
+		return nil, nil, err
 	}
 
 	var (
@@ -316,6 +355,7 @@ func (st *StateTransition) TransitionDbEx() (ret []byte, usedGas uint64, usedMon
 		// not assigned to err, except for insufficient balance
 		// error.
 		vmerr error
+		ret   []byte
 	)
 
 	//log.Debugf("TransitionDbEx 0\n")
@@ -335,15 +375,15 @@ func (st *StateTransition) TransitionDbEx() (ret []byte, usedGas uint64, usedMon
 
 	//log.Debugf("TransitionDbEx 3\n")
 
-	if vmerr != nil {
-		log.Debug("VM returned with error", "err", vmerr)
-		// The only possible consensus-error would be if there wasn't
-		// sufficient balance to make the transfer happen. The first
-		// balance transfer may never fail.
-		if vmerr == vm.ErrInsufficientBalance {
-			return nil, 0, nil, false, vmerr
-		}
-	}
+	//if vmerr != nil {
+	//	log.Debug("VM returned with error", "err", vmerr)
+	//	// The only possible consensus-error would be if there wasn't
+	//	// sufficient balance to make the transfer happen. The first
+	//	// balance transfer may never fail.
+	//	if vmerr == vm.ErrInsufficientBalance {
+	//		return nil, 0, nil, false, vmerr
+	//	}
+	//}
 
 	st.refundGas()
 
@@ -351,7 +391,7 @@ func (st *StateTransition) TransitionDbEx() (ret []byte, usedGas uint64, usedMon
 	//	st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
 
 	//st.state.AddBalance(st.evm.Coinbase, new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice))
-	usedMoney = new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice)
+	usedMoney := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice)
 
 	//log.Debugf("TransitionDbEx 5\n")
 
@@ -359,5 +399,11 @@ func (st *StateTransition) TransitionDbEx() (ret []byte, usedGas uint64, usedMon
 	//log.Debugf("TransitionDbEx, return ret-%v, st.gasUsed()-%v, usedMoney-%v, vmerr-%v, err-%v\n",
 	//	ret, st.gasUsed(), usedMoney, vmerr, err)
 
-	return ret, st.gasUsed(), usedMoney, vmerr != nil, err
+	//return ret, st.gasUsed(), usedMoney, vmerr != nil, err
+
+	return &ExecutionResult{
+		UsedGas:    st.gasUsed(),
+		Err:        vmerr,
+		ReturnData: ret,
+	}, usedMoney, nil
 }

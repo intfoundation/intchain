@@ -695,7 +695,7 @@ func (self *worker) commitTransactionsEx(txs *types.TransactionsByPriceAndNonce,
 func (self *worker) commitTransactionEx(tx *types.Transaction, coinbase common.Address, gp *core.GasPool, totalUsedMoney *big.Int, cch core.CrossChainHelper) ([]*types.Log, error) {
 	snap := self.current.state.Snapshot()
 
-	receipt, _, err := core.ApplyTransactionEx(self.config, self.chain, nil, gp, self.current.state, self.current.ops, self.current.header, tx, &self.current.header.GasUsed, totalUsedMoney, vm.Config{}, cch, true)
+	receipt, err := core.ApplyTransactionEx(self.config, self.chain, nil, gp, self.current.state, self.current.ops, self.current.header, tx, &self.current.header.GasUsed, totalUsedMoney, vm.Config{}, cch, true)
 	if err != nil {
 		self.current.state.RevertToSnapshot(snap)
 		return nil, err
