@@ -749,16 +749,15 @@ func (epoch *Epoch) copy(copyPrevNext bool) *Epoch {
 
 		rs: epoch.rs,
 
-		Number:         epoch.Number,
-		RewardPerBlock: new(big.Int).Set(epoch.RewardPerBlock),
-		StartBlock:     epoch.StartBlock,
-		EndBlock:       epoch.EndBlock,
-		StartTime:      epoch.StartTime,
-		EndTime:        epoch.EndTime,
-		BlockGenerated: epoch.BlockGenerated,
-		Status:         epoch.Status,
-		Validators:     epoch.Validators.Copy(),
-		//Candidates:       epoch.Candidates.Copy(),
+		Number:           epoch.Number,
+		RewardPerBlock:   new(big.Int).Set(epoch.RewardPerBlock),
+		StartBlock:       epoch.StartBlock,
+		EndBlock:         epoch.EndBlock,
+		StartTime:        epoch.StartTime,
+		EndTime:          epoch.EndTime,
+		BlockGenerated:   epoch.BlockGenerated,
+		Status:           epoch.Status,
+		Validators:       epoch.Validators.Copy(),
 		validatorVoteSet: epoch.validatorVoteSet.Copy(),
 
 		previousEpoch: previousEpoch,
@@ -770,7 +769,7 @@ func (epoch *Epoch) estimateForNextEpoch(lastBlockHeight uint64, lastBlockTime t
 
 	var rewardFirstYear = epoch.rs.RewardFirstYear       //20000000e+18  every year
 	var epochNumberPerYear = epoch.rs.EpochNumberPerYear //4380
-	var totalYear = epoch.rs.TotalYear                   //10
+	var totalYear = epoch.rs.TotalYear                   //5
 	var timePerBlockOfEpoch int64
 
 	const EMERGENCY_BLOCKS_OF_NEXT_EPOCH uint64 = 1000 // al least 1000 blocks per epoch

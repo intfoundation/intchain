@@ -80,7 +80,6 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 		if epochInBlock.Number == currentEpoch.Number+1 {
 			// Save the next epoch
 			if block.NumberU64() == currentEpoch.StartBlock+2 {
-				//fmt.Printf("update local epoch block number %v, current epoch start block %v\n", block.NumberU64(), currentEpoch.StartBlock)
 				// Propose next epoch
 				//epochInBlock.SetEpochValidatorVoteSet(ep.NewEpochValidatorVoteSet())
 				epochInBlock.Status = ep.EPOCH_VOTED_NOT_SAVED
@@ -96,7 +95,6 @@ func updateLocalEpoch(bc *core.BlockChain, block *ethTypes.Block) {
 			}
 			currentEpoch.Save()
 		} else if epochInBlock.Number == currentEpoch.Number {
-			//fmt.Printf("update local epoch: epochInBlock.Number %v, currentEpoch.Number %v, epochInBlock.StartTime %v\n", epochInBlock.Number, currentEpoch.Number, epochInBlock.StartTime)
 			// Update the current epoch Start Time from proposer
 			currentEpoch.StartTime = epochInBlock.StartTime
 			currentEpoch.Save()

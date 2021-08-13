@@ -49,12 +49,9 @@ func (api *API) GetEpoch(num hexutil.Uint64) (*tdmTypes.EpochApi, error) {
 		}
 	}
 
-	newReward := new(big.Int).Mul(resultEpoch.RewardPerBlock, big.NewInt(8))
-	newReward.Div(newReward, big.NewInt(10))
-
 	return &tdmTypes.EpochApi{
 		Number:         hexutil.Uint64(resultEpoch.Number),
-		RewardPerBlock: (*hexutil.Big)(newReward),
+		RewardPerBlock: (*hexutil.Big)(resultEpoch.RewardPerBlock),
 		StartBlock:     hexutil.Uint64(resultEpoch.StartBlock),
 		EndBlock:       hexutil.Uint64(resultEpoch.EndBlock),
 		StartTime:      resultEpoch.StartTime,
@@ -117,7 +114,7 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidator, error) {
 		}
 
 		nextValidators := ep.Validators.Copy()
-		//nextCandidates := ep.Candidates.Copy()
+
 		err = epoch.DryRunUpdateEpochValidatorSet(state, nextValidators, nextEp.GetEpochValidatorVoteSet())
 		if err != nil {
 			return nil, err
@@ -140,70 +137,6 @@ func (api *API) GetNextEpochValidators() ([]*tdmTypes.EpochValidator, error) {
 		return validators, nil
 	}
 }
-
-//func (api *API) GetNextEpochCandidates() ([]*tdmTypes.EpochCandidate, error) {
-//
-//	//height := api.chain.CurrentBlock().NumberU64()
-//
-//	ep := api.tendermint.core.consensusState.Epoch
-//	nextEp := ep.GetNextEpoch()
-//	if nextEp == nil {
-//		return nil, errors.New("voting for next epoch has not started yet")
-//	} else {
-//		state, err := api.chain.State()
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		nextValidators := ep.Validators.Copy()
-//		//nextCandidates := ep.Candidates.Copy()
-//		err = epoch.DryRunUpdateEpochValidatorSet(state, ep.Number, nextValidators, nextEp.GetEpochValidatorVoteSet())
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		candidates := make([]*tdmTypes.EpochCandidate, 0, len(nextCandidates.Candidates))
-//		for _, val := range nextCandidates.Candidates {
-//			candidates = append(candidates, &tdmTypes.EpochCandidate{
-//				Address: common.BytesToAddress(val.Address),
-//			})
-//		}
-//
-//		return candidates, nil
-//	}
-//}
-
-//func (api *API) GetEpochCandidates(num hexutil.Uint64) ([]*tdmTypes.EpochCandidate, error) {
-//	number := uint64(num)
-//	var resultEpoch *epoch.Epoch
-//	curEpoch := api.tendermint.core.consensusState.Epoch
-//	if number < 0 || number > curEpoch.Number {
-//		return nil, errors.New("epoch number out of range")
-//	}
-//
-//	if number == curEpoch.Number {
-//		resultEpoch = curEpoch
-//	} else {
-//		resultEpoch = epoch.LoadOneEpoch(curEpoch.GetDB(), number, nil)
-//	}
-//
-//	cansCopy := resultEpoch.Candidates.Copy()
-//
-//	candidates := make([]*tdmTypes.EpochCandidate, 0, len(cansCopy.Candidates))
-//	for _, can := range cansCopy.Candidates {
-//		candidates = append(candidates, &tdmTypes.EpochCandidate{
-//			Address: common.BytesToAddress(can.Address),
-//		})
-//	}
-//
-//	return candidates, nil
-//}
-
-// CreateValidator no longer support
-//func (api *API) CreateValidator(from common.Address) (*tdmTypes.PrivValidator, error) {
-//	validator := tdmTypes.GenPrivValidatorKey(from)
-//	return validator, nil
-//}
 
 // decode extra data
 func (api *API) DecodeExtraData(extra string) (extraApi *tdmTypes.TendermintExtraApi, err error) {
@@ -286,56 +219,3 @@ func (api *API) GetVoteHash(from common.Address, pubkey crypto.BLSPubKey, amount
 	}
 	return intCrypto.Keccak256Hash(ConcatCopyPreAllocate(byteData))
 }
-
-//func (api *API) GetValidatorStatus(from common.Address) (*tdmTypes.ValidatorStatus, error) {
-//	state, err := api.chain.State()
-//	if state == nil || err != nil {
-//		return nil, err
-//	}
-//	status := &tdmTypes.ValidatorStatus{
-//		IsForbidden: state.GetOrNewStateObject(from).IsForbidden(),
-//	}
-//
-//	return status, nil
-//}
-
-//func (api *API) GetCandidateList() (*tdmTypes.CandidateApi, error) {
-//	state, err := api.chain.State()
-//
-//	if state == nil || err != nil {
-//		return nil, err
-//	}
-//
-//	candidateList := make([]string, 0)
-//	candidateSet := state.GetCandidateSet()
-//	for addr := range candidateSet {
-//		candidateList = append(candidateList, addr)
-//	}
-//
-//	candidates := &tdmTypes.CandidateApi{
-//		CandidateList: candidateList,
-//	}
-//
-//	return candidates, nil
-//}
-//
-//func (api *API) GetForbiddenList() (*tdmTypes.ForbiddenApi, error) {
-//	state, err := api.chain.State()
-//
-//	if state == nil || err != nil {
-//		return nil, err
-//	}
-//
-//	forbiddenList := make([]string, 0)
-//	forbiddenSet := state.GetForbiddenSet()
-//	fmt.Printf("forbidden set %v", forbiddenSet)
-//	for addr := range forbiddenSet {
-//		forbiddenList = append(forbiddenList, addr)
-//	}
-//
-//	forbiddenAddresses := &tdmTypes.ForbiddenApi{
-//		ForbiddenList: forbiddenList,
-//	}
-//
-//	return forbiddenAddresses, nil
-//}
