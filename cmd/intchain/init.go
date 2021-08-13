@@ -32,9 +32,9 @@ import (
 )
 
 const (
-	POSReward = "200000000000000000000000000" // 20B
+	POSReward = "100000000000000000000000000" // 10M
 
-	TotalYear = 10
+	TotalYear = 5
 
 	DefaultAccountPassword = "intchain"
 )
