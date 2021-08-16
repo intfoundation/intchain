@@ -82,12 +82,12 @@ func GenesisDocFromJSON(jsonBlob []byte) (genDoc *GenesisDoc, err error) {
 var MainnetGenesisJSON string = `{
 	"chain_id": "intchain",
 	"consensus": "ipbft",
-	"genesis_time": "2021-07-20T14:31:29.764824+08:00",
+	"genesis_time": "2021-08-16T10:39:35.470198+08:00",
 	"reward_scheme": {
-		"total_reward": "0xa56fa5b99019a5c8000000",
+		"total_reward": "0x52b7d2dcc80cd2e4000000",
 		"reward_first_year": "0x108b2a2c28029094000000",
 		"epoch_no_per_year": "0x111c",
-		"total_year": "0xa"
+		"total_year": "0x5"
 	},
 	"current_epoch": {
 		"number": "0x0",
@@ -96,9 +96,9 @@ var MainnetGenesisJSON string = `{
 		"end_block": "0x960",
 		"validators": [
 			{
-				"address": "0x479c368fcc030f42ddc671df69ad4e4afa37264b",
-				"pub_key": "0x78D7E79506ADDE7F6ACBB64F2EE96E42FD5E2C02A06E8F9B72EEDF2405313F9A45F26CF889259E57CB3669EAAB964958A144B9A87E0980514FAC91E11F94661A48F2AC32704C3CD320DD24E20EA708A8AFFBAEE0B4123E992AD2B0289866CC842779E4ABB6ED562C930DC8BA58896B5987BB5A0861F099851DA16C94BB985ED3",
-				"amount": "0x54b40b1f852bda000000",
+				"address": "0xf4b1a4a22c875f0a57f080b0e5337fc641a3f871",
+				"pub_key": "0x0B932AF4BA2A11829459FCE08960BA3E14D00A5E5F86543C033A5FEB575CDD4D4E9ABD16704E67A11F10E476F9DB18950874A3A5ED767F1E80A10629E9820BE03D07FAA4C5A7F8335EF51CD516275ACD690F1F803EAB2FAB6DB61FBBD037609011C0971DEBB3AB97733BE60F4A0115B0B12305AE732E2CC24A69369946ED16F4",
+				"amount": "0xd3c21bcecceda1000000",
 				"name": "",
 				"epoch": "0x0"
 			}
