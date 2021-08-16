@@ -55,7 +55,7 @@ const (
 )
 
 var (
-	minimumRegisterAmount = math.MustParseBig256("1000000000000000000000000") // 1000000 * e18
+	minimumRegisterAmount = math.MustParseBig256("32000000000000000000") // 32 * e18
 
 	//maxCandidateNumber = 1000
 
