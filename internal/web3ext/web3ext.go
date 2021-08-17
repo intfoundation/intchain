@@ -599,16 +599,6 @@ web3._extend({
 			params: 1
 		}),
 		new web3._extend.Method({
-			name: 'getCandidateList',
-			call: 'int_getCandidateList',
-			params: 0
-		}),
-		new web3._extend.Method({
-			name: 'getForbiddenList',
-			call: 'int_getForbiddenList',
-			params: 0
-		}),
-		new web3._extend.Method({
 			name: 'delegate',
 			call: 'int_delegate',
 			params: 4
