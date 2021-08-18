@@ -21,7 +21,7 @@ To both improve and encourage device interconnectivity, we have built an economy
 
 ### Latest Version
 
-The latest INT Chain version for Testnet is v4.1.0
+The latest INT Chain version is v4.2.0
 
 ### Install `Go`
 
