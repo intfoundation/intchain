@@ -59,7 +59,7 @@ After setting up `Go` and `C compiler` correctly, you should be able to compile 
 Make sure that your server can access to google.com because our project depends on some libraries provided by google. (If you are not able to access google.com, you can also try to add a proxy: `export GOPROXY=https://goproxy.io`)
 
 ```bash
-git clone --branch testnet https://github.com/intfoundation/intchain
+git clone https://github.com/intfoundation/intchain
 cd intchain
 make intchain
 ```
@@ -97,6 +97,12 @@ intchain attach <datadir>/intchain/intchain.ipc
 
 For developers, you would like to deploy contracts for testing, but you do not want to do that with real money spending.
 In other words, instead of attaching to the main network, you want to join the test network with your node, which is fully equivalent to the main network.
+
+```bash
+git checkout -b testnet origin/testnet
+make intchain
+```
+
 
 ```bash
 intchain --testnet
