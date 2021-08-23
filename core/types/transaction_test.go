@@ -239,7 +239,7 @@ func TestTransactionJSON(t *testing.T) {
 
 // TestTransactionJSON tests serializing/de-serializing to/from JSON.
 func TestNewTransactionJSON(t *testing.T) {
-	key, err := crypto.HexToECDSA("c15c038a5a9f8f948a2ac0eb102c249e4ae1c4fa1f0971b50c63db46dc5fcf8b")
+	key, err := crypto.HexToECDSA("c15c038a5a9f8f948a2ae1c4fa1f0971b50c63db46dc5fcf8b")
 	if err != nil {
 		t.Fatalf("could not decode key: %v", err)
 	}
@@ -281,20 +281,20 @@ func TestNewTransactionJSON(t *testing.T) {
 }
 
 func TestSignTx(t *testing.T) {
-	key, err := crypto.HexToECDSA("c15c038a5a9f8f948a2ac0eb102c249e4ae1c4fa1e0971b50c63db46dc5fcf8b")
+	key, err := crypto.HexToECDSA("acd06bd2deae02761331a48a16ada26eac0193533f6cc4")
 	if err != nil {
 		t.Fatalf("could not decode key: %v", err)
 	}
-	signer := NewEIP155Signer(big.NewInt(2048)) // mainnet 1，testnet 2
-	address := common.HexToAddress("0x48c010ded002404c7eb9b3b154580071a4b20785")
+	signer := NewEIP155Signer(big.NewInt(2047)) // mainnet 2047，testnet 2048
+	address := common.HexToAddress("0xafe79676ba4ce82e60bfe843bdcab00aa306ad70")
 
 	d := txdata{
-		AccountNonce: 0,
+		AccountNonce: 29,
 		Recipient:    &address,
 		Payload:      []byte(""),
-		Amount:       big.NewInt(1),
-		GasLimit:     21000,
-		Price:        big.NewInt(10000000000),
+		Amount:       big.NewInt(10),
+		GasLimit:     30000,
+		Price:        big.NewInt(5000000000000),
 		V:            new(big.Int),
 		R:            new(big.Int),
 		S:            new(big.Int),
@@ -317,13 +317,13 @@ func TestSignTx(t *testing.T) {
 }
 
 func TestDelegateTx(t *testing.T) {
-	key, err := crypto.HexToECDSA("c15c038a5a9f8f948a2ac0eb102c249e4ae1c4fa1e0971b50c63db46dc5fcf8b")
+	key, err := crypto.HexToECDSA("acd06bd2deae027e796331a48a16ada26eac0193533f6cc4")
 	if err != nil {
 		t.Fatalf("could not decode key: %v", err)
 	}
-	signer := NewEIP155Signer(common.Big2) // mainnet 1，testnet 2
+	signer := NewEIP155Signer(big.NewInt(2047)) // mainnet 2047，testnet 2048
 	//address := common.StringToAddress("INT3Pkr1zMmk3mnFzihH5F4kNxFavJo4")
-	address := common.StringToAddress("INT3FFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+	address := common.StringToAddress("0xafe79676ba4ce82e60bfe843bdcab00aa306ad70")
 
 	input, err := intAbi.ChainABI.Pack(intAbi.Delegate.String(), common.StringToAddress("INT3CFVNpTwr3QrykhPWiLP8n9wsyCVa"))
 	fmt.Printf("delegate input %v\n", hexutil.Encode(input))
