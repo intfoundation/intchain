@@ -2,7 +2,7 @@ BUILD_FLAGS = -tags "$(BUILD_TAGS)" -ldflags "
 
 build:
 	@ echo "start building......"
-	@ go build -o $(GOPATH)/bin/intchain ./cmd/intchain/
+	@ go build -o ./bin/intchain ./cmd/intchain/
 	@ echo "Done building."
 #.PHONY: intchain
 intchain:
