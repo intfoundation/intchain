@@ -969,8 +969,8 @@ func FormatLogs(logs []vm.StructLog) []StructLogRes {
 func (s *PublicBlockChainAPI) rpcOutputBlock(b *types.Block, inclTx bool, fullTx bool) (map[string]interface{}, error) {
 	head := b.Header() // copies the header once
 	fields := map[string]interface{}{
-		"number":           (*hexutil.Big)(head.Number),
-		"mainchainNumber":  (*hexutil.Big)(head.MainChainNumber),
+		"number": (*hexutil.Big)(head.Number),
+		//"mainchainNumber":  (*hexutil.Big)(head.MainChainNumber),
 		"hash":             b.Hash(),
 		"parentHash":       head.ParentHash,
 		"nonce":            head.Nonce,
