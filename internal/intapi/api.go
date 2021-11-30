@@ -827,12 +827,10 @@ func (s *PublicBlockChainAPI) EstimateGas(ctx context.Context, args CallArgs) (h
 		hi  uint64
 		cap uint64
 	)
-	if intAbi.IsIntChainContractAddr(args.To) {
-		functionType, e := intAbi.FunctionTypeFromId(args.Data[:4])
-		if e != nil {
-			fmt.Printf("Not intchain inner contract address: %v\n", args.To.Hex())
-		}
 
+	functionType, e := intAbi.FunctionTypeFromId(args.Data[:4])
+	if e == nil && functionType != intAbi.Unknown {
+		fmt.Printf("intchain inner contract tx, address: %v, functionType: %v\n", args.To.Hex(), functionType)
 		return hexutil.Uint64(functionType.RequiredGas()), nil
 	}
 
