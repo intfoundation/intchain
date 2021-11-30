@@ -460,18 +460,25 @@ func (st *StateTransition) TransitionDbTracer() (*ExecutionResult, *big.Int, err
 			return nil, nil, fmt.Errorf("insufficient INT for gas (%x). Req %v, has %v", from.Bytes()[:4], gasValue, st.state.GetBalance(from))
 		}
 
-		st.state.SubBalance(from, gasValue)
+		if err := st.gp.SubGas(gasLimit); err != nil {
+			return nil, nil, err
+		}
+
+		//st.state.SubBalance(from, gasValue)
 		//log.Infof("ApplyTransactionEx() 1, gas is %v, gasPrice is %v, gasValue is %v\n", gasLimit, tx.GasPrice(), gasValue)
 
 		// use gas
 		gas := function.RequiredGas()
 		if gasLimit < gas {
+			fmt.Printf("out of gas, req %v, has %v\n", gas, gasLimit)
 			return nil, nil, vm.ErrOutOfGas
 		}
 
+		restBalance := new(big.Int).Sub(st.state.GetBalance(from), gasValue)
+
 		// Check Tx Amount
-		if st.state.GetBalance(from).Cmp(msg.Value()) == -1 {
-			return nil, nil, fmt.Errorf("insufficient INT for tx amount (%x). Req %v, has %v", from.Bytes()[:4], msg.Value(), st.state.GetBalance(from))
+		if restBalance.Cmp(msg.Value()) == -1 {
+			return nil, nil, fmt.Errorf("insufficient INT for tx amount (%x). Req %v, has %v", from.Bytes()[:4], msg.Value(), restBalance)
 		}
 
 		//if applyCb := GetApplyCb(function); applyCb != nil {
@@ -483,6 +490,14 @@ func (st *StateTransition) TransitionDbTracer() (*ExecutionResult, *big.Int, err
 		//		panic("callback func is wrong, this should not happened, please check the code")
 		//	}
 		//}
+
+		usedMoney := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice)
+
+		return &ExecutionResult{
+			UsedGas:    st.gasUsed(),
+			Err:        nil,
+			ReturnData: nil,
+		}, usedMoney, nil
 
 	}
 
