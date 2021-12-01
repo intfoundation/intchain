@@ -564,6 +564,7 @@ func (st *StateTransition) TransitionDbTracer() (*ExecutionResult, *big.Int, err
 
 	//return ret, st.gasUsed(), usedMoney, vmerr != nil, err
 
+	fmt.Printf("ret %X\n", ret)
 	return &ExecutionResult{
 		UsedGas:    st.gasUsed(),
 		Err:        vmerr,
