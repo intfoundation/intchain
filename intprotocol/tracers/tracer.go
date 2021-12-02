@@ -606,6 +606,7 @@ func (jst *Tracer) GetResult() (json.RawMessage, error) {
 	jst.vm.PutPropString(jst.stateObject, "ctx")
 
 	// Finalize the trace and return the results
+	fmt.Printf("Tracer get result %v\n", jst)
 	result, err := jst.call("result", "ctx", "db")
 	if err != nil {
 		jst.err = wrapError("result", err)
