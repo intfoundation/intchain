@@ -445,11 +445,11 @@ func (st *StateTransition) TransitionDbTracer() (*ExecutionResult, *big.Int, err
 		if msg.CheckNonce() {
 			nonce := st.state.GetNonce(from)
 			if nonce < msg.Nonce() {
-				log.Info("ApplyTransactionEx() abort due to nonce too high")
-				return nil, nil, ErrNonceTooHigh
+				log.Info("TransitionDbTracer() abort due to nonce too high")
+				//return nil, nil, ErrNonceTooHigh
 			} else if nonce > msg.Nonce() {
-				log.Info("ApplyTransactionEx() abort due to nonce too low")
-				return nil, nil, ErrNonceTooLow
+				log.Info("TransitionDbTracer() abort due to nonce too low")
+				//return nil, nil, ErrNonceTooLow
 			}
 		}
 
@@ -498,7 +498,7 @@ func (st *StateTransition) TransitionDbTracer() (*ExecutionResult, *big.Int, err
 		return &ExecutionResult{
 			UsedGas:    st.gasUsed(),
 			Err:        nil,
-			ReturnData: []byte{},
+			ReturnData: nil,
 		}, usedMoney, nil
 
 	}
