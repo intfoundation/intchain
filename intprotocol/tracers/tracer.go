@@ -615,6 +615,5 @@ func (jst *Tracer) GetResult() (json.RawMessage, error) {
 	jst.vm.DestroyHeap()
 	jst.vm.Destroy()
 
-	fmt.Printf("Tracer get result %v\n", result)
 	return result, jst.err
 }
