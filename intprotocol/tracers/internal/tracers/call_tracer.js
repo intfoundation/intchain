@@ -200,6 +200,7 @@
 			output:  toHex(ctx.output),
 			time:    ctx.time,
 		};
+		console.log("result tracer 1", result)
 		if (this.callstack[0] && this.callstack[0].calls !== undefined) {
 			result.calls = this.callstack[0].calls;
 		}
@@ -211,6 +212,7 @@
 		if (result.error !== undefined) {
 			delete result.output;
 		}
+		console.log("result tracer 2", result)
 		return this.finalize(result);
 	},
 
@@ -236,11 +238,13 @@
 				delete sorted[key];
 			}
 		}
+		console.log("finalize tracer 1", sorted)
 		if (sorted.calls !== undefined) {
 			for (var i=0; i<sorted.calls.length; i++) {
 				sorted.calls[i] = this.finalize(sorted.calls[i]);
 			}
 		}
+		console.log("finalize tracer 2", sorted)
 		return sorted;
 	}
 }
