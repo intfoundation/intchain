@@ -689,6 +689,11 @@ func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, v
 		tracer vm.Tracer
 		err    error
 	)
+
+	if message.To().Hex() == common.HexToAddress("0x0000000000000000000000000000000000001001").Hex() {
+		return nil, nil
+	}
+
 	switch {
 	case config != nil && config.Tracer != nil:
 		// Define a meaningful timeout of a single transaction trace
