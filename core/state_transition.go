@@ -493,12 +493,24 @@ func (st *StateTransition) TransitionDbTracer() (*ExecutionResult, *big.Int, err
 		//	}
 		//}
 
+		var (
+			evm = st.evm
+			// vm errors do not effect consensus and are therefor
+			// not assigned to err, except for insufficient balance
+			// error.
+			//vmerr error
+			ret []byte
+		)
+
+		st.state.SetNonce(sender.Address(), st.state.GetNonce(sender.Address())+1)
+		ret, _, _ = evm.Call(sender, st.to().Address(), st.data, st.gas, st.value)
+
 		usedMoney := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice)
 
 		return &ExecutionResult{
 			UsedGas:    gas,
 			Err:        nil,
-			ReturnData: []byte{},
+			ReturnData: ret,
 		}, usedMoney, nil
 
 	}
