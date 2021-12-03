@@ -496,7 +496,7 @@ func (st *StateTransition) TransitionDbTracer() (*ExecutionResult, *big.Int, err
 		usedMoney := new(big.Int).Mul(new(big.Int).SetUint64(st.gasUsed()), st.gasPrice)
 
 		return &ExecutionResult{
-			UsedGas:    st.gasUsed(),
+			UsedGas:    gas,
 			Err:        nil,
 			ReturnData: []byte{},
 		}, usedMoney, nil
