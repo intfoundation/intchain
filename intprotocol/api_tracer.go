@@ -690,9 +690,9 @@ func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, v
 		err    error
 	)
 
-	if message.To() != nil && (message.To().Hex() == common.HexToAddress("0x0000000000000000000000000000000000001001").Hex()) {
-		return []byte{}, nil
-	}
+	//if message.To() != nil && (message.To().Hex() == common.HexToAddress("0x0000000000000000000000000000000000001001").Hex()) {
+	//	return []byte{}, nil
+	//}
 
 	switch {
 	case config != nil && config.Tracer != nil:

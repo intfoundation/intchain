@@ -498,7 +498,7 @@ func (st *StateTransition) TransitionDbTracer() (*ExecutionResult, *big.Int, err
 		return &ExecutionResult{
 			UsedGas:    st.gasUsed(),
 			Err:        nil,
-			ReturnData: nil,
+			ReturnData: []byte{},
 		}, usedMoney, nil
 
 	}

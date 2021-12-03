@@ -614,6 +614,6 @@ func (jst *Tracer) GetResult() (json.RawMessage, error) {
 	// Clean up the JavaScript environment
 	jst.vm.DestroyHeap()
 	jst.vm.Destroy()
-	fmt.Printf("tracer call result %v, %X\n", result, result)
+
 	return result, jst.err
 }
