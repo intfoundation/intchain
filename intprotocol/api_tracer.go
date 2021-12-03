@@ -691,7 +691,7 @@ func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, v
 	)
 
 	if message.To() != nil && (message.To().Hex() == common.HexToAddress("0x0000000000000000000000000000000000001001").Hex()) {
-		return common.Hex2Bytes("0x0000000000000000000000000000000000000000000000000000000000000001"), nil
+		return []byte{}, nil
 	}
 
 	switch {
