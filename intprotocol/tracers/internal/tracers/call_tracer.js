@@ -202,6 +202,9 @@
 		};
 
 		if (this.callstack[0].calls !== undefined) {
+		    if (result === undefined) {
+		        result = {}
+            }
 			result.calls = this.callstack[0].calls;
 		}
 		if (this.callstack[0].error !== undefined) {
