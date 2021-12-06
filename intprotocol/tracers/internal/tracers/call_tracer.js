@@ -193,18 +193,15 @@
 			type:    ctx.type,
 			from:    toHex(ctx.from),
 			to:      toHex(ctx.to),
-			value:   ctx.value !== undefined ? '0x' + ctx.value.toString(16) : '0x0',
-			gas:     ctx.gas !== undefined ? '0x' + bigInt(ctx.gas).toString(16) : '0x0',
-			gasUsed: ctx.gasUsed !== undefined ? '0x' + bigInt(ctx.gasUsed).toString(16) : '0x0',
+			value:   '0x' + ctx.value.toString(16),
+			gas:     '0x' + bigInt(ctx.gas).toString(16),
+			gasUsed: '0x' + bigInt(ctx.gasUsed).toString(16),
 			input:   toHex(ctx.input),
 			output:  toHex(ctx.output),
 			time:    ctx.time,
 		};
-
+		console.log("result tracer 1", result, this.callstack[0])
 		if (this.callstack[0].calls !== undefined) {
-		    if (result === undefined) {
-		        result = {}
-            }
 			result.calls = this.callstack[0].calls;
 		}
 		if (this.callstack[0].error !== undefined) {
@@ -215,7 +212,7 @@
 		if (result.error !== undefined) {
 			delete result.output;
 		}
-
+		console.log("result tracer 2", result, this.callstack[0])
 		return this.finalize(result);
 	},
 
@@ -241,13 +238,13 @@
 				delete sorted[key];
 			}
 		}
-
+		console.log("finalize tracer 1", sorted)
 		if (sorted.calls !== undefined) {
 			for (var i=0; i<sorted.calls.length; i++) {
 				sorted.calls[i] = this.finalize(sorted.calls[i]);
 			}
 		}
-
+		console.log("finalize tracer 2", sorted)
 		return sorted;
 	}
 }
