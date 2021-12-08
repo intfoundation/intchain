@@ -189,6 +189,12 @@
 	// result is invoked when all the opcodes have been iterated over and returns
 	// the final result of the tracing.
 	result: function(ctx, db) {
+		console.log("result tracer ctx", ctx)
+		console.log("result tracer ctx", ctx.value)
+		console.log("result tracer ctx", ctx.gas)
+		console.log("result tracer ctx", ctx.gasUsed)
+		console.log("result tracer ctx", bigInt(ctx.gas))
+		console.log("result tracer ctx", bigInt(ctx.gasUsed))
 		var result = {
 			type:    ctx.type,
 			from:    toHex(ctx.from),
