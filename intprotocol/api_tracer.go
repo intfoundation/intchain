@@ -725,6 +725,7 @@ func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, v
 	vmenv := vm.NewEVM(vmctx, statedb, api.eth.blockchain.Config(), vm.Config{Debug: true, Tracer: tracer})
 
 	result, _, err := core.ApplyMessageTracer(vmenv, message, new(core.GasPool).AddGas(message.Gas()))
+	fmt.Printf("trace tx %v, err %v\n", result, err)
 	if err != nil {
 		return nil, fmt.Errorf("tracing failed: %v", err)
 	}
