@@ -728,8 +728,7 @@ func (api *PrivateDebugAPI) traceTx(ctx context.Context, message core.Message, v
 	fmt.Printf("trace tx %v, err %v\n", result, err)
 	if err != nil {
 		fmt.Errorf("tracing failed: %v", err)
-		//return nil, fmt.Errorf("tracing failed: %v", err)
-		return nil, nil
+		return nil, fmt.Errorf("tracing failed: %v", err)
 	}
 	// Depending on the tracer type, format and return the output
 	switch tracer := tracer.(type) {

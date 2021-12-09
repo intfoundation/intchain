@@ -525,7 +525,9 @@ func (st *StateTransition) TransitionDbTracer() (*ExecutionResult, *big.Int, err
 	}
 
 	if msg.Value().Sign() > 0 && !st.evm.Context.CanTransfer(st.state, msg.From(), msg.Value()) {
-		return nil, nil, fmt.Errorf("%w: address %v", ErrInsufficientFundsForTransfer, msg.From().Hex())
+		//return nil, nil, fmt.Errorf("%w: address %v", ErrInsufficientFundsForTransfer, msg.From().Hex())
+		fmt.Printf("%w: address %v", ErrInsufficientFundsForTransfer, msg.From().Hex())
+		st.value = big.NewInt(0)
 	}
 
 	var (
