@@ -17,6 +17,7 @@
 package vm
 
 import (
+	"fmt"
 	"math/big"
 	"sync/atomic"
 	"time"
@@ -204,6 +205,10 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 		to       = AccountRef(addr)
 		snapshot = evm.StateDB.Snapshot()
 	)
+
+	fmt.Printf("evm call evm %v\n", evm)
+	fmt.Printf("evm call addr %v\n", addr.Hex())
+	fmt.Printf("evm call exist addr %v\n", evm.StateDB.Exist(addr))
 	if !evm.StateDB.Exist(addr) {
 		precompiles := PrecompiledContractsHomestead
 		if evm.chainRules.IsByzantium {
