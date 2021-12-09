@@ -237,6 +237,8 @@ func (evm *EVM) Call(caller ContractRef, addr common.Address, input []byte, gas 
 	// Even if the account has no code, we need to continue because it might be a precompile
 	start := time.Now()
 
+	fmt.Printf("evm call evm debug %v\n", evm.vmConfig.Debug)
+	fmt.Printf("evm call evm depth %v\n", evm.depth)
 	// Capture the tracer start/end events in debug mode
 	if evm.vmConfig.Debug && evm.depth == 0 {
 		evm.vmConfig.Tracer.CaptureStart(caller.Address(), addr, false, input, gas, value)
