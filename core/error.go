@@ -93,4 +93,8 @@ var (
 
 	// ErrNotAllowedInChildChain is returned if the transaction with child flag = false be sent to child chain
 	ErrNotAllowedInChildChain = errors.New("transaction not allowed in child chain")
+
+	// ErrInsufficientFundsForTransfer is returned if the transaction sender doesn't
+	// have enough funds for transfer(topmost call only).
+	ErrInsufficientFundsForTransfer = errors.New("insufficient funds for transfer")
 )

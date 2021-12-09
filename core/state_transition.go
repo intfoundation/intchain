@@ -524,6 +524,10 @@ func (st *StateTransition) TransitionDbTracer() (*ExecutionResult, *big.Int, err
 		return nil, nil, err
 	}
 
+	if msg.Value().Sign() > 0 && !st.evm.Context.CanTransfer(st.state, msg.From(), msg.Value()) {
+		return nil, nil, fmt.Errorf("%w: address %v", ErrInsufficientFundsForTransfer, msg.From().Hex())
+	}
+
 	var (
 		evm = st.evm
 		// vm errors do not effect consensus and are therefor
