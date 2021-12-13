@@ -694,12 +694,27 @@ func (s *PublicBlockChainAPI) GetStorageAt(ctx context.Context, address common.A
 
 // CallArgs represents the arguments for a call.
 type CallArgs struct {
-	From     common.Address  `json:"from"`
+	From     *common.Address `json:"from"`
 	To       *common.Address `json:"to"`
 	Gas      hexutil.Uint64  `json:"gas"`
 	GasPrice hexutil.Big     `json:"gasPrice"`
 	Value    hexutil.Big     `json:"value"`
-	Data     hexutil.Bytes   `json:"data"`
+	Data     *hexutil.Bytes  `json:"data"`
+}
+
+func (arg *CallArgs) from() common.Address {
+	if arg.From == nil {
+		return common.Address{}
+	}
+	return *arg.From
+}
+
+// data retrieves the transaction calldata. Input field is preferred.
+func (arg *CallArgs) data() []byte {
+	if arg.Data != nil {
+		return *arg.Data
+	}
+	return nil
 }
 
 func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr rpc.BlockNumber, vmCfg vm.Config, timeout time.Duration) (*core.ExecutionResult, error) {
@@ -710,7 +725,7 @@ func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr
 		return nil, err
 	}
 	// Set sender address or use a default if none specified
-	addr := args.From
+	addr := args.from()
 	if addr == (common.Address{}) {
 		if wallets := s.b.AccountManager().Wallets(); len(wallets) > 0 {
 			if accounts := wallets[0].Accounts(); len(accounts) > 0 {
@@ -728,7 +743,7 @@ func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr
 	}
 
 	// Create new call message
-	msg := types.NewMessage(addr, args.To, 0, args.Value.ToInt(), gas, gasPrice, args.Data, false)
+	msg := types.NewMessage(addr, args.To, 0, args.Value.ToInt(), gas, gasPrice, *args.Data, false)
 
 	// Setup context so it may be cancelled the call has completed
 	// or, in case of unmetered gas, setup a context with a timeout.
@@ -828,7 +843,7 @@ func (s *PublicBlockChainAPI) EstimateGas(ctx context.Context, args CallArgs) (h
 		cap uint64
 	)
 
-	functionType, e := intAbi.FunctionTypeFromId(args.Data[:4])
+	functionType, e := intAbi.FunctionTypeFromId(args.data()[:4])
 	if e == nil && functionType != intAbi.Unknown {
 		fmt.Printf("intchain inner contract tx, address: %v, functionType: %v\n", args.To.Hex(), functionType)
 		return hexutil.Uint64(functionType.RequiredGas()), nil
